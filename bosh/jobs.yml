@@ -6,15 +6,14 @@ jobs:
   instances: 1
   persistent_disk: 1024
   resource_pool: small_z1
-  networks: [prometheus1]
+  networks:
+  - name: prometheus1
   properties:
     alertmanager:
       route:
         receiver: default-receiver
       receivers:
       - name: default-receiver
-      data:
-        retention: "90d"
 
 - name: prometheus
   templates:
@@ -29,7 +28,8 @@ jobs:
   instances: 1
   persistent_disk: 1024
   resource_pool: small_z1
-  networks: [prometheus1]
+  networks:
+  - name: prometheus1
   properties:
     prometheus:
       scrape_configs:
@@ -59,7 +59,8 @@ jobs:
   instances: 1
   persistent_disk: 1024
   resource_pool: small_z1
-  networks: [prometheus1]
+  networks:
+  - name: prometheus1
   properties:
     auth:
       generic_oauth:
@@ -69,10 +70,13 @@ jobs:
 
 - name: nginx
   templates:
+  - name: nginx
+    release: prometheus
   instances: 1
   persistent_disk: 1024
   resource_pool: small_z1
-  networks: [prometheus1]
+  networks:
+  - name: prometheus1
   properties:
     nginx:
       prometheus:

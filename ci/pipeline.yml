@@ -35,7 +35,7 @@ jobs:
         args:
         - -exc
         - |
-          prometheus-config/generate-manifest.sh \
+          prometheus-config/bosh/generate-manifest.sh \
             prometheus-config/bosh/infrastructure-staging.yml \
             terraform-yaml/state.yml \
             common/secrets.yml \
@@ -46,9 +46,6 @@ jobs:
       manifest: prometheus-manifest/manifest.yml
       releases:
       - prometheus-release/*.tgz
-      - influxdb-release/*.tgz
-      - secureproxy-release/*.tgz
-      - grafana-release/*.tgz
       stemcells:
       - prometheus-stemcell/*.tgz
   on_failure:
@@ -99,7 +96,7 @@ jobs:
         args:
         - -exc
         - |
-          prometheus-config/generate-manifest.sh \
+          prometheus-config/bosh/generate-manifest.sh \
             prometheus-config/bosh/infrastructure-production.yml \
             terraform-yaml/state.yml \
             common/secrets.yml \

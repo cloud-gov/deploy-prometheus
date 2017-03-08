@@ -1,8 +1,31 @@
 networks:
 - name: prometheus1
-  dns:
-  - (( grab terraform_outputs.production_monitoring_subnet_dns ))
-  - (( grab terraform_outputs.tooling_bosh_static_ip ))
+  type: dynamic
+  subnets:
+  - range: (( grab terraform_outputs.production_monitoring_subnet_cidr ))
+    gateway: (( grab terraform_outputs.production_monitoring_subnet_gateway ))
+    dns:
+    - (( grab terraform_outputs.production_monitoring_subnet_dns ))
+    - (( grab terraform_outputs.tooling_bosh_static_ip ))
+    cloud_properties:
+      subnet: (( grab terraform_outputs.production_monitoring_subnet ))
+      security_groups:
+      - (( grab terraform_outputs.production_monitoring_security_group ))
+      - (( grab terraform_outputs.bosh_security_group ))
+
+resource_pools:
+- name: small_z1
   cloud_properties:
-    subnet: (( grab terraform_outputs.production_monitoring_subnet ))
-    security_groups: (( grab terraform_outputs.production_monitoring_security_group ))
+    instance_type: m3.medium
+    availability_zone: (( grab terraform_outputs.az1 ))
+    elbs:
+    - (( grab terraform_outputs.production_prometheus_elb_name ))
+
+compilation:
+  cloud_properties:
+    availability_zone: (( grab terraform_outputs.az1 ))
+
+properties:
+  bosh_exporter:
+    metrics:
+      environment: production
