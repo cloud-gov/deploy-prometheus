@@ -1,0 +1,69 @@
+jobs:
+- name: alertmanager
+  templates:
+  - name: alertmanager
+    release: prometheus
+  instances: 1
+  persistent_disk: 1024
+  resource_pool: small_z1
+  networks: [prometheus1]
+  properties:
+    alertmanager:
+      route:
+        receiver: default-receiver
+      receivers:
+      - name: default-receiver
+
+- name: prometheus
+  templates:
+  - name: prometheus
+    release: prometheus
+  - name: pushgateway
+    release: prometheus
+  - name: bosh_exporter
+    release: prometheus
+  # - name: collectd_exporter
+  #   release: prometheus
+  instances: 1
+  persistent_disk: 1024
+  resource_pool: small_z1
+  networks: [prometheus1]
+  properties:
+    prometheus:
+      scrape_configs:
+      - job_name: bosh
+        scrape_interval: 1m
+        scrape_timeout: 1m
+        static_configs:
+        - targets:
+          - localhost:9190
+      - job_name: prometheus
+        static_configs:
+        - targets:
+          - localhost:9090
+      - job_name: pushgateway
+        static_configs:
+        - targets:
+          - localhost:9091
+      # - job_name: collectd
+      #   static_configs:
+      #   - targets:
+      #     - localhost:9103
+
+- name: grafana
+  templates:
+  - name: grafana
+    release: prometheus
+  instances: 1
+  persistent_disk: 1024
+  resource_pool: small_z1
+  networks: [prometheus1]
+
+- name: nginx
+  templates:
+  instances: 1
+  persistent_disk: 1024
+  resource_pool: small_z1
+  networks: [prometheus1]
+
+networks: (( param "please set networks" ))

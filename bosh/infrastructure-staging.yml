@@ -1,0 +1,8 @@
+networks:
+- name: prometheus1
+  dns:
+  - (( grab terraform_outputs.staging_monitoring_subnet_dns ))
+  - (( grab terraform_outputs.tooling_bosh_static_ip ))
+  cloud_properties:
+    subnet: (( grab terraform_outputs.staging_monitoring_subnet ))
+    security_groups: (( grab terraform_outputs.staging_monitoring_security_group ))

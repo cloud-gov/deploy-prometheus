@@ -1,0 +1,233 @@
+---
+jobs:
+- name: deploy-prometheus-staging
+  serial: true
+  plan:
+  - aggregate:
+    - get: master-bosh-root-cert
+    - get: prometheus-config
+      trigger: true
+    - get: common
+      resource: common-staging
+      trigger: true
+    - get: prometheus-release
+      trigger: true
+    - get: prometheus-stemcell
+      trigger: true
+    - get: terraform-yaml
+      trigger: true
+    - get: pipeline-tasks
+  - task: prometheus-manifest
+    config: &manifest-config
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: 18fgsa/concourse-task
+      inputs:
+      - name: prometheus-config
+      - name: terraform-yaml
+      - name: common
+      outputs:
+      - name: prometheus-manifest
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          prometheus-config/generate-manifest.sh \
+            prometheus-config/bosh/infrastructure-staging.yml \
+            terraform-yaml/state.yml \
+            common/secrets.yml \
+            > prometheus-manifest/manifest.yml
+  - put: prometheus-staging-deployment
+    params: &deploy-params
+      cert: master-bosh-root-cert/master-bosh.crt
+      manifest: prometheus-manifest/manifest.yml
+      releases:
+      - prometheus-release/*.tgz
+      - influxdb-release/*.tgz
+      - secureproxy-release/*.tgz
+      - grafana-release/*.tgz
+      stemcells:
+      - prometheus-stemcell/*.tgz
+  on_failure:
+    put: slack
+    params:
+      text: |
+        :x: FAILED to deploy prometheus on staging
+        <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+      channel: {{slack-channel}}
+      username: {{slack-username}}
+      icon_url: {{slack-icon-url}}
+  on_success:
+    put: slack
+    params:
+      text: |
+        :white_check_mark: Successfully deployed prometheus on staging
+        <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+      channel: {{slack-channel}}
+      username: {{slack-username}}
+      icon_url: {{slack-icon-url}}
+
+- name: deploy-prometheus-production
+  serial: true
+  plan:
+  - aggregate:
+    - get: master-bosh-root-cert
+    - get: prometheus-config
+      passed: [deploy-prometheus-staging]
+      trigger: true
+    - get: common
+      resource: common-production
+      trigger: true
+    - get: prometheus-release
+      passed: [deploy-prometheus-staging]
+      trigger: true
+    - get: prometheus-stemcell
+      passed: [deploy-prometheus-staging]
+      trigger: true
+    - get: terraform-yaml
+      passed: [deploy-prometheus-staging]
+      trigger: true
+    - get: pipeline-tasks
+  - task: prometheus-manifest
+    config:
+      <<: *manifest-config
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          prometheus-config/generate-manifest.sh \
+            prometheus-config/bosh/infrastructure-production.yml \
+            terraform-yaml/state.yml \
+            common/secrets.yml \
+            > prometheus-manifest/manifest.yml
+  - put: prometheus-production-deployment
+    params: *deploy-params
+  on_failure:
+    put: slack
+    params:
+      text: |
+        :x: FAILED to deploy prometheus on production
+        <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+      channel: {{slack-channel}}
+      username: {{slack-username}}
+      icon_url: {{slack-icon-url}}
+  on_success:
+    put: slack
+    params:
+      text: |
+        :white_check_mark: Successfully deployed prometheus on production
+        <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+      channel: {{slack-channel}}
+      username: {{slack-username}}
+      icon_url: {{slack-icon-url}}
+
+resources:
+- name: master-bosh-root-cert
+  type: s3
+  source:
+    access_key_id: {{ci-access-key-id}}
+    bucket: {{prometheus-production-private-bucket}}
+    region_name: {{aws-region}}
+    secret_access_key: {{ci-secret-access-key}}
+    versioned_file: master-bosh.crt
+
+- name: common-staging
+  type: cg-common
+  source:
+    region: {{prometheus-staging-private-region}}
+    bucket_name: {{prometheus-staging-private-bucket}}
+    access_key_id: {{ci-access-key-id}}
+    secret_access_key: {{ci-secret-access-key}}
+    secrets_file: prometheus-staging.yml
+    secrets_passphrase: {{prometheus-staging-private-passphrase}}
+    bosh_cert: bosh-tooling.pem
+
+- name: common-production
+  type: cg-common
+  source:
+    region: {{prometheus-production-private-region}}
+    bucket_name: {{prometheus-production-private-bucket}}
+    access_key_id: {{prometheus-production-private-access-key-id}}
+    secret_access_key: {{prometheus-production-private-secret-access-key}}
+    secrets_file: prometheus-production.yml
+    secrets_passphrase: {{prometheus-production-private-passphrase}}
+    bosh_cert: bosh-tooling.pem
+
+- name: prometheus-release
+  type: bosh-io-release
+  source:
+    repository: cloudfoundry-community/prometheus-boshrelease
+
+- name: prometheus-config
+  type: git
+  source:
+    uri: {{cg-deploy-prometheus-git-url}}
+    branch: {{cg-deploy-prometheus-git-branch}}
+
+- name: prometheus-stemcell
+  type: s3
+  source:
+    access_key_id: {{ci-access-key-id}}
+    bucket: cg-stemcell-images
+    regexp: light-bosh-stemcell-(.*)-aws-xen-hvm-ubuntu-trusty-go_agent.tgz
+    region_name: us-gov-west-1
+    secret_access_key: {{ci-secret-access-key}}
+
+- name: prometheus-staging-deployment
+  type: 18f-bosh-deployment
+  source:
+    target: {{prometheus-staging-deployment-bosh-target}}
+    username: {{prometheus-staging-deployment-bosh-username}}
+    password: {{prometheus-staging-deployment-bosh-password}}
+    deployment: {{prometheus-staging-deployment-bosh-deployment}}
+
+- name: prometheus-production-deployment
+  type: 18f-bosh-deployment
+  source:
+    target: {{prometheus-production-deployment-bosh-target}}
+    username: {{prometheus-production-deployment-bosh-username}}
+    password: {{prometheus-production-deployment-bosh-password}}
+    deployment: {{prometheus-production-deployment-bosh-deployment}}
+
+- name: pipeline-tasks
+  type: git
+  source:
+    uri: {{pipeline-tasks-git-url}}
+    branch: {{pipeline-tasks-git-branch}}
+
+- name: slack
+  type: slack-notification
+  source:
+    url: {{slack-webhook-url}}
+
+- name: terraform-yaml
+  type: s3-iam
+  source:
+    bucket: {{tf-state-bucket-tooling}}
+    versioned_file: {{tf-state-file-tooling}}
+    region_name: {{aws-region}}
+
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+
+- name: 18f-bosh-deployment
+  type: docker-image
+  source:
+    repository: 18fgsa/bosh-deployment-resource
+
+- name: cg-common
+  type: docker-image
+  source:
+    repository: 18fgsa/cg-common-resource
+
+- name: s3-iam
+  type: docker-image
+  source:
+    repository: 18fgsa/s3-resource
