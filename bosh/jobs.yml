@@ -80,10 +80,13 @@ jobs:
   properties:
     nginx:
       prometheus:
-        path: "/"
-      grafana:
-        path: "/grafana/"
+        http_port: 80
+        server_name: (( param "specify prometheus server name" ))
       alertmanager:
-        path: "/alertmanager/"
+        http_port: 80
+        server_name: (( param "specify alertmanager server name" ))
+      grafana:
+        http_port: 80
+        server_name: (( param "specify grafana server name" ))
 
 networks: (( param "please set networks" ))
