@@ -18,6 +18,11 @@ resource_pools:
   cloud_properties:
     instance_type: m3.medium
     availability_zone: (( grab terraform_outputs.staging_monitoring_az ))
+
+- name: small_z1_public
+  cloud_properties:
+    instance_type: m3.medium
+    availability_zone: (( grab terraform_outputs.staging_monitoring_az ))
     elbs:
     - (( grab terraform_outputs.staging_prometheus_elb_name ))
 

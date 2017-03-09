@@ -25,3 +25,9 @@ resource_pools:
   stemcell:
     name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
     version: latest
+
+- name: small_z1_public
+  network: prometheus1
+  stemcell:
+    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
+    version: latest

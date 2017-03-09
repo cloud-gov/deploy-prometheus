@@ -74,16 +74,19 @@ jobs:
     release: prometheus
   instances: 1
   persistent_disk: 1024
-  resource_pool: small_z1
+  resource_pool: small_z1_public
   networks:
   - name: prometheus1
   properties:
     nginx:
       prometheus:
-        path: "/"
-      grafana:
-        path: "/grafana/"
+        http_port: 80
+        server_name: (( param "specify prometheus server name" ))
       alertmanager:
-        path: "/alertmanager/"
+        http_port: 80
+        server_name: (( param "specify alertmanager server name" ))
+      grafana:
+        http_port: 80
+        server_name: (( param "specify grafana server name" ))
 
 networks: (( param "please set networks" ))
