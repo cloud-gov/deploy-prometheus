@@ -23,6 +23,12 @@ jobs:
     release: prometheus
   - name: bosh_exporter
     release: prometheus
+  - name: firehose_exporter
+    release: prometheus
+  - name: bosh_alerts
+    release: prometheus
+  - name: cloudfoundry_alerts
+    release: prometheus
   # - name: collectd_exporter
   #   release: prometheus
   instances: 1
@@ -32,13 +38,10 @@ jobs:
   - name: prometheus1
   properties:
     prometheus:
+      rule_files:
+      - /var/vcap/packages/bosh_alerts/*.alerts
+      - /var/vcap/packages/cloudfoundry_alerts/*.alerts
       scrape_configs:
-      - job_name: bosh
-        scrape_interval: 1m
-        scrape_timeout: 1m
-        static_configs:
-        - targets:
-          - localhost:9190
       - job_name: prometheus
         static_configs:
         - targets:
@@ -47,6 +50,16 @@ jobs:
         static_configs:
         - targets:
           - localhost:9091
+      - job_name: bosh
+        scrape_interval: 1m
+        scrape_timeout: 1m
+        static_configs:
+        - targets:
+          - localhost:9190
+      - job_name: firehose
+        static_configs:
+        - targets:
+          - localhost:9186
       # - job_name: collectd
       #   static_configs:
       #   - targets:
@@ -56,17 +69,61 @@ jobs:
   templates:
   - name: grafana
     release: prometheus
+  - name: bosh_dashboards
+    release: prometheus
+  - name: cloudfoundry_dashboards
+    release: prometheus
   instances: 1
   persistent_disk: 1024
   resource_pool: small_z1
   networks:
   - name: prometheus1
   properties:
-    auth:
-      generic_oauth:
-        enabled: true
-        allow_sign_up: true
-        scopes: [openid, metrics.read]
+    grafana:
+      auth:
+        generic_oauth:
+          enabled: true
+          allow_sign_up: true
+          scopes: openid,metrics.read
+      dashboards:
+        json:
+          enabled: true
+      prometheus:
+        dashboard_files:
+        # Bosh dashboards
+        - /var/vcap/packages/bosh_dashboards/bosh_deployments.json
+        - /var/vcap/packages/bosh_dashboards/bosh_jobs.json
+        - /var/vcap/packages/bosh_dashboards/bosh_overview.json
+        - /var/vcap/packages/bosh_dashboards/bosh_processes.json
+        - /var/vcap/packages/bosh_dashboards/prometheus_bosh_exporter.json
+        # Cloudfoundry dashboards
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_apps_events.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_apps_latency.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_apps_requests.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_apps_system.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_bbs.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_cc.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_cells_capacity.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_component_metrics.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_diego_auctions.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_diego_health.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_doppler_server.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_etcd.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_etcd_operations.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_garden_linux.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_kpis.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_lrps_tasks.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_metron_agent.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_metron_agent_doppler.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_organization_memory_quotas.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_organization_summary.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_route_emitter.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_router.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_space_summary.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_summary.json
+        - /var/vcap/packages/cloudfoundry_dashboards/cf_uaa.json
+        - /var/vcap/packages/cloudfoundry_dashboards/prometheus_cf_exporter.json
+        - /var/vcap/packages/cloudfoundry_dashboards/prometheus_firehose_exporter.json
 
 - name: nginx
   templates:

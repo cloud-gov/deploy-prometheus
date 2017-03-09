@@ -34,3 +34,6 @@ properties:
   bosh_exporter:
     metrics:
       environment: staging
+  firehose_exporter:
+    metrics:
+      environment: staging

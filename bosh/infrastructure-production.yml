@@ -34,3 +34,6 @@ properties:
   bosh_exporter:
     metrics:
       environment: production
+  firehose_exporter:
+    metrics:
+      environment: production
