@@ -74,7 +74,7 @@ jobs:
     release: prometheus
   instances: 1
   persistent_disk: 1024
-  resource_pool: small_z1
+  resource_pool: small_z1_public
   networks:
   - name: prometheus1
   properties:
