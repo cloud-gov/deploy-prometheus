@@ -25,6 +25,8 @@ jobs:
     release: prometheus
   - name: firehose_exporter
     release: prometheus
+  - name: kube_state_metrics_exporter
+    release: prometheus
   - name: bosh_alerts
     release: prometheus
   - name: cloudfoundry_alerts
@@ -60,6 +62,10 @@ jobs:
         static_configs:
         - targets:
           - localhost:9186
+      - job_name: kube_state_metrics_exporter
+        static_configs:
+        - targets:
+          - localhost:9188
       # - job_name: collectd
       #   static_configs:
       #   - targets:
@@ -72,6 +78,8 @@ jobs:
   - name: bosh_dashboards
     release: prometheus
   - name: cloudfoundry_dashboards
+    release: prometheus
+  - name: kubernetes_dashboards
     release: prometheus
   instances: 1
   persistent_disk: 1024
@@ -124,6 +132,19 @@ jobs:
         - /var/vcap/packages/cloudfoundry_dashboards/cf_uaa.json
         - /var/vcap/packages/cloudfoundry_dashboards/prometheus_cf_exporter.json
         - /var/vcap/packages/cloudfoundry_dashboards/prometheus_firehose_exporter.json
+        # Kubernetes dashboards
+        - /var/vcap/packages/kubernetes_dashboards/kubernetes_admission_quota_controller.json
+        - /var/vcap/packages/kubernetes_dashboards/kubernetes_apiserver_latencies.json
+        - /var/vcap/packages/kubernetes_dashboards/kubernetes_apiserver_requests.json
+        - /var/vcap/packages/kubernetes_dashboards/kubernetes_daemonsets.json
+        - /var/vcap/packages/kubernetes_dashboards/kubernetes_deployments.json
+        - /var/vcap/packages/kubernetes_dashboards/kubernetes_nodes_capacity.json
+        - /var/vcap/packages/kubernetes_dashboards/kubernetes_nodes_health.json
+        - /var/vcap/packages/kubernetes_dashboards/kubernetes_nodes_info.json
+        - /var/vcap/packages/kubernetes_dashboards/kubernetes_pods.json
+        - /var/vcap/packages/kubernetes_dashboards/kubernetes_pods_containers.json
+        - /var/vcap/packages/kubernetes_dashboards/kubernetes_rest_client.json
+        - /var/vcap/packages/kubernetes_dashboards/kubernetes_ssh_tunnels.json
 
 - name: nginx
   templates:
