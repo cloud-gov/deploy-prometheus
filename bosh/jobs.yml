@@ -4,7 +4,7 @@ jobs:
   - name: alertmanager
     release: prometheus
   instances: 1
-  persistent_disk: 1024
+  disk_pool: prometheus_small
   resource_pool: small_z1
   networks:
   - name: prometheus1
@@ -34,7 +34,7 @@ jobs:
   # - name: collectd_exporter
   #   release: prometheus
   instances: 1
-  persistent_disk: 1024
+  disk_pool: prometheus_large
   resource_pool: small_z1
   networks:
   - name: prometheus1
@@ -82,7 +82,7 @@ jobs:
   - name: kubernetes_dashboards
     release: prometheus
   instances: 1
-  persistent_disk: 1024
+  disk_pool: prometheus_small
   resource_pool: small_z1
   networks:
   - name: prometheus1
@@ -151,7 +151,7 @@ jobs:
   - name: nginx
     release: prometheus
   instances: 1
-  persistent_disk: 1024
+  disk_pool: prometheus_small
   resource_pool: small_z1_public
   networks:
   - name: prometheus1

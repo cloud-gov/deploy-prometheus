@@ -26,6 +26,18 @@ resource_pools:
     name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
     version: latest
 
+disk_pools:
+- name: prometheus_large
+  disk_size: 3_096
+  cloud_properties:
+    type: gp2
+    encrypted: true
+- name: prometheus_small
+  disk_size: 1_024
+  cloud_properties:
+    type: gp2
+    encrypted: true
+
 - name: small_z1_public
   network: prometheus1
   stemcell:
