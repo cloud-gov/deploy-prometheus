@@ -31,8 +31,6 @@ jobs:
     release: prometheus
   - name: cloudfoundry_alerts
     release: prometheus
-  # - name: collectd_exporter
-  #   release: prometheus
   instances: 1
   disk_pool: prometheus_large
   resource_pool: small_z1
@@ -66,10 +64,18 @@ jobs:
         static_configs:
         - targets:
           - localhost:9188
-      # - job_name: collectd
-      #   static_configs:
-      #   - targets:
-      #     - localhost:9103
+      - job_name: node
+        file_sd_configs:
+          files:
+          - /var/vcap/store/bosh_exporter/bosh_target_groups.json
+        relabel_configs:
+        - source_labels: [__meta_bosh_job_process_name]
+          regex: node_exporter
+          action: keep
+        - source_labels: [__address__]
+          regex: "(.*)"
+          target_label: __address__
+          replacement: "${1}:9100"
 
 - name: grafana
   templates:
