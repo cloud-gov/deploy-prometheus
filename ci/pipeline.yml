@@ -15,7 +15,6 @@ jobs:
     - get: prometheus-stemcell
       trigger: true
     - get: terraform-yaml
-      trigger: true
     - get: pipeline-tasks
   - task: prometheus-manifest
     config: &manifest-config
@@ -85,8 +84,6 @@ jobs:
       passed: [deploy-prometheus-staging]
       trigger: true
     - get: terraform-yaml
-      passed: [deploy-prometheus-staging]
-      trigger: true
     - get: pipeline-tasks
   - task: prometheus-manifest
     config:
