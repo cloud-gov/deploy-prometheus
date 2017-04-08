@@ -31,6 +31,8 @@ jobs:
     release: prometheus
   - name: cloudfoundry_alerts
     release: prometheus
+  - name: prometheus_alerts
+    release: prometheus
   instances: 1
   disk_pool: prometheus_large
   resource_pool: small_z1
@@ -41,6 +43,7 @@ jobs:
       rule_files:
       - /var/vcap/packages/bosh_alerts/*.alerts
       - /var/vcap/packages/cloudfoundry_alerts/*.alerts
+      - /var/vcap/packages/prometheus_alerts/*.alerts
       scrape_configs:
       - job_name: prometheus
         static_configs:
@@ -86,6 +89,10 @@ jobs:
   - name: cloudfoundry_dashboards
     release: prometheus
   - name: kubernetes_dashboards
+    release: prometheus
+  - name: system_dashboards
+    release: prometheus
+  - name: prometheus_dashboards
     release: prometheus
   instances: 1
   disk_pool: prometheus_small
@@ -151,6 +158,17 @@ jobs:
         - /var/vcap/packages/kubernetes_dashboards/kubernetes_pods_containers.json
         - /var/vcap/packages/kubernetes_dashboards/kubernetes_rest_client.json
         - /var/vcap/packages/kubernetes_dashboards/kubernetes_ssh_tunnels.json
+        # System dashboards
+        - /var/vcap/packages/system_dashboards/bosh_system_disk_performance.json
+        - /var/vcap/packages/system_dashboards/bosh_system_disk_space.json
+        - /var/vcap/packages/system_dashboards/bosh_system_overview.json
+        - /var/vcap/packages/system_dashboards/system_disk_performance.json
+        - /var/vcap/packages/system_dashboards/system_disk_space.json
+        - /var/vcap/packages/system_dashboards/system_overview.json
+        # Prometheus dashboards
+        - /var/vcap/packages/prometheus_dashboards/prometheus_scrapes_notifications.json
+        - /var/vcap/packages/prometheus_dashboards/prometheus_storage.json
+        - /var/vcap/packages/prometheus_dashboards/prometheus_summary.json
 
 - name: nginx
   templates:
