@@ -66,7 +66,7 @@ jobs:
           - localhost:9188
       - job_name: node
         file_sd_configs:
-          files:
+        - files:
           - /var/vcap/store/bosh_exporter/bosh_target_groups.json
         relabel_configs:
         - source_labels: [__meta_bosh_job_process_name]
