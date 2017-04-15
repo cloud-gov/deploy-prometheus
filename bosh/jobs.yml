@@ -43,6 +43,7 @@ jobs:
       rule_files:
       - /var/vcap/packages/bosh_alerts/*.alerts
       - /var/vcap/packages/cloudfoundry_alerts/*.alerts
+      - /var/vcap/packages/kubernetes_alerts/*.alerts
       - /var/vcap/packages/prometheus_alerts/*.alerts
       scrape_configs:
       - job_name: prometheus
