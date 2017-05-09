@@ -43,6 +43,7 @@ jobs:
       rule_files:
       - /var/vcap/packages/bosh_alerts/*.alerts
       - /var/vcap/packages/cloudfoundry_alerts/*.alerts
+      - /var/vcap/packages/kubernetes_alerts/*.alerts
       - /var/vcap/packages/prometheus_alerts/*.alerts
       scrape_configs:
       - job_name: prometheus
@@ -111,64 +112,11 @@ jobs:
           enabled: true
       prometheus:
         dashboard_files:
-        # Bosh dashboards
-        - /var/vcap/packages/bosh_dashboards/bosh_deployments.json
-        - /var/vcap/packages/bosh_dashboards/bosh_jobs.json
-        - /var/vcap/packages/bosh_dashboards/bosh_overview.json
-        - /var/vcap/packages/bosh_dashboards/bosh_processes.json
-        - /var/vcap/packages/bosh_dashboards/prometheus_bosh_exporter.json
-        # Cloudfoundry dashboards
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_apps_events.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_apps_latency.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_apps_requests.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_apps_system.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_bbs.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_cc.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_cells_capacity.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_component_metrics.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_diego_auctions.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_diego_health.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_doppler_server.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_etcd.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_etcd_operations.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_garden_linux.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_kpis.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_lrps_tasks.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_metron_agent.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_metron_agent_doppler.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_organization_memory_quotas.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_organization_summary.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_route_emitter.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_router.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_space_summary.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_summary.json
-        - /var/vcap/packages/cloudfoundry_dashboards/cf_uaa.json
-        - /var/vcap/packages/cloudfoundry_dashboards/prometheus_cf_exporter.json
-        - /var/vcap/packages/cloudfoundry_dashboards/prometheus_firehose_exporter.json
-        # Kubernetes dashboards
-        - /var/vcap/packages/kubernetes_dashboards/kubernetes_admission_quota_controller.json
-        - /var/vcap/packages/kubernetes_dashboards/kubernetes_apiserver_latencies.json
-        - /var/vcap/packages/kubernetes_dashboards/kubernetes_apiserver_requests.json
-        - /var/vcap/packages/kubernetes_dashboards/kubernetes_daemonsets.json
-        - /var/vcap/packages/kubernetes_dashboards/kubernetes_deployments.json
-        - /var/vcap/packages/kubernetes_dashboards/kubernetes_nodes_capacity.json
-        - /var/vcap/packages/kubernetes_dashboards/kubernetes_nodes_health.json
-        - /var/vcap/packages/kubernetes_dashboards/kubernetes_nodes_info.json
-        - /var/vcap/packages/kubernetes_dashboards/kubernetes_pods.json
-        - /var/vcap/packages/kubernetes_dashboards/kubernetes_pods_containers.json
-        - /var/vcap/packages/kubernetes_dashboards/kubernetes_rest_client.json
-        - /var/vcap/packages/kubernetes_dashboards/kubernetes_ssh_tunnels.json
-        # System dashboards
-        - /var/vcap/packages/system_dashboards/bosh_system_disk_performance.json
-        - /var/vcap/packages/system_dashboards/bosh_system_disk_space.json
-        - /var/vcap/packages/system_dashboards/bosh_system_overview.json
-        - /var/vcap/packages/system_dashboards/system_disk_performance.json
-        - /var/vcap/packages/system_dashboards/system_disk_space.json
-        - /var/vcap/packages/system_dashboards/system_overview.json
-        # Prometheus dashboards
-        - /var/vcap/packages/prometheus_dashboards/prometheus_scrapes_notifications.json
-        - /var/vcap/packages/prometheus_dashboards/prometheus_storage.json
-        - /var/vcap/packages/prometheus_dashboards/prometheus_summary.json
+        - /var/vcap/packages/bosh_dashboards/*.json
+        - /var/vcap/packages/system_dashboards/*.json
+        - /var/vcap/packages/cloudfoundry_dashboards/*.json
+        - /var/vcap/packages/kubernetes_dashboards/*.json
+        - /var/vcap/packages/prometheus_dashboards/*.json
 
 - name: nginx
   templates:
