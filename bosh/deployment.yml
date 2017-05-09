@@ -33,12 +33,12 @@ resource_pools:
 
 disk_pools:
 - name: prometheus_large
-  disk_size: 3_096
+  disk_size: 8192
   cloud_properties:
     type: gp2
     encrypted: true
 - name: prometheus_small
-  disk_size: 1_024
+  disk_size: 1024
   cloud_properties:
     type: gp2
     encrypted: true
