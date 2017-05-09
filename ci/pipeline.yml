@@ -175,16 +175,16 @@ resources:
   type: 18f-bosh-deployment
   source:
     target: {{prometheus-staging-deployment-bosh-target}}
-    username: {{prometheus-staging-deployment-bosh-username}}
-    password: {{prometheus-staging-deployment-bosh-password}}
+    client_id: {{prometheus-staging-deployment-bosh-uaa-client-id}}
+    client_secret: {{prometheus-staging-deployment-bosh-uaa-client-secret}}
     deployment: {{prometheus-staging-deployment-bosh-deployment}}
 
 - name: prometheus-production-deployment
   type: 18f-bosh-deployment
   source:
     target: {{prometheus-production-deployment-bosh-target}}
-    username: {{prometheus-production-deployment-bosh-username}}
-    password: {{prometheus-production-deployment-bosh-password}}
+    client_id: {{prometheus-production-deployment-bosh-uaa-client-id}}
+    client_secret: {{prometheus-production-deployment-bosh-uaa-client-secret}}
     deployment: {{prometheus-production-deployment-bosh-deployment}}
 
 - name: pipeline-tasks
