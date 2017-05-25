@@ -5,8 +5,8 @@ networks:
   - range: (( grab terraform_outputs.staging_monitoring_subnet_cidr ))
     gateway: (( grab terraform_outputs.staging_monitoring_subnet_gateway ))
     dns:
-    - (( grab terraform_outputs.staging_monitoring_subnet_dns ))
     - (( grab terraform_outputs.tooling_bosh_static_ip ))
+    - (( grab terraform_outputs.vpc_cidr_dns ))
     cloud_properties:
       subnet: (( grab terraform_outputs.staging_monitoring_subnet ))
       security_groups:
