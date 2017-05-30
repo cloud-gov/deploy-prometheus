@@ -1,30 +1,89 @@
-jobs:
+instance_groups:
 - name: alertmanager
-  templates:
+  instances: 1
+  vm_type: (( concat meta.environment "-prometheus" ))
+  persistent_disk_type: (( concat meta.environment "-prometheus-small" ))
+  stemcell: default
+  azs: (( grab meta.azs ))
+  networks:
+  - name: (( concat meta.environment "-monitoring" ))
+  jobs:
   - name: alertmanager
     release: prometheus
-  instances: 1
-  disk_pool: prometheus_small
-  resource_pool: small_z1
-  networks:
-  - name: prometheus1
-  properties:
-    alertmanager:
-      route:
-        receiver: default-receiver
-      receivers:
-      - name: default-receiver
+    properties:
+      alertmanager:
+        route:
+          receiver: default-receiver
+        receivers:
+        - name: default-receiver
 
 - name: prometheus
-  templates:
+  instances: 1
+  vm_type: (( concat meta.environment "-prometheus" ))
+  persistent_disk_type: (( concat meta.environment "-prometheus-large" ))
+  stemcell: default
+  azs: (( grab meta.azs ))
+  networks:
+  - name: (( concat meta.environment "-monitoring" ))
+  jobs:
   - name: prometheus
     release: prometheus
+    properties:
+      prometheus:
+        rule_files:
+        - /var/vcap/jobs/bosh_alerts/*.alerts
+        - /var/vcap/jobs/cloudfoundry_alerts/*.alerts
+        - /var/vcap/jobs/kubernetes_alerts/*.alerts
+        - /var/vcap/jobs/prometheus_alerts/*.alerts
+        scrape_configs:
+        - job_name: prometheus
+          static_configs:
+          - targets:
+            - localhost:9090
+        - job_name: pushgateway
+          static_configs:
+          - targets:
+            - localhost:9091
+        - job_name: bosh
+          scrape_interval: 1m
+          scrape_timeout: 1m
+          static_configs:
+          - targets:
+            - localhost:9190
+        - job_name: firehose
+          static_configs:
+          - targets:
+            - localhost:9186
+        - job_name: kube_state_metrics_exporter
+          static_configs:
+          - targets:
+            - localhost:9188
+        - job_name: node
+          file_sd_configs:
+          - files:
+            - /var/vcap/store/bosh_exporter/bosh_target_groups.json
+          relabel_configs:
+          - source_labels: [__meta_bosh_job_process_name]
+            regex: node_exporter
+            action: keep
+          - source_labels: [__address__]
+            regex: "(.*)"
+            target_label: __address__
+            replacement: "${1}:9100"
   - name: pushgateway
     release: prometheus
   - name: bosh_exporter
     release: prometheus
+    properties:
+      bosh_exporter:
+        metrics:
+          environment: (( grab meta.environment ))
   - name: firehose_exporter
     release: prometheus
+    properties:
+      firehose_exporter:
+        metrics:
+          environment: (( grab meta.environment ))
   - name: kube_state_metrics_exporter
     release: prometheus
   - name: bosh_alerts
@@ -33,58 +92,35 @@ jobs:
     release: prometheus
   - name: prometheus_alerts
     release: prometheus
-  instances: 1
-  disk_pool: prometheus_large
-  resource_pool: small_z1
-  networks:
-  - name: prometheus1
-  properties:
-    prometheus:
-      rule_files:
-      - /var/vcap/jobs/bosh_alerts/*.alerts
-      - /var/vcap/jobs/cloudfoundry_alerts/*.alerts
-      - /var/vcap/jobs/kubernetes_alerts/*.alerts
-      - /var/vcap/jobs/prometheus_alerts/*.alerts
-      scrape_configs:
-      - job_name: prometheus
-        static_configs:
-        - targets:
-          - localhost:9090
-      - job_name: pushgateway
-        static_configs:
-        - targets:
-          - localhost:9091
-      - job_name: bosh
-        scrape_interval: 1m
-        scrape_timeout: 1m
-        static_configs:
-        - targets:
-          - localhost:9190
-      - job_name: firehose
-        static_configs:
-        - targets:
-          - localhost:9186
-      - job_name: kube_state_metrics_exporter
-        static_configs:
-        - targets:
-          - localhost:9188
-      - job_name: node
-        file_sd_configs:
-        - files:
-          - /var/vcap/store/bosh_exporter/bosh_target_groups.json
-        relabel_configs:
-        - source_labels: [__meta_bosh_job_process_name]
-          regex: node_exporter
-          action: keep
-        - source_labels: [__address__]
-          regex: "(.*)"
-          target_label: __address__
-          replacement: "${1}:9100"
 
 - name: grafana
-  templates:
+  instances: 1
+  vm_type: (( concat meta.environment "-prometheus" ))
+  persistent_disk_type: (( concat meta.environment "-prometheus-small" ))
+  stemcell: default
+  azs: (( grab meta.azs ))
+  networks:
+  - name: (( concat meta.environment "-monitoring" ))
+  jobs:
   - name: grafana
     release: prometheus
+    properties:
+      grafana:
+        auth:
+          generic_oauth:
+            enabled: true
+            allow_sign_up: true
+            scopes: openid,metrics.read
+        dashboards:
+          json:
+            enabled: true
+        prometheus:
+          dashboard_files:
+          - /var/vcap/jobs/bosh_dashboards/*.json
+          - /var/vcap/jobs/system_dashboards/*.json
+          - /var/vcap/jobs/cloudfoundry_dashboards/*.json
+          - /var/vcap/jobs/kubernetes_dashboards/*.json
+          - /var/vcap/jobs/prometheus_dashboards/*.json
   - name: bosh_dashboards
     release: prometheus
   - name: cloudfoundry_dashboards
@@ -95,48 +131,26 @@ jobs:
     release: prometheus
   - name: prometheus_dashboards
     release: prometheus
-  instances: 1
-  disk_pool: prometheus_small
-  resource_pool: small_z1
-  networks:
-  - name: prometheus1
-  properties:
-    grafana:
-      auth:
-        generic_oauth:
-          enabled: true
-          allow_sign_up: true
-          scopes: openid,metrics.read
-      dashboards:
-        json:
-          enabled: true
-      prometheus:
-        dashboard_files:
-        - /var/vcap/jobs/bosh_dashboards/*.json
-        - /var/vcap/jobs/system_dashboards/*.json
-        - /var/vcap/jobs/cloudfoundry_dashboards/*.json
-        - /var/vcap/jobs/kubernetes_dashboards/*.json
-        - /var/vcap/jobs/prometheus_dashboards/*.json
 
 - name: nginx
-  templates:
+  instances: 1
+  vm_type: (( concat meta.environment "-prometheus" ))
+  persistent_disk_type: (( concat meta.environment "-prometheus-small" ))
+  stemcell: default
+  azs: (( grab meta.azs ))
+  networks:
+  - name: (( concat meta.environment "-monitoring" ))
+  jobs:
   - name: nginx
     release: prometheus
-  instances: 1
-  disk_pool: prometheus_small
-  resource_pool: small_z1_public
-  networks:
-  - name: prometheus1
-  properties:
-    nginx:
-      prometheus:
-        http_port: 80
-        server_name: (( param "specify prometheus server name" ))
-      alertmanager:
-        http_port: 80
-        server_name: (( param "specify alertmanager server name" ))
-      grafana:
-        http_port: 80
-        server_name: (( param "specify grafana server name" ))
-
-networks: (( param "please set networks" ))
+    properties:
+      nginx:
+        prometheus:
+          http_port: 80
+          server_name: (( param "specify prometheus server name" ))
+        alertmanager:
+          http_port: 80
+          server_name: (( param "specify alertmanager server name" ))
+        grafana:
+          http_port: 80
+          server_name: (( param "specify grafana server name" ))

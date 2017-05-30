@@ -1,16 +1,14 @@
+meta:
+  azs: (( param "specify azs" ))
+  environment: (( param "specify environment" ))
+
 releases:
 - {name: prometheus, version: latest}
 
-compilation:
-  workers: 6
-  network: prometheus1
-  reuse_compilation_vms: true
-  cloud_properties:
-    instance_type: m3.xlarge
-    ephemeral_disk:
-      size: 30000
-      type: gp2
-      encrypted: true
+stemcells:
+- alias: default
+  name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
+  version: latest
 
 update:
   canaries: 1
@@ -18,27 +16,3 @@ update:
   canary_watch_time: 1000-600000
   update_watch_time: 1000-600000
   serial: false
-
-resource_pools:
-- name: small_z1
-  network: prometheus1
-  stemcell:
-    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
-    version: latest
-- name: small_z1_public
-  network: prometheus1
-  stemcell:
-    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
-    version: latest
-
-disk_pools:
-- name: prometheus_large
-  disk_size: 8192
-  cloud_properties:
-    type: gp2
-    encrypted: true
-- name: prometheus_small
-  disk_size: 1024
-  cloud_properties:
-    type: gp2
-    encrypted: true
