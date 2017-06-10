@@ -121,12 +121,10 @@ jobs:
 
 resources:
 - name: master-bosh-root-cert
-  type: s3
+  type: s3-iam
   source:
-    access_key_id: {{ci-access-key-id}}
     bucket: {{prometheus-production-private-bucket}}
     region_name: {{aws-region}}
-    secret_access_key: {{ci-secret-access-key}}
     versioned_file: master-bosh.crt
 
 - name: common-staging
@@ -134,8 +132,6 @@ resources:
   source:
     region: {{prometheus-staging-private-region}}
     bucket_name: {{prometheus-staging-private-bucket}}
-    access_key_id: {{ci-access-key-id}}
-    secret_access_key: {{ci-secret-access-key}}
     secrets_file: prometheus-staging.yml
     secrets_passphrase: {{prometheus-staging-private-passphrase}}
     bosh_cert: bosh-tooling.pem
@@ -145,8 +141,6 @@ resources:
   source:
     region: {{prometheus-production-private-region}}
     bucket_name: {{prometheus-production-private-bucket}}
-    access_key_id: {{prometheus-production-private-access-key-id}}
-    secret_access_key: {{prometheus-production-private-secret-access-key}}
     secrets_file: prometheus-production.yml
     secrets_passphrase: {{prometheus-production-private-passphrase}}
     bosh_cert: bosh-tooling.pem
@@ -163,13 +157,11 @@ resources:
     branch: {{cg-deploy-prometheus-git-branch}}
 
 - name: prometheus-stemcell
-  type: s3
+  type: s3-iam
   source:
-    access_key_id: {{ci-access-key-id}}
     bucket: cg-stemcell-images
     regexp: light-bosh-stemcell-(.*)-aws-xen-hvm-ubuntu-trusty-go_agent.tgz
     region_name: us-gov-west-1
-    secret_access_key: {{ci-secret-access-key}}
 
 - name: prometheus-staging-deployment
   type: 18f-bosh-deployment

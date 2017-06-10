@@ -106,11 +106,16 @@ instance_groups:
     release: prometheus
     properties:
       grafana:
+        server:
+          root_url: (( concat "https://grafana." meta.domain ))
         auth:
           generic_oauth:
             enabled: true
             allow_sign_up: true
             scopes: openid,metrics.read
+            auth_url: https://opslogin.fr.cloud.gov/oauth/authorize
+            token_url: https://opslogin.fr.cloud.gov/oauth/token
+            api_url: https://opslogin.fr.cloud.gov/userinfo
         dashboards:
           json:
             enabled: true
@@ -136,6 +141,8 @@ instance_groups:
   instances: 1
   vm_type: (( concat meta.environment "-prometheus" ))
   persistent_disk_type: (( concat meta.environment "-prometheus-small" ))
+  vm_extensions:
+  - (( concat meta.environment "-prometheus-lb" ))
   stemcell: default
   azs: (( grab meta.azs ))
   networks:
@@ -147,10 +154,10 @@ instance_groups:
       nginx:
         prometheus:
           http_port: 80
-          server_name: (( param "specify prometheus server name" ))
+          server_name: (( concat "prometheus." meta.domain ))
         alertmanager:
           http_port: 80
-          server_name: (( param "specify alertmanager server name" ))
+          server_name: (( concat "alertmanager." meta.domain ))
         grafana:
           http_port: 80
-          server_name: (( param "specify grafana server name" ))
+          server_name: (( concat "grafana." meta.domain ))

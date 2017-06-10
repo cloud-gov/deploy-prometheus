@@ -1,3 +1,4 @@
 meta:
   azs: [z2]
   environment: staging
+  domain: fr-stage.cloud.gov

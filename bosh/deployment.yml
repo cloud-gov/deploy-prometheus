@@ -1,7 +1,3 @@
-meta:
-  azs: (( param "specify azs" ))
-  environment: (( param "specify environment" ))
-
 releases:
 - {name: prometheus, version: latest}
 
