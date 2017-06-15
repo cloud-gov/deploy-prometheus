@@ -82,6 +82,11 @@ instance_groups:
     release: prometheus
     properties:
       firehose_exporter:
+        uaa:
+          url: (( concat "https://login." meta.domain ))
+        doppler:
+          url: (( concat "wss://doppler." meta.domain ":443" ))
+          subscription_id: prometheus
         metrics:
           environment: (( grab meta.environment ))
   - name: kube_state_metrics_exporter
