@@ -9,7 +9,7 @@ which spruce > /dev/null 2>&1 || {
 
 path="$(dirname $0)"
 
-spruce merge \
+STEMCELL_VERSION=$(cat ubuntu-stemcell/version) spruce merge \
   --prune meta --prune terraform_outputs \
   "$path/deployment.yml" \
   "$path/jobs.yml" \
