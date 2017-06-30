@@ -164,11 +164,9 @@ resources:
     branch: {{cg-deploy-prometheus-git-branch}}
 
 - name: prometheus-stemcell
-  type: s3-iam
+  type: bosh-io-stemcell
   source:
-    bucket: cg-stemcell-images
-    regexp: light-bosh-stemcell-(.*)-aws-xen-hvm-ubuntu-trusty-go_agent.tgz
-    region_name: us-gov-west-1
+    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
 
 - name: prometheus-staging-deployment
   type: 18f-bosh-deployment
