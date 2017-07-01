@@ -34,6 +34,8 @@ instance_groups:
         - /var/vcap/jobs/bosh_alerts/*.alerts
         - /var/vcap/jobs/cloudfoundry_alerts/*.alerts
         - /var/vcap/jobs/kubernetes_alerts/*.alerts
+        - /var/vcap/jobs/elasticsearch_alerts/*.alerts
+        - /var/vcap/jobs/concourse_alerts/*.alerts
         - /var/vcap/jobs/prometheus_alerts/*.alerts
         scrape_configs:
         - job_name: prometheus
@@ -62,6 +64,10 @@ instance_groups:
           static_configs:
           - targets:
             - localhost:9122
+        - job_name: elasticsearch_exporter
+          static_configs:
+          - targets:
+            - localhost:9114
         - job_name: node
           file_sd_configs:
           - files:
@@ -97,9 +103,17 @@ instance_groups:
     release: prometheus
   - name: influxdb_exporter
     release: prometheus
+  - name: elasticsearch_exporter
+    release: prometheus
   - name: bosh_alerts
     release: prometheus
   - name: cloudfoundry_alerts
+    release: prometheus
+  - name: kubernetes_alerts
+    release: prometheus
+  - name: elasticsearch_alerts
+    release: prometheus
+  - name: concourse_alerts
     release: prometheus
   - name: prometheus_alerts
     release: prometheus
@@ -136,14 +150,20 @@ instance_groups:
           - /var/vcap/jobs/system_dashboards/*.json
           - /var/vcap/jobs/cloudfoundry_dashboards/*.json
           - /var/vcap/jobs/kubernetes_dashboards/*.json
+          - /var/vcap/jobs/elasticsearch_dashboards/*.json
+          - /var/vcap/jobs/concourse_dashboards/*.json
           - /var/vcap/jobs/prometheus_dashboards/*.json
   - name: bosh_dashboards
+    release: prometheus
+  - name: system_dashboards
     release: prometheus
   - name: cloudfoundry_dashboards
     release: prometheus
   - name: kubernetes_dashboards
     release: prometheus
-  - name: system_dashboards
+  - name: elasticsearch_dashboards
+    release: prometheus
+  - name: concourse_dashboards
     release: prometheus
   - name: prometheus_dashboards
     release: prometheus
