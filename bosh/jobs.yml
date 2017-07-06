@@ -105,6 +105,10 @@ instance_groups:
     release: prometheus
   - name: elasticsearch_exporter
     release: prometheus
+    properties:
+      elasticsearch_exporter:
+        es:
+          all: true
   - name: bosh_alerts
     release: prometheus
   - name: cloudfoundry_alerts
