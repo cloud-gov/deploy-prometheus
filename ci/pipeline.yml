@@ -14,6 +14,8 @@ jobs:
       trigger: true
     - get: prometheus-stemcell
       trigger: true
+    - get: ubuntu-stemcell
+      trigger: true
     - get: terraform-yaml
     - get: pipeline-tasks
   - task: prometheus-manifest
@@ -25,6 +27,7 @@ jobs:
           repository: 18fgsa/concourse-task
       inputs:
       - name: prometheus-config
+      - name: ubuntu-stemcell
       - name: terraform-yaml
       - name: common
       outputs:
@@ -88,6 +91,8 @@ jobs:
       trigger: true
     - get: prometheus-stemcell
       passed: [deploy-prometheus-staging]
+      trigger: true
+    - get: ubuntu-stemcell
       trigger: true
     - get: terraform-yaml
     - get: pipeline-tasks
@@ -201,6 +206,12 @@ resources:
     bucket: {{tf-state-bucket-tooling}}
     versioned_file: {{tf-state-file-tooling}}
     region_name: {{aws-region}}
+
+- name: ubuntu-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: bosh-aws-xen-ubuntu-trusty-go_agent
+    force_regular: true
 
 resource_types:
 - name: slack-notification

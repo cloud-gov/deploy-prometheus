@@ -111,6 +111,11 @@ instance_groups:
           all: true
   - name: bosh_alerts
     release: prometheus
+    properties:
+      bosh_alerts:
+        deployment_stemcell_outdated:
+          version: (( grab $STEMCELL_VERSION ))
+          evaluation_time: 24h
   - name: cloudfoundry_alerts
     release: prometheus
   - name: kubernetes_alerts
