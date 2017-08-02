@@ -12,6 +12,8 @@ instance_groups:
     release: prometheus
     properties:
       alertmanager:
+        data:
+          retention: 720h
         route:
           receiver: default-receiver
         receivers:
@@ -30,6 +32,9 @@ instance_groups:
     release: prometheus
     properties:
       prometheus:
+        storage:
+          local:
+            retention: 720h
         rule_files:
         - /var/vcap/jobs/bosh_alerts/*.alerts
         - /var/vcap/jobs/cloudfoundry_alerts/*.alerts
