@@ -2,3 +2,20 @@ meta:
   azs: [z1]
   environment: production
   domain: fr.cloud.gov
+
+instance_groups:
+- name: prometheus
+  jobs:
+  - name: prometheus
+    properties:
+      prometheus:
+        scrape_configs:
+        - (( append ))
+        - job_name: kubernetes_broker_exporter
+          scheme: https
+          basic_auth:
+            username: (( param "specify kubernetes broker exporter username" ))
+            password: (( param "specify kubernetes broker exporter password" ))
+          static_configs:
+          - targets:
+            - kubernetes-broker-exporter.app.fr.cloud.gov:443

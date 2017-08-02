@@ -1,0 +1,23 @@
+ALERT BrokeredElasticsearchAlive
+  IF kubernetes_broker_elasticsearch_alive != 1
+  FOR 5m
+  LABELS {
+    service = "kubernetes-broker-elasticsearch",
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "Brokered elasticsearch instance {{$labels.instance_guid}} is not responding",
+    description = "Brokered elasticsearch instance {{$labels.instance_guid}} has not been responding for 5m",
+  }
+
+ALERT BrokeredElasticsearchHealthy
+  IF kubernetes_broker_elasticsearch_healthy != 1
+  FOR 5m
+  LABELS {
+    service = "kubernetes-broker-elasticsearch",
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "Brokered elasticsearch instance {{$labels.instance_guid}} is not healthy",
+    description = "Brokered elasticsearch instance {{$labels.instance_guid}} has not been healthy for 5m",
+  }

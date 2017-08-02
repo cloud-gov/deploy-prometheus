@@ -9,7 +9,7 @@ which spruce > /dev/null 2>&1 || {
 
 path="$(dirname $0)"
 
-spruce merge \
+SPRUCE_FILE_BASE_PATH=prometheus-config spruce merge \
   --prune meta --prune terraform_outputs \
   "$path/deployment.yml" \
   "$path/jobs.yml" \
