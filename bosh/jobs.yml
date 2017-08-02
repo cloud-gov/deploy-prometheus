@@ -37,6 +37,8 @@ instance_groups:
         - /var/vcap/jobs/elasticsearch_alerts/*.alerts
         - /var/vcap/jobs/concourse_alerts/*.alerts
         - /var/vcap/jobs/prometheus_alerts/*.alerts
+        custom_rules:
+        - (( file "bosh/alerts/kubernetes_broker.alerts" ))
         scrape_configs:
         - job_name: prometheus
           static_configs:

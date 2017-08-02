@@ -2,3 +2,28 @@ meta:
   azs: [z2]
   environment: staging
   domain: fr-stage.cloud.gov
+
+instance_groups:
+- name: prometheus
+  jobs:
+  - name: prometheus
+    properties:
+      prometheus:
+        scrape_configs:
+        - (( append ))
+        - job_name: kubernetes_broker_exporter_development
+          scheme: https
+          basic_auth:
+            username: (( param "specify kubernetes broker exporter development username" ))
+            password: (( param "specify kubernetes broker exporter development password" ))
+          static_configs:
+          - targets:
+            - kubernetes-broker-exporter.dev.us-gov-west-1.aws-us-gov.cloud.gov:443
+        - job_name: kubernetes_broker_exporter_staging
+          scheme: https
+          basic_auth:
+            username: (( param "specify kubernetes broker exporter staging username" ))
+            password: (( param "specify kubernetes broker exporter staging password" ))
+          static_configs:
+          - targets:
+            - kubernetes-broker-exporter.fr-stage.cloud.gov:443
