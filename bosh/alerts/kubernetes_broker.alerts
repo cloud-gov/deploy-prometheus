@@ -21,3 +21,27 @@ ALERT BrokeredElasticsearchHealthy
     summary = "Brokered elasticsearch instance {{$labels.instance_guid}} is not healthy",
     description = "Brokered elasticsearch instance {{$labels.instance_guid}} has not been healthy for 5m",
   }
+
+ALERT BrokeredRedisAlive
+  IF kubernetes_broker_redis_alive != 1
+  FOR 5m
+  LABELS {
+    service = "kubernetes-broker-redis",
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "Brokered redis instance {{$labels.instance_guid}} is not responding",
+    description = "Brokered redis instance {{$labels.instance_guid}} has not been responding for 5m",
+  }
+
+ALERT BrokeredRedisHealthy
+  IF kubernetes_broker_redis_healthy != 1
+  FOR 5m
+  LABELS {
+    service = "kubernetes-broker-redis",
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "Brokered redis instance {{$labels.instance_guid}} is not healthy",
+    description = "Brokered redis instance {{$labels.instance_guid}} has not been healthy for 5m",
+  }
