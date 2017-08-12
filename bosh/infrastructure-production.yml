@@ -7,10 +7,22 @@ instance_groups:
 - name: prometheus
   jobs:
   - name: prometheus
+    provides:
+      prometheus: {as: prometheus-primary}
     properties:
       prometheus:
         scrape_configs:
         - (( append ))
+        - job_name: federate
+          honor_labels: true
+          metrics_path: /federate
+          params:
+            match[]:
+            - '{__name__=~"bosh_.*"}'
+            - '{__name__=~"node_.*"}'
+          static_configs:
+          - targets:
+            - 0.prometheus-tooling.production-monitoring.prometheus-production.toolingbosh:9090
         - job_name: kubernetes_broker_exporter
           scheme: https
           basic_auth:
@@ -19,3 +31,60 @@ instance_groups:
           static_configs:
           - targets:
             - kubernetes-broker-exporter.app.fr.cloud.gov:443
+
+- name: prometheus-tooling
+  instances: 1
+  vm_type: (( concat meta.environment "-prometheus" ))
+  persistent_disk_type: (( concat meta.environment "-prometheus-large" ))
+  stemcell: default
+  azs: (( grab meta.azs ))
+  networks:
+  - name: (( concat meta.environment "-monitoring" ))
+  jobs:
+  - name: prometheus
+    release: prometheus
+    properties:
+      prometheus:
+        external_labels:
+          federate: prometheus-tooling
+        scrape_configs:
+        - job_name: prometheus
+          static_configs:
+          - targets:
+            - localhost:9090
+        - job_name: bosh
+          scrape_interval: 1m
+          scrape_timeout: 1m
+          static_configs:
+          - targets:
+            - localhost:9190
+        - job_name: node
+          file_sd_configs:
+          - files:
+            - /var/vcap/store/bosh_exporter/bosh_target_groups.json
+          relabel_configs:
+          - source_labels: [__meta_bosh_job_process_name]
+            regex: node_exporter
+            action: keep
+          - source_labels: [__address__]
+            regex: "(.*)"
+            target_label: __address__
+            replacement: "${1}:9100"
+  - name: bosh_exporter
+    release: prometheus
+    properties:
+      bosh_exporter:
+        metrics:
+          environment: tooling
+
+- name: grafana
+  jobs:
+  - name: grafana
+    consumes:
+      prometheus: {from: prometheus-primary}
+
+- name: nginx
+  jobs:
+  - name: nginx
+    consumes:
+      prometheus: {from: prometheus-primary}
