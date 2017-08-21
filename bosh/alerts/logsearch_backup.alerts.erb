@@ -7,7 +7,7 @@ ALERT LogsearchBackupFileSize
   }
   ANNOTATIONS {
     summary = "Logsearch backup file size on environment {{$labels.environment}} is too low",
-    summary = "Logsearch backup file size on environment {{$labels.environment}} has been too low for 30m",
+    description = "Logsearch backup file size on environment {{$labels.environment}} has been too low for 30m",
   }
 
 ALERT LogsearchBackupLogCount
@@ -19,7 +19,7 @@ ALERT LogsearchBackupLogCount
   }
   ANNOTATIONS {
     summary = "Logsearch backup log count on environment {{$labels.environment}} is too low",
-    summary = "Logsearch backup log count on environment {{$labels.environment}} has been too low for 30m",
+    description = "Logsearch backup log count on environment {{$labels.environment}} has been too low for 30m",
   }
 
 ALERT LogsearchBackupRatio
@@ -31,5 +31,17 @@ ALERT LogsearchBackupRatio
   }
   ANNOTATIONS {
     summary = "Logsearch backup ratio on environment {{$labels.environment}} is too low",
-    summary = "Logsearch backup ratio on environment {{$labels.environment}} has been too low for 30m",
+    description = "Logsearch backup ratio on environment {{$labels.environment}} has been too low for 30m",
+  }
+
+ALERT LogsearchBackupExpired
+  IF time() - max(logsearch_backup_timestamp) > 60 * 30
+  FOR 5m
+  LABELS {
+    service = "logsearch-backup",
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "Logsearch timestamp on environment {{$labels.environment}} is too old",
+    description = "Logsearch timestamp on environment {{$labels.environment}} has been too old for 5m",
   }
