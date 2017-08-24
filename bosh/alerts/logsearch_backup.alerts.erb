@@ -1,0 +1,47 @@
+ALERT LogsearchBackupFileSize
+  IF logsearch_backup_file_size < <%= ENV['LOGSEARCH_FILE_SIZE_THRESHOLD'] %>
+  FOR 30m
+  LABELS {
+    service = "logsearch-backup",
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "Logsearch backup file size on environment {{$labels.environment}} is too low",
+    description = "Logsearch backup file size on environment {{$labels.environment}} has been too low for 30m",
+  }
+
+ALERT LogsearchBackupLogCount
+  IF logsearch_backup_log_count < <%= ENV['LOGSEARCH_LOG_COUNT_THRESHOLD'] %>
+  FOR 30m
+  LABELS {
+    service = "logsearch-backup",
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "Logsearch backup log count on environment {{$labels.environment}} is too low",
+    description = "Logsearch backup log count on environment {{$labels.environment}} has been too low for 30m",
+  }
+
+ALERT LogsearchBackupRatio
+  IF logsearch_backup_file_size / logsearch_backup_log_count < <%= ENV['LOGSEARCH_RATIO_THRESHOLD'] %>
+  FOR 30m
+  LABELS {
+    service = "logsearch-backup",
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "Logsearch backup ratio on environment {{$labels.environment}} is too low",
+    description = "Logsearch backup ratio on environment {{$labels.environment}} has been too low for 30m",
+  }
+
+ALERT LogsearchBackupExpired
+  IF time() - max(logsearch_backup_timestamp) > 60 * 30
+  FOR 5m
+  LABELS {
+    service = "logsearch-backup",
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "Logsearch timestamp on environment {{$labels.environment}} is too old",
+    description = "Logsearch timestamp on environment {{$labels.environment}} has been too old for 5m",
+  }

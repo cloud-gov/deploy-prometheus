@@ -17,6 +17,10 @@ jobs:
     - get: terraform-yaml
     - get: pipeline-tasks
   - task: prometheus-manifest
+    params:
+      LOGSEARCH_FILE_SIZE_THRESHOLD: 25000
+      LOGSEARCH_LOG_COUNT_THRESHOLD: 300
+      LOGSEARCH_RATIO_THRESHOLD: 50
     config: &manifest-config
       platform: linux
       image_resource:
@@ -34,6 +38,7 @@ jobs:
         args:
         - -exc
         - |
+          erb prometheus-config/bosh/alerts/logsearch_backup.alerts.erb > prometheus-config/bosh/alerts/logsearch_backup.alerts
           prometheus-config/bosh/generate-manifest.sh \
             prometheus-config/bosh/infrastructure-staging.yml \
             terraform-yaml/state.yml \
@@ -92,6 +97,10 @@ jobs:
     - get: terraform-yaml
     - get: pipeline-tasks
   - task: prometheus-manifest
+    params:
+      LOGSEARCH_FILE_SIZE_THRESHOLD: 3000000
+      LOGSEARCH_LOG_COUNT_THRESHOLD: 30000
+      LOGSEARCH_RATIO_THRESHOLD: 50
     config:
       <<: *manifest-config
       run:
@@ -99,6 +108,7 @@ jobs:
         args:
         - -exc
         - |
+          erb prometheus-config/bosh/alerts/logsearch_backup.alerts.erb > prometheus-config/bosh/alerts/logsearch_backup.alerts
           prometheus-config/bosh/generate-manifest.sh \
             prometheus-config/bosh/infrastructure-production.yml \
             terraform-yaml/state.yml \
