@@ -1,0 +1,32 @@
+ALERT AWSLogsGroupExpired
+  IF awslogs_loggroup_not_logging > 0
+  LABELS {
+    service = "awslogs",
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "CloudWatch Logs group {{$labels.group}} is not receiving logs",
+    description = "CloudWatch Logs group {{$labels.group}} has not received a log in the last hour",
+  }
+
+ALERT AWSLogsInstanceExpired
+  IF awslogs_instance_not_logging > 0
+  LABELS {
+    service = "awslogs",
+    severity = "warning",
+  }
+  ANNOTATIONS {
+    summary = "EC2 instance {{$labels.instance_id}} is not logging",
+    description = "EC2 instance {{$labels.instance_id}} is not logging",
+  }
+
+ALERT AWSLogsInstanceStopping
+  IF awslogs_instance_not_logging > 1
+  LABELS {
+    service = "awslogs",
+    severity = "critical",
+  }
+  ANNOTATIONS {
+    summary = "EC2 instance {{$labels.instance_id}} will be stopped due to not logging",
+    description = "EC2 instance {{$labels.instance_id}} will be stopped due to not logging",
+  }
