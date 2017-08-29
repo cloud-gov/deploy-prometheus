@@ -13,7 +13,6 @@ cat <<EOF > /tmp/monitor_loggroups
 kubernetes-development
 kubernetes-production
 kubernetes-staging
-this-log-group-will-alert-cnelson
 EOF
 
 echo "Starting log group check..."
