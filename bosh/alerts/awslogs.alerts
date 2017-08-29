@@ -9,6 +9,17 @@ ALERT AWSLogsGroupExpired
     description = "CloudWatch Logs group {{$labels.group}} has not received a log in the last hour",
   }
 
+ALERT AWSLogsCheckNotRunning
+  IF time() - awslogs_lastcheck > 7200
+  LABELS {
+    service = "awslogs",
+    severity = "critical",
+  }
+  ANNOTATIONS {
+    summary = "AWS Log Checker has not run in two hours.",
+    description = "Check https://ci.fr.cloud.gov/teams/main/pipelines/deploy-prometheus?groups=checks for failures",
+  }
+
 ALERT AWSLogsInstanceExpired
   IF awslogs_instance_not_logging > 0
   LABELS {

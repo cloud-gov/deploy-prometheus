@@ -60,7 +60,6 @@ cat <<EOF | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics
 awslogs_loggroup_not_logging {group="_GLOBAL"} ${STATUS}
 EOF
 
-
 echo "Finished group check. Checked ${GROUP_COUNT} groups."
 
 echo "Starting instance check..."
@@ -100,6 +99,8 @@ EOF
 done
 
 echo "Finished instance check. Checked $(cat /tmp/active_instances | wc -l) instances."
+
+echo "awslogs_lastcheck $(date +'%s')" | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs"
 
 # if we need to, stop an instance
 if [ ! -z "${target_instance}" ]; then
