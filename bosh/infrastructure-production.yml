@@ -30,7 +30,7 @@ instance_groups:
             password: (( param "specify kubernetes broker exporter password" ))
           static_configs:
           - targets:
-            - kubernetes-broker-exporter.app.fr.cloud.gov:443
+            - kubernetes-broker-exporter.app.cloud.gov:443
 
 - name: prometheus-tooling
   instances: 1
