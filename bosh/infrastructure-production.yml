@@ -40,6 +40,8 @@ instance_groups:
   azs: (( grab meta.azs ))
   networks:
   - name: (( concat meta.environment "-monitoring" ))
+  env:
+    persistent_disk_fs: xfs
   jobs:
   - name: prometheus
     release: prometheus
