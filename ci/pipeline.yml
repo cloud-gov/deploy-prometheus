@@ -184,7 +184,7 @@ resources:
   source:
     region: {{prometheus-staging-private-region}}
     bucket_name: {{prometheus-staging-private-bucket}}
-    secrets_file: prometheus-staging.yml
+    secrets_file: staging-prometheus.yml
     secrets_passphrase: {{prometheus-staging-private-passphrase}}
     bosh_cert: bosh-tooling.pem
 
@@ -193,7 +193,7 @@ resources:
   source:
     region: {{prometheus-production-private-region}}
     bucket_name: {{prometheus-production-private-bucket}}
-    secrets_file: prometheus-production.yml
+    secrets_file: production-prometheus.yml
     secrets_passphrase: {{prometheus-production-private-passphrase}}
     bosh_cert: bosh-tooling.pem
 
