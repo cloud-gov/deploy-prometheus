@@ -133,7 +133,7 @@ jobs:
     - get: pipeline-tasks
   - task: prometheus-manifest
     params:
-      LOGSEARCH_FILE_SIZE_THRESHOLD: 3000000
+      LOGSEARCH_FILE_SIZE_THRESHOLD: 3e+06
       LOGSEARCH_LOG_COUNT_THRESHOLD: 30000
       LOGSEARCH_RATIO_THRESHOLD: 50
     config:
