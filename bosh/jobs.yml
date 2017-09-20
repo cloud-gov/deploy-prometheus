@@ -48,12 +48,14 @@ instance_groups:
         - (( file "bosh/alerts/kubernetes_broker.alerts" ))
         - (( file "bosh/alerts/logsearch_backup.alerts" ))
         - (( file "bosh/alerts/awslogs.alerts" ))
+        - (( file "bosh/alerts/bosh_unknown_instance.alerts" ))
         scrape_configs:
         - job_name: prometheus
           static_configs:
           - targets:
             - localhost:9090
         - job_name: pushgateway
+          honor_labels: true
           static_configs:
           - targets:
             - localhost:9091

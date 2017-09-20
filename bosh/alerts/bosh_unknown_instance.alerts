@@ -1,0 +1,21 @@
+ALERT BoshUnknownInstanceCheckExpired
+  IF time() - push_time_seconds{job="boshunknowninstance-lastcheck"} > 7200
+  LABELS {
+    service = "bosh_unknown_iaas_instance",
+    severity = "critical",
+  }
+  ANNOTATIONS {
+    summary = "Bosh Unknown Instance Check for VPC {{$labels.instance}} has not run in two hours",
+    description = "Check bosh director {{$labels.instance}} for errors",
+  }
+
+ALERT BoshUnknownInstanceExpired
+  IF bosh_unknown_iaas_instance > 0
+  LABELS {
+    service = "bosh_unknown_iaas_instance",
+    severity = "critical",
+  }
+  ANNOTATIONS {
+    summary = "Bosh found unknown IaaS instance {{$labels.iaas_id}} in VPC {{$labels.vpc_name}}",
+    description = "Unknown IaaS instance {{$labels.iaas_id}} with bosh id {{$labels.bosh_id}} found in VPC {{$labels.vpc_name}}",
+  }
