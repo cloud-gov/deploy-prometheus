@@ -18,17 +18,17 @@ EOF
 echo "Starting log group check..."
 GROUP_COUNT=0
 
-GROUPS=`aws logs describe-log-groups | jq -r .logGroups[].logGroupName`
+LOG_GROUPS=$(aws logs describe-log-groups | jq -r .logGroups[].logGroupName)
 
 # Clear existing metrics from all log groups
 # See https://github.com/prometheus/pushgateway/issues/117
-for GROUP in ${GROUPS}; do
+for GROUP in ${LOG_GROUPS}; do
     NICE_GROUP=$(echo $GROUP | tr /. - | sed s/^-//)
     curl -X DELETE "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs/instance/${NICE_GROUP}"
 done
 curl -X DELETE "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs/instance/_GLOBAL"
 
-for GROUP in ${GROUPS}; do
+for GROUP in ${LOG_GROUPS}; do
     LAST_UPDATE=$(aws logs describe-log-streams --log-group-name=$GROUP --order-by LastEventTime --descending --max-items 1 | jq .logStreams[].lastEventTimestamp)
     if [ -z "${LAST_UPDATE}" ] || [ "${LAST_UPDATE}" == "null" ]; then
         LAST_UPDATE=0
@@ -74,7 +74,7 @@ echo "Finished group check. Checked ${GROUP_COUNT} groups."
 echo "Starting instance check..."
 
 # list all running instances
-aws ec2 describe-instances --max-items 1000  | jq -r '.Reservations[].Instances[] | select(.State.Name == "running") | .InstanceId' > /tmp/active_instances
+aws ec2 describe-instances --max-items 1000 | jq -r '.Reservations[].Instances[] | select(.State.Name == "running") | .InstanceId' > /tmp/active_instances
 
 target_instance=""
 # Emit a metric for each entry in our heatbeat group, where host = logStreamName, and metric = seconds since last update
