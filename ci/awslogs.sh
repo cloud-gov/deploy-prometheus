@@ -18,7 +18,17 @@ EOF
 echo "Starting log group check..."
 GROUP_COUNT=0
 
-for GROUP in  `aws logs describe-log-groups | jq -r .logGroups[].logGroupName`; do
+GROUPS=`aws logs describe-log-groups | jq -r .logGroups[].logGroupName`
+
+# Clear existing metrics from all log groups
+# See https://github.com/prometheus/pushgateway/issues/117
+for GROUP in ${GROUPS}; do
+    NICE_GROUP=$(echo $GROUP | tr /. - | sed s/^-//)
+    curl -X DELETE "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs/instance/${NICE_GROUP}"
+done
+curl -X DELETE "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs/instance/_GLOBAL"
+
+for GROUP in ${GROUPS}; do
     LAST_UPDATE=$(aws logs describe-log-streams --log-group-name=$GROUP --order-by LastEventTime --descending --max-items 1 | jq .logStreams[].lastEventTimestamp)
     if [ -z "${LAST_UPDATE}" ] || [ "${LAST_UPDATE}" == "null" ]; then
         LAST_UPDATE=0
