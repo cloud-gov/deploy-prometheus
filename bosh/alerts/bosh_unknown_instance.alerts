@@ -9,6 +9,18 @@ ALERT BoshUnknownInstanceCheckExpired
     description = "Check bosh director {{$labels.vpc_name}} for errors",
   }
 
+ALERT BoshUnknownInstanceCheckAbsent
+  IF absent(push_time_seconds{job="bosh_unknown_instance"}) == 1
+  FOR 1h
+  LABELS {
+    service = "bosh_unknown_iaas_instance",
+    severity = "critical",
+  }
+  ANNOTATIONS {
+    summary = "Bosh Unknown Instance Check for VPC {{$labels.vpc_name}} has not run for one hour",
+    description = "Check bosh director {{$labels.vpc_name}} for errors",
+  }
+
 ALERT BoshUnknownInstanceExpired
   IF bosh_unknown_iaas_instance > 0
   LABELS {
