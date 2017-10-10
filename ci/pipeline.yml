@@ -46,6 +46,8 @@ jobs:
       trigger: true
     - get: prometheus-release
       trigger: true
+    - get: oauth2-proxy-release
+      trigger: true
     - get: prometheus-stemcell
       trigger: true
     - get: terraform-yaml
@@ -90,6 +92,7 @@ jobs:
       manifest: prometheus-manifest/manifest.yml
       releases:
       - prometheus-release/*.tgz
+      - oauth2-proxy-release/*.tgz
       stemcells:
       - prometheus-stemcell/*.tgz
   on_failure:
@@ -124,6 +127,9 @@ jobs:
       resource: common-production
       trigger: true
     - get: prometheus-release
+      passed: [deploy-prometheus-staging]
+      trigger: true
+    - get: oauth2-proxy-release
       passed: [deploy-prometheus-staging]
       trigger: true
     - get: prometheus-stemcell
@@ -201,6 +207,13 @@ resources:
   type: bosh-io-release
   source:
     repository: cloudfoundry-community/prometheus-boshrelease
+
+- name: oauth2-proxy-release
+  type: s3-iam
+  source:
+    bucket: {{s3-bosh-releases-bucket}}
+    regexp: oauth2-proxy-(.*).tgz
+    region_name: {{aws-region}}
 
 - name: prometheus-config
   type: git
