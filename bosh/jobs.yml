@@ -151,13 +151,10 @@ instance_groups:
         server:
           root_url: (( concat "https://grafana." meta.domain ))
         auth:
-          generic_oauth:
+          anonymous:
             enabled: true
-            allow_sign_up: true
-            scopes: openid,metrics.read
-            auth_url: https://opslogin.fr.cloud.gov/oauth/authorize
-            token_url: https://opslogin.fr.cloud.gov/oauth/token
-            api_url: https://opslogin.fr.cloud.gov/userinfo
+          basic:
+            enabled: false
         dashboards:
           json:
             enabled: true
@@ -201,11 +198,22 @@ instance_groups:
     properties:
       nginx:
         prometheus:
-          http_port: 80
+          http_port: 8081
           server_name: (( concat "prometheus." meta.domain ))
         alertmanager:
-          http_port: 80
+          http_port: 8081
           server_name: (( concat "alertmanager." meta.domain ))
         grafana:
-          http_port: 80
+          http_port: 8081
           server_name: (( concat "grafana." meta.domain ))
+  - name: oauth2-proxy
+    release: oauth2-proxy
+    properties:
+      address: http://0.0.0.0:8080
+      upstream: http://127.0.0.1:8081
+      provider: oidc
+      client_id: (( param "specify oauth-proxy client" ))
+      client_secret: (( param "specify oauth-proxy client secret" ))
+      cookie_secret: (( param "specify oauth-proxy cookie secret" ))
+      oidc_issuer_url: https://opslogin.fr.cloud.gov/oauth/token
+      email_domain: gsa.gov
