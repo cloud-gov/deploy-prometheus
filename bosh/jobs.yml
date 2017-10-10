@@ -153,6 +153,7 @@ instance_groups:
         auth:
           anonymous:
             enabled: true
+            org_role: Admin
           basic:
             enabled: false
         dashboards:
