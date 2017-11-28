@@ -227,20 +227,22 @@ resources:
     name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
 
 - name: prometheus-staging-deployment
-  type: 18f-bosh-deployment
+  type: bosh-deployment
   source:
     target: {{prometheus-staging-deployment-bosh-target}}
-    client_id: {{prometheus-staging-deployment-bosh-uaa-client-id}}
+    client: {{prometheus-staging-deployment-bosh-uaa-client-id}}
     client_secret: {{prometheus-staging-deployment-bosh-uaa-client-secret}}
-    deployment: {{prometheus-staging-deployment-bosh-deployment}}
+    ca_cert: {{prometheus-staging-bosh-ca-cert}}
+    deployment: prometheus-staging
 
 - name: prometheus-production-deployment
-  type: 18f-bosh-deployment
+  type: bosh-deployment
   source:
     target: {{prometheus-production-deployment-bosh-target}}
-    client_id: {{prometheus-production-deployment-bosh-uaa-client-id}}
+    client: {{prometheus-production-deployment-bosh-uaa-client-id}}
     client_secret: {{prometheus-production-deployment-bosh-uaa-client-secret}}
-    deployment: {{prometheus-production-deployment-bosh-deployment}}
+    ca_cert: {{prometheus-production-bosh-ca-cert}}
+    deployment: prometheus-production
 
 - name: pipeline-tasks
   type: git
@@ -271,10 +273,10 @@ resource_types:
   source:
     repository: cfcommunity/slack-notification-resource
 
-- name: 18f-bosh-deployment
+- name: bosh-deployment
   type: docker-image
   source:
-    repository: 18fgsa/bosh-deployment-resource
+    repository: cloudfoundry/bosh-deployment-resource
 
 - name: cg-common
   type: docker-image
