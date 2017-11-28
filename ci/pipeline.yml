@@ -7,6 +7,7 @@ groups:
 - name: checks
   jobs:
   - awslogs-check
+  - aws-mfa-check
 
 jobs:
 - name: awslogs-check
@@ -33,6 +34,21 @@ jobs:
         :flashing-alert: Instances should be stopped due to failure to log, but that's commented out pending SCR approval!
         <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
       text_file: stopping/instance-id
+
+- name: aws-mfa-check
+  serial_groups: [production]
+  plan:
+  - aggregate:
+    - get: aws-mfa-timer
+      trigger: true
+    - get: prometheus-config
+      resource: prometheus-config
+  - task: aws-mfa
+    file: prometheus-config/ci/aws-mfa.yml
+    tags: [iaas]
+    params:
+      AWS_DEFAULT_REGION: {{aws-region}}
+      GATEWAY_HOST: {{gateway-host}}
 
 - name: deploy-prometheus-staging
   serial: true
@@ -263,6 +279,11 @@ resources:
     region_name: {{aws-region}}
 
 - name: awslogs-timer
+  type: time
+  source:
+    interval: 30m
+
+- name: aws-mfa-timer
   type: time
   source:
     interval: 30m
