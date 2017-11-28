@@ -50,6 +50,7 @@ instance_groups:
         - (( file "bosh/alerts/awslogs.alerts" ))
         - (( file "bosh/alerts/aws_iam_mfa.alerts" ))
         - (( file "bosh/alerts/bosh_unknown_instance.alerts" ))
+        - (( file "bosh/alerts/nessus.alerts" ))
         scrape_configs:
         - job_name: prometheus
           static_configs:
