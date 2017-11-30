@@ -1,0 +1,10 @@
+ALERT NessusManagerLicenseInvalid
+  IF nessus_manager_license_invalid != 0
+  LABELS {
+    service = "nessus_manager",
+    severity = "critical",
+  }
+  ANNOTATIONS {
+    summary = "Nessus Manager license is invalid",
+    description = "https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/",
+  }

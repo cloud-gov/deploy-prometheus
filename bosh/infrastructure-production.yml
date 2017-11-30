@@ -20,6 +20,7 @@ instance_groups:
             match[]:
             - '{__name__=~"bosh_.*"}'
             - '{__name__=~"node_.*"}'
+            - '{__name__=~"nessus_.*"}'
           static_configs:
           - targets:
             - 0.prometheus-tooling.production-monitoring.prometheus-production.toolingbosh:9090
