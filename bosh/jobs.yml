@@ -75,10 +75,6 @@ instance_groups:
           static_configs:
           - targets:
             - localhost:9188
-        - job_name: influxdb_exporter
-          static_configs:
-          - targets:
-            - localhost:9122
         - job_name: elasticsearch_exporter
           static_configs:
           - targets:
@@ -115,8 +111,6 @@ instance_groups:
         metrics:
           environment: (( grab meta.environment ))
   - name: kube_state_metrics_exporter
-    release: prometheus
-  - name: influxdb_exporter
     release: prometheus
   - name: elasticsearch_exporter
     release: prometheus
