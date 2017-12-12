@@ -246,18 +246,18 @@ resources:
   type: bosh-deployment
   source:
     target: {{prometheus-staging-deployment-bosh-target}}
-    client: {{prometheus-staging-deployment-bosh-uaa-client-id}}
-    client_secret: {{prometheus-staging-deployment-bosh-uaa-client-secret}}
-    ca_cert: {{prometheus-staging-bosh-ca-cert}}
+    client: ci
+    client_secret: {{tooling_bosh_uaa_ci_client_secret}}
+    ca_cert: {{common_ca_cert}}
     deployment: prometheus-staging
 
 - name: prometheus-production-deployment
   type: bosh-deployment
   source:
     target: {{prometheus-production-deployment-bosh-target}}
-    client: {{prometheus-production-deployment-bosh-uaa-client-id}}
-    client_secret: {{prometheus-production-deployment-bosh-uaa-client-secret}}
-    ca_cert: {{prometheus-production-bosh-ca-cert}}
+    client: ci
+    client_secret: {{tooling_bosh_uaa_ci_client_secret}}
+    ca_cert: {{common_ca_cert}}
     deployment: prometheus-production
 
 - name: pipeline-tasks
