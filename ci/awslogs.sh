@@ -84,7 +84,9 @@ for streaminfo in $(aws logs describe-log-streams --output text --max-items 1000
     last=$(( $(echo ${streaminfo} | cut -f2) / 1000 ))
 
     # if the instance is no longer running, then we don't care if it's logging
+    # and make sure that we clear it from push gw See https://github.com/prometheus/pushgateway/issues/117
     if ! grep "${aws_id}" /tmp/active_instances 1>/dev/null 2>&1; then
+        curl -X DELETE "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs/instance/${aws_id}"
         continue
     fi
 
