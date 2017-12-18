@@ -1,3 +1,6 @@
 azs: [z1]
 environment: production
 domain: fr.cloud.gov
+logsearch_file_size_threshold: 3e+06
+logsearch_log_count_threshold: 30000
+logsearch_ratio_threshold: 50

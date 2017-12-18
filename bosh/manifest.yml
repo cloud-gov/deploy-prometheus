@@ -1,3 +1,21 @@
+name: prometheus-((environment))
+
+releases:
+- {name: prometheus, version: latest}
+- {name: oauth2-proxy, version: latest}
+
+stemcells:
+- alias: default
+  name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
+  version: latest
+
+update:
+  canaries: 1
+  max_in_flight: 32
+  canary_watch_time: 1000-600000
+  update_watch_time: 1000-600000
+  serial: false
+
 instance_groups:
 - name: alertmanager
   instances: 1
@@ -51,13 +69,6 @@ instance_groups:
         - /var/vcap/jobs/elasticsearch_alerts/*.alerts
         - /var/vcap/jobs/concourse_alerts/*.alerts
         - /var/vcap/jobs/prometheus_alerts/*.alerts
-        custom_rules:
-        - (( file "bosh/alerts/kubernetes_broker.alerts" ))
-        - (( file "bosh/alerts/logsearch_backup.alerts" ))
-        - (( file "bosh/alerts/awslogs.alerts" ))
-        - (( file "bosh/alerts/aws_iam_mfa.alerts" ))
-        - (( file "bosh/alerts/bosh_unknown_instance.alerts" ))
-        - (( file "bosh/alerts/nessus.alerts" ))
         scrape_configs:
         - job_name: prometheus
           static_configs:
@@ -82,10 +93,6 @@ instance_groups:
           static_configs:
           - targets:
             - localhost:9188
-        - job_name: influxdb_exporter
-          static_configs:
-          - targets:
-            - localhost:9122
         - job_name: elasticsearch_exporter
           file_sd_configs:
           - files:
@@ -130,11 +137,11 @@ instance_groups:
     properties:
       firehose_exporter:
         uaa:
-          url: https://login.((meta.domain))
+          url: https://login.((domain))
           client_id: ((firehose-client-id))
           client_secret: ((firehose-client-secret))
         doppler:
-          url: wss://doppler.((meta.domain)):443
+          url: wss://doppler.((domain)):443
           subscription_id: prometheus
         metrics:
           environment: ((environment))
@@ -144,8 +151,6 @@ instance_groups:
       kube_state_metrics_exporter:
         apiserver: ((kubernetes-apiserver-url))
         kubeconfig: ((kubernetes-config))
-  - name: influxdb_exporter
-    release: prometheus
   - name: bosh_alerts
     release: prometheus
     properties:
@@ -188,6 +193,8 @@ instance_groups:
       grafana:
         server:
           root_url: https://grafana.((domain))
+        security:
+          admin_password: ((grafana-admin-password))
         auth:
           anonymous:
             enabled: true
