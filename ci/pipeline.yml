@@ -66,7 +66,6 @@ jobs:
       trigger: true
     - get: prometheus-stemcell
       trigger: true
-    - get: terraform-yaml
     - get: pipeline-tasks
   - task: prometheus-manifest
     params:
@@ -81,7 +80,6 @@ jobs:
           repository: 18fgsa/concourse-task
       inputs:
       - name: prometheus-config
-      - name: terraform-yaml
       - name: common
       outputs:
       - name: prometheus-manifest
@@ -92,9 +90,6 @@ jobs:
         - |
           erb prometheus-config/bosh/alerts/logsearch_backup.alerts.erb > prometheus-config/bosh/alerts/logsearch_backup.alerts
           prometheus-config/bosh/generate-manifest.sh \
-            prometheus-config/bosh/infrastructure-staging.yml \
-            terraform-yaml/state.yml \
-            common/secrets.yml \
             > prometheus-manifest/manifest.yml
   - &lint-manifest
     task: lint-manifest
@@ -111,6 +106,11 @@ jobs:
       - oauth2-proxy-release/*.tgz
       stemcells:
       - prometheus-stemcell/*.tgz
+      ops_files:
+      - prometheus-config/bosh/opsfiles/staging.yml
+      vars_files:
+      - prometheus-config/bosh/varsfiles/staging.yml
+      - common/secrets.yml
   on_failure:
     put: slack
     params:
@@ -151,7 +151,6 @@ jobs:
     - get: prometheus-stemcell
       passed: [deploy-prometheus-staging]
       trigger: true
-    - get: terraform-yaml
     - get: pipeline-tasks
   - task: prometheus-manifest
     params:
@@ -167,13 +166,16 @@ jobs:
         - |
           erb prometheus-config/bosh/alerts/logsearch_backup.alerts.erb > prometheus-config/bosh/alerts/logsearch_backup.alerts
           prometheus-config/bosh/generate-manifest.sh \
-            prometheus-config/bosh/infrastructure-production.yml \
-            terraform-yaml/state.yml \
-            common/secrets.yml \
             > prometheus-manifest/manifest.yml
   - *lint-manifest
   - put: prometheus-production-deployment
-    params: *deploy-params
+    params:
+      <<: *deploy-params
+      ops_files:
+      - prometheus-config/bosh/opsfiles/production.yml
+      vars_files:
+      - prometheus-config/bosh/varsfiles/production.yml
+      - common/secrets.yml
   on_failure:
     put: slack
     params:
@@ -270,13 +272,6 @@ resources:
   type: slack-notification
   source:
     url: {{slack-webhook-url}}
-
-- name: terraform-yaml
-  type: s3-iam
-  source:
-    bucket: {{tf-state-bucket-tooling}}
-    versioned_file: {{tf-state-file-tooling}}
-    region_name: {{aws-region}}
 
 - name: awslogs-timer
   type: time
