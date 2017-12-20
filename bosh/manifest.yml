@@ -19,7 +19,7 @@ update:
 instance_groups:
 - name: alertmanager
   instances: 1
-  vm_type: ((environment))-prometheus
+  vm_type: ((environment))-prometheus-small
   persistent_disk_type: ((environment))-prometheus-small
   stemcell: default
   azs: ((azs))
@@ -46,7 +46,7 @@ instance_groups:
 
 - name: prometheus
   instances: 1
-  vm_type: ((environment))-prometheus
+  vm_type: ((environment))-prometheus-large
   persistent_disk_type: ((environment))-prometheus-large
   stemcell: default
   azs: ((azs))
@@ -180,7 +180,7 @@ instance_groups:
 
 - name: grafana
   instances: 1
-  vm_type: ((environment))-prometheus
+  vm_type: ((environment))-prometheus-small
   persistent_disk_type: ((environment))-prometheus-small
   stemcell: default
   azs: ((azs))
@@ -230,7 +230,7 @@ instance_groups:
 
 - name: nginx
   instances: 1
-  vm_type: ((environment))-prometheus
+  vm_type: ((environment))-prometheus-small
   persistent_disk_type: ((environment))-prometheus-small
   vm_extensions:
   - ((environment))-prometheus-lb
