@@ -1,0 +1,218 @@
+# AWS IAM MFA alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  value: |
+    ALERT AWSMFADisabled
+      IF aws_iam_user_mfa != 1
+      LABELS {
+        service = "aws_iam",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "AWS IAM user {{$labels.instance}} does not have MFA enabled",
+        description = "Remind user {{$labels.instance}} to enable MFA",
+      }
+
+    ALERT AWSMFANotRunning
+      IF time() - aws_iam_user_lastcheck > 7200
+      LABELS {
+        service = "aws_iam",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "AWS IAM check is not running",
+        description = "Check https://ci.fr.cloud.gov/teams/main/pipelines/deploy-prometheus?groups=checks for failures",
+      }
+
+# CloudWatch logs alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  value: |
+    ALERT AWSLogsGroupExpired
+      IF awslogs_loggroup_not_logging > 0
+      LABELS {
+        service = "awslogs",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "CloudWatch Logs group {{$labels.group}} is not receiving logs",
+        description = "CloudWatch Logs group {{$labels.group}} has not received a log in the last hour",
+      }
+
+    ALERT AWSLogsCheckNotRunning
+      IF time() - awslogs_lastcheck > 7200
+      LABELS {
+        service = "awslogs",
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "AWS Log Checker has not run in two hours.",
+        description = "Check https://ci.fr.cloud.gov/teams/main/pipelines/deploy-prometheus?groups=checks for failures",
+      }
+
+    ALERT AWSLogsInstanceExpired
+      IF awslogs_instance_not_logging > 0
+      LABELS {
+        service = "awslogs",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "EC2 instance {{$labels.instance_id}} is not logging",
+        description = "EC2 instance {{$labels.instance_id}} is not logging",
+      }
+
+    ALERT AWSLogsInstanceStopping
+      IF awslogs_instance_not_logging > 1
+      LABELS {
+        service = "awslogs",
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "EC2 instance {{$labels.instance_id}} will be stopped due to not logging",
+        description = "EC2 instance {{$labels.instance_id}} will be stopped due to not logging",
+      }
+
+# BOSH unknown instance alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  value: |
+    ALERT BoshUnknownInstanceCheckExpired
+      IF time() - push_time_seconds{job="boshunknowninstance-lastcheck"} > 7200
+      LABELS {
+        service = "bosh_unknown_iaas_instance",
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "Bosh Unknown Instance Check for VPC {{$labels.instance}} has not run in two hours",
+        description = "Check bosh director {{$labels.instance}} for errors",
+      }
+
+    ALERT BoshUnknownInstanceExpired
+      IF bosh_unknown_iaas_instance > 0
+      LABELS {
+        service = "bosh_unknown_iaas_instance",
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "Bosh found unknown IaaS instance {{$labels.iaas_id}} in VPC {{$labels.vpc_name}}",
+        description = "Unknown IaaS instance {{$labels.iaas_id}} with bosh id {{$labels.bosh_id}} found in VPC {{$labels.vpc_name}}",
+      }
+
+# Kubernetes broker alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  value: |
+    ALERT BrokeredElasticsearchAlive
+      IF kubernetes_broker_elasticsearch_alive != 1
+      FOR 5m
+      LABELS {
+        service = "kubernetes-broker-elasticsearch",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "Brokered elasticsearch instance {{$labels.instance_guid}} is not responding",
+        description = "Brokered elasticsearch instance {{$labels.instance_guid}} has not been responding for 5m",
+      }
+
+    ALERT BrokeredElasticsearchHealthy
+      IF kubernetes_broker_elasticsearch_healthy != 1
+      FOR 5m
+      LABELS {
+        service = "kubernetes-broker-elasticsearch",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "Brokered elasticsearch instance {{$labels.instance_guid}} is not healthy",
+        description = "Brokered elasticsearch instance {{$labels.instance_guid}} has not been healthy for 5m",
+      }
+
+    ALERT BrokeredRedisAlive
+      IF kubernetes_broker_redis_alive != 1
+      FOR 5m
+      LABELS {
+        service = "kubernetes-broker-redis",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "Brokered redis instance {{$labels.instance_guid}} is not responding",
+        description = "Brokered redis instance {{$labels.instance_guid}} has not been responding for 5m",
+      }
+
+    ALERT BrokeredRedisHealthy
+      IF kubernetes_broker_redis_healthy != 1
+      FOR 5m
+      LABELS {
+        service = "kubernetes-broker-redis",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "Brokered redis instance {{$labels.instance_guid}} is not healthy",
+        description = "Brokered redis instance {{$labels.instance_guid}} has not been healthy for 5m",
+      }
+
+# Logsearch backup alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  value: |
+    ALERT LogsearchBackupFileSize
+      IF logsearch_backup_file_size < ((logsearch_file_size_threshold))
+      FOR 30m
+      LABELS {
+        service = "logsearch-backup",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "Logsearch backup file size on environment {{$labels.environment}} is too low",
+        description = "Logsearch backup file size on environment {{$labels.environment}} has been too low for 30m",
+      }
+
+    ALERT LogsearchBackupLogCount
+      IF logsearch_backup_log_count < ((logsearch_log_count_threshold))
+      FOR 30m
+      LABELS {
+        service = "logsearch-backup",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "Logsearch backup log count on environment {{$labels.environment}} is too low",
+        description = "Logsearch backup log count on environment {{$labels.environment}} has been too low for 30m",
+      }
+
+    ALERT LogsearchBackupRatio
+      IF logsearch_backup_file_size / logsearch_backup_log_count < ((logsearch_ratio_threshold))
+      FOR 30m
+      LABELS {
+        service = "logsearch-backup",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "Logsearch backup ratio on environment {{$labels.environment}} is too low",
+        description = "Logsearch backup ratio on environment {{$labels.environment}} has been too low for 30m",
+      }
+
+    ALERT LogsearchBackupExpired
+      IF time() - max(logsearch_backup_timestamp) > 60 * 30
+      FOR 5m
+      LABELS {
+        service = "logsearch-backup",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "Logsearch timestamp on environment {{$labels.environment}} is too old",
+        description = "Logsearch timestamp on environment {{$labels.environment}} has been too old for 5m",
+      }
+
+# Nessus alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  value: |
+    ALERT NessusManagerLicenseInvalid
+      IF nessus_manager_license_invalid != 0
+      LABELS {
+        service = "nessus_manager",
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "Nessus Manager license is invalid",
+        description = "https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/",
+      }

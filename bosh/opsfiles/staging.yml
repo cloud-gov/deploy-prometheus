@@ -1,0 +1,23 @@
+# Add kubernetes broker exporters
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/scrape_configs/-
+  value:
+    job_name: kubernetes_broker_exporter_development
+    scheme: https
+    basic_auth:
+      username: ((kubernetes-broker-exporter-username-development))
+      password: ((kubernetes-broker-exporter-password-development))
+    static_configs:
+    - targets:
+      - kubernetes-broker-exporter.dev.us-gov-west-1.aws-us-gov.cloud.gov:443
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/scrape_configs/-
+  value:
+    job_name: kubernetes_broker_exporter_staging
+    scheme: https
+    basic_auth:
+      username: ((kubernetes-broker-exporter-username-staging))
+      password: ((kubernetes-broker-exporter-password-staging))
+    static_configs:
+    - targets:
+      - kubernetes-broker-exporter.fr-stage.cloud.gov:443
