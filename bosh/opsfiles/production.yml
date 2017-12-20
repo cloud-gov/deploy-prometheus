@@ -1,6 +1,7 @@
 # Scrape tooling prometheus via federation
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/scrape_configs/-
+  value:
     job_name: federate
     honor_labels: true
     metrics_path: /federate
@@ -74,19 +75,26 @@
       release: prometheus
       properties:
         bosh_exporter:
+          bosh:
+            url: ((tooling-bosh-url))
+            ca_cert: ((bosh-ca-cert))
+            uaa:
+              url: ((tooling-bosh-url)):8443
+              client_id: ((tooling-bosh-client-id))
+              client_secret: ((tooling-bosh-client-secret))
           metrics:
             environment: tooling
 
 # Disambiguate prometheus jobs
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/provides
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/provides?
   value:
     prometheus: {as: prometheus-primary}
 - type: replace
-  path: /instance_groups/name=grafana/jobs/name=grafana/conumes
+  path: /instance_groups/name=grafana/jobs/name=grafana/consumes?
   value:
     prometheus: {from: prometheus-primary}
 - type: replace
-  path: /instance_groups/name=nginx/jobs/name=nginx/conumes
+  path: /instance_groups/name=nginx/jobs/name=nginx/consumes?
   value:
     prometheus: {from: prometheus-primary}
