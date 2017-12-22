@@ -33,7 +33,7 @@
   value:
     name: prometheus-tooling
     instances: 1
-    vm_type: ((environment))-prometheus
+    vm_type: ((environment))-prometheus-large
     persistent_disk_type: ((environment))-prometheus-large
     stemcell: default
     azs: ((azs))
