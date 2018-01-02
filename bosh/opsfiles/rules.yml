@@ -216,3 +216,19 @@
         summary = "Nessus Manager license is invalid",
         description = "https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/",
       }
+
+# Kubernetes etcd alerts
+# Note: Only the leader emits metrics, so take max to ignore stale metrics
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  value: |
+    ALERT KubernetesEtcdBackupExpired
+      IF time() - max(kubernetes_etcd_backup) by (environment) > 1800
+      LABELS {
+        service = "kubernetes_etcd",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "Kubernetes etcd backup is out of date",
+        description = "Check kubernetes etcd backup",
+      }
