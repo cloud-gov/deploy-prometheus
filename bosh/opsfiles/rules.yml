@@ -217,6 +217,17 @@
         description = "https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/",
       }
 
+    ALERT NessusPluginsOutdated
+      IF nessus_manager_plugin_age > 7
+      LABELS {
+        service = "nessus_manager",
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "Nessus Manager plugins are more than 7 days old",
+        description = "https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/",
+      }
+
 # Kubernetes etcd alerts
 # Note: Only the leader emits metrics, so take max to ignore stale metrics
 - type: replace
