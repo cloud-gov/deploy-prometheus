@@ -243,3 +243,29 @@
         summary = "Kubernetes etcd backup is out of date",
         description = "Check kubernetes etcd backup",
       }
+
+# UAA Client Audit alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  value: |
+    ALERT UAAClientAuditUnexpectedClient
+      IF uaa_client_audit != 1
+      LABELS {
+        service = "uaaclient",
+        severity = "warning",
+      }
+      ANNOTATIONS {
+        summary = "UAA Client {{$labels.instance}} is not expected",
+        description = "UAA Client {{$labels.instance}} exists but is not expected",
+      }
+
+    ALERT UAAClientAuditNotRunning
+      IF time() - uaa_client_audit_lastcheck > 7200
+      LABELS {
+        service = "uaaclient",
+        severity = "critical",
+      }
+      ANNOTATIONS {
+        summary = "UAA Client Audit has not run in two hours.",
+        description = "Check https://ci.fr.cloud.gov/teams/main/pipelines/deploy-cf-deployment for failures",
+      }
