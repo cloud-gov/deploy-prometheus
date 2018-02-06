@@ -251,18 +251,19 @@
     ALERT UAAClientAuditUnexpectedClient
       IF uaa_client_audit != 1
       LABELS {
-        service = "uaaclient",
+        service = "uaa_client_audit",
         severity = "warning",
+        uaa = "{{$labels.uaa_url}}",
       }
       ANNOTATIONS {
-        summary = "UAA Client {{$labels.instance}} is not expected",
-        description = "UAA Client {{$labels.instance}} exists but is not expected",
+        summary = "UAA Client {{$labels.instance}} is not expected for {{$labels.uaa_url}}",
+        description = "UAA Client {{$labels.instance}} exists but is not expected for {{$labels.uaa_url}}",
       }
 
     ALERT UAAClientAuditNotRunning
       IF time() - uaa_client_audit_lastcheck > 7200
       LABELS {
-        service = "uaaclient",
+        service = "uaa_client_audit",
         severity = "critical",
       }
       ANNOTATIONS {
