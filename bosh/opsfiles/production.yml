@@ -18,14 +18,14 @@
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/scrape_configs/-
   value:
-    job_name: kubernetes_broker_exporter_staging
+    job_name: kubernetes_broker_exporter
     scheme: https
     basic_auth:
       username: ((kubernetes-broker-exporter-username))
       password: ((kubernetes-broker-exporter-password))
     static_configs:
     - targets:
-      - kubernetes-broker-exporter.fr-stage.cloud.gov:443
+      - kubernetes-broker-exporter.app.cloud.gov:443
 
 # Add tooling prometheus
 - type: replace
