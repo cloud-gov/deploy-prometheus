@@ -110,6 +110,22 @@ https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/alerts/kubernetes_b
 ### Guidance:
 A kubernetes brokered elasticsearch instance has been unhealthy for over 5 minutes. Review the relevant kubernetes pod status and logs for more details.
 
+## NessusManagerLicenseInvalid
+### Source data:
+https://github.com/18F/cg-nessus-manager-boshrelease/blob/master/jobs/nessus-manager/templates/bin/health.sh#L4
+### Rule body:
+https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L209
+### Guidance:
+Nessus manager is reporting a license issue. See https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/ for more details.
+
+## NessusPluginsOutdated
+### Source data:
+https://github.com/18F/cg-nessus-manager-boshrelease/blob/master/jobs/nessus-manager/templates/bin/health.sh#L7
+### Rule body:
+https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L220
+### Guidance:
+Nessus plugins have not been updated in over 7 days. Outdated plugins will eventually cause recently published vulnerabilities to go undetected. See https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/ for more details.
+
 ## UAAClientAuditUnexpectedClient
 ### Source data:
 https://github.com/18F/cg-deploy-cf/blob/master/ci/uaa-client-audit.sh
