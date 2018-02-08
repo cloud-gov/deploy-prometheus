@@ -195,6 +195,8 @@ instance_groups:
           root_url: https://grafana.((domain))
         security:
           admin_password: ((grafana-admin-password))
+        session:
+          cookie_secure: "true"
         auth:
           anonymous:
             enabled: true
