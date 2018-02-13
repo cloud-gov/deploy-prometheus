@@ -60,8 +60,8 @@ instance_groups:
     properties:
       prometheus:
         storage:
-          local:
-            retention: 720h
+          tsdb:
+            retention: 30d
         rule_files:
         - /var/vcap/jobs/bosh_alerts/*.alerts.yml
         - /var/vcap/jobs/cloudfoundry_alerts/*.alerts.yml
