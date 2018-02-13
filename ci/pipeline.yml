@@ -77,7 +77,7 @@ jobs:
       stemcells:
       - prometheus-stemcell/*.tgz
       ops_files:
-      - prometheus-config/bosh/opsfiles/rules.yml
+      # - prometheus-config/bosh/opsfiles/rules.yml
       - prometheus-config/bosh/opsfiles/staging.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/staging.yml
@@ -127,7 +127,7 @@ jobs:
     params:
       <<: *deploy-params
       ops_files:
-      - prometheus-config/bosh/opsfiles/rules.yml
+      # - prometheus-config/bosh/opsfiles/rules.yml
       - prometheus-config/bosh/opsfiles/production.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/production.yml
@@ -177,10 +177,17 @@ resources:
     secrets_passphrase: {{prometheus-production-private-passphrase}}
     bosh_cert: bosh-tooling.pem
 
+# TODO: Restore after upstream switches to prometheus 2.x
+# - name: prometheus-release
+#   type: bosh-io-release
+#   source:
+#     repository: cloudfoundry-community/prometheus-boshrelease
 - name: prometheus-release
-  type: bosh-io-release
+  type: s3-iam
   source:
-    repository: cloudfoundry-community/prometheus-boshrelease
+    bucket: {{s3-bosh-releases-bucket}}
+    regexp: prometheus-(.*).tgz
+    region_name: {{aws-region}}
 
 - name: oauth2-proxy-release
   type: s3-iam
