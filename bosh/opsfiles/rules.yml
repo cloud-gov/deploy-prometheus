@@ -1,6 +1,6 @@
 # AWS IAM MFA alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
   value: |
     ALERT AWSMFADisabled
       IF aws_iam_user_mfa != 1
@@ -26,7 +26,7 @@
 
 # CloudWatch logs alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
   value: |
     ALERT AWSLogsGroupExpired
       IF awslogs_loggroup_not_logging > 0
@@ -74,7 +74,7 @@
 
 # BOSH unknown instance alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
   value: |
     ALERT BoshUnknownInstanceCheckExpired
       IF time() - push_time_seconds{job="boshunknowninstance-lastcheck"} > 7200
@@ -100,7 +100,7 @@
 
 # Kubernetes broker alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
   value: |
     ALERT BrokeredElasticsearchAlive
       IF kubernetes_broker_elasticsearch_alive != 1
@@ -152,7 +152,7 @@
 
 # Logsearch backup alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
   value: |
     ALERT LogsearchBackupFileSize
       IF logsearch_backup_file_size < ((logsearch_file_size_threshold))
@@ -204,7 +204,7 @@
 
 # Nessus alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
   value: |
     ALERT NessusManagerLicenseInvalid
       IF nessus_manager_license_invalid != 0
@@ -231,7 +231,7 @@
 # Kubernetes etcd alerts
 # Note: Only the leader emits metrics, so take max to ignore stale metrics
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
   value: |
     ALERT KubernetesEtcdBackupExpired
       IF time() - max(kubernetes_etcd_backup) by (environment) > 1800
@@ -246,7 +246,7 @@
 
 # UAA Client Audit alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
   value: |
     ALERT UAAClientAuditUnexpectedClient
       IF uaa_client_audit != 1

@@ -55,7 +55,7 @@ instance_groups:
   env:
     persistent_disk_fs: xfs
   jobs:
-  - name: prometheus
+  - name: prometheus2
     release: prometheus
     properties:
       prometheus:
@@ -63,12 +63,12 @@ instance_groups:
           local:
             retention: 720h
         rule_files:
-        - /var/vcap/jobs/bosh_alerts/*.alerts
-        - /var/vcap/jobs/cloudfoundry_alerts/*.alerts
-        - /var/vcap/jobs/kubernetes_alerts/*.alerts
-        - /var/vcap/jobs/elasticsearch_alerts/*.alerts
-        - /var/vcap/jobs/concourse_alerts/*.alerts
-        - /var/vcap/jobs/prometheus_alerts/*.alerts
+        - /var/vcap/jobs/bosh_alerts/*.alerts.yml
+        - /var/vcap/jobs/cloudfoundry_alerts/*.alerts.yml
+        - /var/vcap/jobs/kubernetes_alerts/*.alerts.yml
+        - /var/vcap/jobs/elasticsearch_alerts/*.alerts.yml
+        - /var/vcap/jobs/concourse_alerts/*.alerts.yml
+        - /var/vcap/jobs/prometheus_alerts/*.alerts.yml
         scrape_configs:
         - job_name: prometheus
           static_configs:
