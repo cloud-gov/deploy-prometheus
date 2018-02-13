@@ -77,7 +77,7 @@ jobs:
       stemcells:
       - prometheus-stemcell/*.tgz
       ops_files:
-      # - prometheus-config/bosh/opsfiles/rules.yml
+      - prometheus-config/bosh/opsfiles/rules.yml
       - prometheus-config/bosh/opsfiles/staging.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/staging.yml
@@ -127,7 +127,7 @@ jobs:
     params:
       <<: *deploy-params
       ops_files:
-      # - prometheus-config/bosh/opsfiles/rules.yml
+      - prometheus-config/bosh/opsfiles/rules.yml
       - prometheus-config/bosh/opsfiles/production.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/production.yml
