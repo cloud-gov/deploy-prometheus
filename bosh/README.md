@@ -110,6 +110,40 @@ https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/alerts/kubernetes_b
 ### Guidance:
 A kubernetes brokered elasticsearch instance has been unhealthy for over 5 minutes. Review the relevant kubernetes pod status and logs for more details.
 
+## NessusManagerLicenseInvalid
+### Source data:
+https://github.com/18F/cg-nessus-manager-boshrelease/blob/master/jobs/nessus-manager/templates/bin/health.sh#L4
+### Rule body:
+https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L209
+### Guidance:
+Nessus manager is reporting a license issue. See https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/ for more details.
+
+## NessusPluginsOutdated
+### Source data:
+https://github.com/18F/cg-nessus-manager-boshrelease/blob/master/jobs/nessus-manager/templates/bin/health.sh#L7
+### Rule body:
+https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L220
+### Guidance:
+Nessus plugins have not been updated in over 7 days. Outdated plugins will eventually cause recently published vulnerabilities to go undetected. See https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/ for more details.
+
+## UAAClientAuditUnexpectedClient
+### Source data:
+https://github.com/18F/cg-deploy-cf/blob/master/ci/uaa-client-audit.sh
+### Rule body:
+https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L247
+### Guidance:
+An unexpected UAA Client has been detected on this UAA. Review the UAA Client name and usage, and add the client in https://github.com/18F/cg-deploy-cf/blob/master/bosh/opsfiles/clients.yml if necessary.
+
+If you cannot identify the UAA Client detected follow the security incident response guide.
+
+## UAAClientAuditNotRunning
+### Source data:
+https://github.com/18F/cg-deploy-cf/blob/master/ci/uaa-client-audit.sh
+### Rule body:
+https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L263
+### Guidance:
+UAA Client audits have not run in this environment for more then 2 hours. Check recent builds for `uaa-client-audit-*` in https://ci.fr.cloud.gov/teams/main/pipelines/deploy-cf-deployment for more details.
+
 ## [TEMPLATE AlertName]
 ### Source data:
 [link to: prometheus exporter, script for push gateway, or log file]
