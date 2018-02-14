@@ -42,7 +42,7 @@
     env:
       persistent_disk_fs: xfs
     jobs:
-    - name: prometheus
+    - name: prometheus2
       release: prometheus
       properties:
         prometheus:
