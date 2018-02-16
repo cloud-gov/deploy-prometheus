@@ -248,12 +248,19 @@ instance_groups:
         prometheus:
           http_port: 8081
           server_name: prometheus.((domain))
+          headers: &security-headers
+            X-Frame-Options: DENY
+            X-Content-Type-Options: nosniff
+            X-XSS-Protection: "1; mode=block"
+            Strict-Transport-Security: "max-age=31536000; preload"
         alertmanager:
           http_port: 8081
           server_name: alertmanager.((domain))
+          headers: *security-headers
         grafana:
           http_port: 8081
           server_name: grafana.((domain))
+          headers: *security-headers
   - name: oauth2-proxy
     release: oauth2-proxy
     properties:
