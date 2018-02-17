@@ -62,6 +62,8 @@ instance_groups:
         storage:
           tsdb:
             retention: 30d
+        web:
+          external_url: https://prometheus.((domain))
         rule_files:
         - /var/vcap/jobs/bosh_alerts/*.alerts.yml
         - /var/vcap/jobs/cloudfoundry_alerts/*.alerts.yml
@@ -207,6 +209,7 @@ instance_groups:
           json:
             enabled: true
         prometheus:
+          use_external_url: true
           dashboard_files:
           - /var/vcap/jobs/bosh_dashboards/*.json
           - /var/vcap/jobs/system_dashboards/*.json
