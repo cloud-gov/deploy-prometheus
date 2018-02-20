@@ -32,15 +32,8 @@ instance_groups:
       alertmanager:
         data:
           retention: 720h
-        route:
-          receiver: slack
-        slack:
-          api_url: ((slack-api-url))
         receivers:
-        - name: slack
-          slack_configs:
-          - channel: ((slack-channel))
-            text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+        - name: notifications
           pagerduty_configs:
           - service_key: ((pagerduty-key))
 
