@@ -32,6 +32,8 @@ instance_groups:
       alertmanager:
         data:
           retention: 720h
+        route:
+          receiver: notifications
         receivers:
         - name: notifications
           pagerduty_configs:
