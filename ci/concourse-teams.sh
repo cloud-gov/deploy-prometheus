@@ -5,7 +5,7 @@ set -eux
 tempfile1=$(mktemp)
 tempfile2=$(mktemp)
 
-CONCOURSE_URIS=(ci.fr.cloud.gov ci.fr-stage.cloud.gov)
+CONCOURSE_URIS=(0.web.production-concourse.concourse-production.toolingbosh 0.web.staging-concourse.concourse-staging.toolingbosh)
 TEAMS_WHITELIST=(main)
 
 for URI in "${CONCOURSE_URIS[@]}"
