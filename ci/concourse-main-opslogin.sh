@@ -4,7 +4,7 @@ set -eux
 
 tempfile=$(mktemp)
 
-CONCOURSE_URIS="ci.fr.cloud.gov ci.fr-stage.cloud.gov"
+CONCOURSE_URIS="0.web.production-concourse.concourse-production.toolingbosh 0.web.staging-concourse.concourse-staging.toolingbosh"
 for URI in ${CONCOURSE_URIS}
 do
   AUTHURL=$(curl -sL https://"$URI"/api/v1/teams/main/auth/methods | jq -r '.[].auth_url' | grep oauth)
