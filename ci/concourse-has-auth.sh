@@ -7,11 +7,11 @@ tempfile=$(mktemp)
 CONCOURSE_URIS="0.web.production-concourse.concourse-production.toolingbosh 0.web.staging-concourse.concourse-staging.toolingbosh"
 for URI in ${CONCOURSE_URIS}
 do
-  TEAMS=$(curl -s https://"$URI"/api/v1/teams | jq -r '.[].name')
+  TEAMS=$(curl -s http://"$URI":8080/api/v1/teams | jq -r '.[].name')
   for TEAM in ${TEAMS}
   do
     has_auth=0
-    if curl -s https://"${URI}"/api/v1/workers | grep "not authorized" >/dev/null
+    if curl -s http://"${URI}":8080/api/v1/workers | grep "not authorized" >/dev/null
     then
       has_auth=1
     fi

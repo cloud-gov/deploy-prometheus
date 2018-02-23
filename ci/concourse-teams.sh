@@ -11,7 +11,7 @@ TEAMS_WHITELIST=(main)
 for URI in "${CONCOURSE_URIS[@]}"
 do
   IFS=$' '
-  TEAMS=$(curl -s https://"$URI"/api/v1/teams | jq -r '.[].name')
+  TEAMS=$(curl -s http://"$URI":8080/api/v1/teams | jq -r '.[].name')
   unset IFS
   for TEAM in $TEAMS
   do
