@@ -7,8 +7,8 @@ tempfile=$(mktemp)
 CONCOURSE_URIS="0.web.production-concourse.concourse-production.toolingbosh 0.web.staging-concourse.concourse-staging.toolingbosh"
 for URI in ${CONCOURSE_URIS}
 do
-  AUTHURL=$(curl -sL http://"$URI":8080/api/v1/teams/main/auth/methods | jq -r '.[].auth_url' | grep oauth)
-  # sed here switch out whatever domain is in AUTHURL for current URI
+  MYURL=$(curl -sL http://"$URI":8080/api/v1/teams/main/auth/methods | jq -r '.[].auth_url' | grep oauth)
+  AUTHURL=`echo $MYURL | sed "s#https://.*cloud\.gov/\(.*\)#http://${URI}:8080/\1#"`
   has_opslogin=0
   if curl -s "$AUTHURL" | grep "opslogin.fr.cloud.gov" > /dev/null
   then
