@@ -232,3 +232,19 @@
       annotations:
         summary: UAA Client Audit has not run in two hours
         description: Check https://ci.fr.cloud.gov/teams/main/pipelines/deploy-cf-deployment for failures
+
+# Concourse alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: concourse
+    rules:
+    - alert: ConcourseTeamWithoutAuthentication
+      expr: concourse_has_auth != 1
+      labels:
+        service: concourse
+        severity: warning
+        concourse: '{{$labels.concourse_url}}'
+      annotations:
+        summary: Concourse team ${{$labels.team}} has no authentication on {{$labels.concourse_url}}
+        description: Check Concourse {{$labels.concourse_url}} configuration for authentication of team ${{$labels.team}}
