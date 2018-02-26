@@ -8,6 +8,7 @@ CONCOURSE_URIS="0.web.production-concourse.concourse-production.toolingbosh 0.we
 for URI in ${CONCOURSE_URIS}
 do
   AUTHURL=$(curl -sL http://"$URI":8080/api/v1/teams/main/auth/methods | jq -r '.[].auth_url' | grep oauth)
+  # sed here switch out whatever domain is in AUTHURL for current URI
   has_opslogin=0
   if curl -s "$AUTHURL" | grep "opslogin.fr.cloud.gov" > /dev/null
   then
