@@ -2,9 +2,8 @@
 
 set -eux
 
-
 CONCOURSE_URIS=(0.web.production-concourse.concourse-production.toolingbosh 0.web.staging-concourse.concourse-staging.toolingbosh)
-TEAMS_WHITELIST=(main)
+TEAMS_WHITELIST="main"
 
 for URI in "${CONCOURSE_URIS[@]}"
 do
@@ -16,8 +15,7 @@ do
   for TEAM in $TEAMS
   do
     extra_team=1
-    if [[ " ${TEAMS_WHITELIST[*]} " == *"$TEAM"* ]];
-    then
+    if echo "${TEAM}" | grep -Fxf <(echo "${TEAMS_WHITELIST}"); then
       extra_team=0
     fi
     echo "concourse_extra_team{team=\"${TEAM}\"} ${extra_team}" >> "${tempfile1}"
@@ -28,8 +26,7 @@ do
   for TEAM in "${TEAMS_WHITELIST[@]}"
   do
     expected_team_missing=1
-    if [[ " ${TEAMS[*]} " == *"$TEAM"* ]];
-    then
+    if echo "${TEAM}" | grep -Fxf <(echo "${TEAMS}"); then
       expected_team_missing=0
     fi
     echo "concourse_expected_team_missing{team=\"${TEAM}\"} ${expected_team_missing}" >> "${tempfile2}"
@@ -42,4 +39,3 @@ done
 
 echo "concourse_extra_teams_lastcheck $(date +'%s')" | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_extra_teams/instance/lastcheck"
 echo "concourse_expected_teams_lastcheck $(date +'%s')" | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_expected_teams/instance/lastcheck"
-
