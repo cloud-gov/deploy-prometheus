@@ -37,17 +37,17 @@ for QUERY in ${QUERIES} ; do
 
   # make sure that the curl worked (indicates that prometheus is down entirely)
   if [ -z "${QTIME}" ] ; then
-    echo "prometheus API gateway is down!"
+    echo "  prometheus API gateway is down!"
     APIOK=no
   else
     # make sure that the data is not too old (indicates that prometheus is not accepting data)
-    TIMEDIFF=$((${TIME} - ${QTIME}))
+    TIMEDIFF=$((TIME - QTIME))
 
     if [ "${TIMEDIFF}" -lt 600 ] ; then
-      echo "data for ${QUERY} is less than 600s old"
+      echo "  data for ${QUERY} is less than 600s old"
       UPDATEOK=yes
     else
-      echo "data for ${QUERY} is greater than 600s old!"
+      echo "  data for ${QUERY} is greater than 600s old!"
     fi
   fi
 done
