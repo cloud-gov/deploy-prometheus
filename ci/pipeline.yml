@@ -11,7 +11,7 @@ groups:
   - concourse-has-auth-check
   - concourse-main-opslogin-check
   - concourse-teams-check
-  - prometheus-down-check
+  - prometheus-down-check-staging
 
 jobs:
 - name: awslogs-check
@@ -106,6 +106,28 @@ jobs:
       resource: prometheus-config
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
+    on_failure:
+      put: pagerduty-notify
+      params:
+        description: Prometheus seems to be down or hung!
+
+- name: prometheus-down-check-staging
+  serial_groups: [staging]
+  plan:
+  - aggregate:
+    - get: prometheus-check-timer
+      trigger: true
+    - get: prometheus-config
+      resource: prometheus-config
+  - task: prometheus-down
+    file: prometheus-config/ci/prometheus-down.yml
+    on_failure:
+      put: pagerduty-notify
+      params:
+        description: Prometheus seems to be down or hung!
+    params:
+      PROMETHEUSHOST: 1.prometheus.staging-monitoring.prometheus-staging.toolingbosh
+
 
 - name: deploy-prometheus-staging
   serial: true
@@ -298,6 +320,16 @@ resources:
   source:
     interval: 30m
 
+- name: pagerduty-notify
+  type: pagerduty-notification-resource
+  source:
+    service_key: {{pagerduty-key}}
+
+- name: pagerduty-notify-staging
+  type: pagerduty-notification-resource
+  source:
+    service_key: {{pagerduty-key-staging}}
+
 resource_types:
 - name: slack-notification
   type: docker-image
@@ -318,3 +350,10 @@ resource_types:
   type: docker-image
   source:
     repository: 18fgsa/s3-resource
+
+- name: pagerduty-notification-resource
+  type: docker-image
+  source:
+    repository: paasmule/pagerduty-notification-resource
+    tag: latest
+
