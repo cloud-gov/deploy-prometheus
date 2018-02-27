@@ -7,12 +7,10 @@ for URI in ${CONCOURSE_URIS}
 do
   tempfile=$(mktemp)
   TEAMS=$(curl -s http://"$URI":8080/api/v1/teams | jq -r '.[].name')
-  for TEAM in ${TEAMS}
-  do
+  for TEAM in ${TEAMS}; do
     has_auth=0
-    AUTHURL=$(curl -sL http://"$URI":8080/api/v1/teams/"$TEAM"/auth/methods | jq -r '.[].auth_url')
-    if [[ ! -z "${AUTHURL// }" ]]
-    then
+    auth_type=$(curl -s "http://${URI}:8080/auth/list_methods?team_name=${TEAM}" | jq -r '.[].type')
+    if [ "${auth_type}" != "none" ]; then
       has_auth=1
     fi
     echo "concourse_has_auth{team=\"${TEAM}\"} ${has_auth}" >> "${tempfile}"
