@@ -6,7 +6,7 @@ image_resource:
     repository: 18fgsa/concourse-task
 
 inputs:
-- {name: prometheus-config}
+- name: prometheus-config
 
 run:
   path: prometheus-config/ci/prometheus-down.sh

@@ -11,6 +11,7 @@ groups:
   - concourse-has-auth-check
   - concourse-main-opslogin-check
   - concourse-teams-check
+  - prometheus-down-check
 
 jobs:
 - name: awslogs-check
@@ -105,9 +106,6 @@ jobs:
       resource: prometheus-config
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
-    params:
-      AWS_DEFAULT_REGION: {{aws-region}}
-      GATEWAY_HOST: {{gateway-host}}
 
 - name: deploy-prometheus-staging
   serial: true
