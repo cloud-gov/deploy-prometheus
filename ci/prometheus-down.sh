@@ -38,7 +38,7 @@ for QUERY in ${QUERIES} ; do
     APIOK=no
   else
     # make sure that the data is not too old (indicates that prometheus is not accepting data)
-    TIMEDIFF=$(( "${TIME}" - "${QTIME}"))
+    TIMEDIFF=$(( ${TIME} - ${QTIME}))
 
     if [ "${TIMEDIFF}" -lt 600 ] ; then
      UPDATEOK=yes
