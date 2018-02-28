@@ -107,9 +107,14 @@ jobs:
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
     on_failure:
-      put: pagerduty-notify
+      task: pagerduty-notify
+      file: prometheus-config/ci/pagerduty-notify.yml
       params:
-        description: Prometheus seems to be down or hung!
+        PAGERDUTY_KEY: {{pagerduty-key}}
+        ALERT_MESSAGE: Prometheus seems to be down or hung!
+        ALERT_SOURCE: Concourse prometheus-down-check
+        ALERT_SEVERITY: critical
+        ALERT_COMPONENT: Prometheus
 
 - name: prometheus-down-check-staging
   serial_groups: [staging]
@@ -122,9 +127,14 @@ jobs:
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
     on_failure:
-      put: pagerduty-notify-staging
+      task: pagerduty-notify
+      file: prometheus-config/ci/pagerduty-notify.yml
       params:
-        description: Prometheus seems to be down or hung!
+        PAGERDUTY_KEY: {{pagerduty-key-staging}}
+        ALERT_MESSAGE: Staging Prometheus seems to be down or hung!
+        ALERT_SOURCE: Concourse prometheus-down-check
+        ALERT_SEVERITY: warning
+        ALERT_COMPONENT: Prometheus
     params:
       PROMETHEUSHOST: 1.prometheus.staging-monitoring.prometheus-staging.toolingbosh
 
@@ -320,16 +330,6 @@ resources:
   source:
     interval: 30m
 
-- name: pagerduty-notify
-  type: pagerduty-notification-resource
-  source:
-    service_key: {{pagerduty-key}}
-
-- name: pagerduty-notify-staging
-  type: pagerduty-notification-resource
-  source:
-    service_key: {{pagerduty-key-staging}}
-
 resource_types:
 - name: slack-notification
   type: docker-image
@@ -350,10 +350,4 @@ resource_types:
   type: docker-image
   source:
     repository: 18fgsa/s3-resource
-
-- name: pagerduty-notification-resource
-  type: docker-image
-  source:
-    repository: paasmule/pagerduty-notification-resource
-    tag: latest
 
