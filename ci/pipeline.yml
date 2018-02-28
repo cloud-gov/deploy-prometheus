@@ -11,6 +11,8 @@ groups:
   - concourse-has-auth-check
   - concourse-main-opslogin-check
   - concourse-teams-check
+  - prometheus-down-check-staging
+  - prometheus-down-check
 
 jobs:
 - name: awslogs-check
@@ -94,6 +96,47 @@ jobs:
     params:
       AWS_DEFAULT_REGION: {{aws-region}}
       GATEWAY_HOST: {{gateway-host}}
+
+- name: prometheus-down-check
+  serial_groups: [production]
+  plan:
+  - aggregate:
+    - get: prometheus-check-timer
+      trigger: true
+    - get: prometheus-config
+  - task: prometheus-down
+    file: prometheus-config/ci/prometheus-down.yml
+    on_failure:
+      task: pagerduty-notify
+      file: prometheus-config/ci/pagerduty-notify.yml
+      params:
+        PAGERDUTY_KEY: {{pagerduty-key}}
+        ALERT_MESSAGE: Prometheus seems to be down or hung!
+        ALERT_SOURCE: Concourse prometheus-down-check
+        ALERT_SEVERITY: critical
+        ALERT_COMPONENT: Prometheus
+
+- name: prometheus-down-check-staging
+  serial_groups: [staging]
+  plan:
+  - aggregate:
+    - get: prometheus-check-timer
+      trigger: true
+    - get: prometheus-config
+  - task: prometheus-down
+    file: prometheus-config/ci/prometheus-down.yml
+    on_failure:
+      task: pagerduty-notify
+      file: prometheus-config/ci/pagerduty-notify.yml
+      params:
+        PAGERDUTY_KEY: {{pagerduty-key-staging}}
+        ALERT_MESSAGE: Staging Prometheus seems to be down or hung!
+        ALERT_SOURCE: Concourse prometheus-down-check-staging
+        ALERT_SEVERITY: warning
+        ALERT_COMPONENT: Prometheus
+    params:
+      PROMETHEUSHOST: 1.prometheus.staging-monitoring.prometheus-staging.toolingbosh
+
 
 - name: deploy-prometheus-staging
   serial: true
@@ -306,3 +349,4 @@ resource_types:
   type: docker-image
   source:
     repository: 18fgsa/s3-resource
+
