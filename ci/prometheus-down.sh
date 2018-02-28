@@ -38,7 +38,7 @@ for QUERY in ${QUERIES} ; do
 
   # make sure that the curl worked (indicates that prometheus is down entirely)
   if [ ! -z "${QTIME}" ] ; then
-    echo "  prometheus API gateway is down!"
+    echo "  prometheus API gateway is UP!"
     APIOK=yes
   else
     if [ "${QTIME}" = "null" ] ; then
