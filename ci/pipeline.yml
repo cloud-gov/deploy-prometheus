@@ -131,7 +131,7 @@ jobs:
       params:
         PAGERDUTY_KEY: {{pagerduty-key-staging}}
         ALERT_MESSAGE: Staging Prometheus seems to be down or hung!
-        ALERT_SOURCE: Concourse prometheus-down-check
+        ALERT_SOURCE: Concourse prometheus-down-check-staging
         ALERT_SEVERITY: warning
         ALERT_COMPONENT: Prometheus
     params:
