@@ -35,19 +35,24 @@ for QUERY in ${QUERIES} ; do
   QTIME=$(curl --max-time 5 -s "${PROMETHEUSHOST}":9090/api/v1/query?query="${QUERY}" \
    | jq -r '.data.result[0].value[1]' | sed 's/\..*//')
 
+
   # make sure that the curl worked (indicates that prometheus is down entirely)
   if [ -z "${QTIME}" ] ; then
     echo "  prometheus API gateway is down!"
     APIOK=no
   else
-    # make sure that the data is not too old (indicates that prometheus is not accepting data)
-    TIMEDIFF=$((TIME - QTIME))
-
-    if [ "${TIMEDIFF}" -lt 600 ] ; then
-      echo "  data for ${QUERY} is less than 600s old"
-      UPDATEOK=yes
+    if [ "${QTIME}" = "null" ] ; then
+      echo "  API is OK, but no data for ${QUERY}"
     else
-      echo "  data for ${QUERY} is greater than 600s old!"
+      # make sure that the data is not too old (indicates that prometheus is not accepting data)
+      TIMEDIFF=$((TIME - QTIME))
+
+      if [ "${TIMEDIFF}" -lt 600 ] ; then
+        echo "  data for ${QUERY} is less than 600s old"
+        UPDATEOK=yes
+      else
+        echo "  data for ${QUERY} is greater than 600s old!"
+      fi
     fi
   fi
 done
