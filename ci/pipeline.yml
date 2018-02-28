@@ -123,7 +123,6 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      resource: prometheus-config
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
     on_failure:
