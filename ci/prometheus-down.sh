@@ -40,7 +40,7 @@ for QUERY in ${QUERIES} ; do
   if [ ! -z "${QTIME}" ] ; then
     echo "  prometheus API gateway is UP!"
     APIOK=yes
-  else
+  
     if [ "${QTIME}" = "null" ] ; then
       echo "  API is OK, but no data for ${QUERY}"
     else
