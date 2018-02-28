@@ -26,7 +26,7 @@ set -u
 "}
 
 TIME=$(date +%s)
-APIOK=yes
+APIOK=no
 UPDATEOK=no
 
 for QUERY in ${QUERIES} ; do
@@ -37,9 +37,9 @@ for QUERY in ${QUERIES} ; do
 
 
   # make sure that the curl worked (indicates that prometheus is down entirely)
-  if [ -z "${QTIME}" ] ; then
+  if [ ! -z "${QTIME}" ] ; then
     echo "  prometheus API gateway is down!"
-    APIOK=no
+    APIOK=yes
   else
     if [ "${QTIME}" = "null" ] ; then
       echo "  API is OK, but no data for ${QUERY}"

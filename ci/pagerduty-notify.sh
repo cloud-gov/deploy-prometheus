@@ -6,20 +6,20 @@
 set -eu
 
 URL="https://events.pagerduty.com/v2/enqueue"
-DATA="
+DATA=$(cat <<EOF
 {
-  \"routing_key\": \"${PAGERDUTY_KEY}\",
-  \"event_action\": \"trigger\",
-  \"dedup_key\": \"${ALERT_MESSAGE}\",
-  \"payload\": {
-    \"summary\": \"${ALERT_MESSAGE}\",
-    \"source\": \"${ALERT_SOURCE}\",
-    \"severity\": \"${ALERT_SEVERITY}\",
-    \"component\": \"${ALERT_COMPONENT}\"
+  "routing_key": "${PAGERDUTY_KEY}",
+  "event_action": "trigger",
+  "dedup_key": "${ALERT_MESSAGE}",
+  "payload": {
+    "summary": "${ALERT_MESSAGE}",
+    "source": "${ALERT_SOURCE}",
+    "severity": "${ALERT_SEVERITY}",
+    "component": "${ALERT_COMPONENT}"
   }
 }
-"
-
+EOF
+)
 
 curl -H "Content-Type: application/json" \
 	-X POST \
