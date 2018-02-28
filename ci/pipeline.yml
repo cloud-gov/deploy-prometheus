@@ -12,6 +12,7 @@ groups:
   - concourse-main-opslogin-check
   - concourse-teams-check
   - prometheus-down-check-staging
+  - prometheus-down-check
 
 jobs:
 - name: awslogs-check
@@ -121,7 +122,7 @@ jobs:
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
     on_failure:
-      put: pagerduty-notify
+      put: pagerduty-notify-staging
       params:
         description: Prometheus seems to be down or hung!
     params:
