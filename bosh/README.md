@@ -148,9 +148,9 @@ UAA Client audits have not run in this environment for more then 2 hours. Check 
 ### Source data:
 https://github.com/18F/cg-deploy-cf/blob/master/ci/prometheus-down.sh
 ### Guidance:
-- This alert is run by concourse, which checks externally that prometheus is answering queries, and that data is getting into concourse.
-- This alert will get triggered if the check is unable to query the prometheus API, or if it cannot find data timestamped less than 600 seconds in the past.  There are a few queries built into the script, though these may be overridden in the job to have more.
-- Go look at Prometheus.  It may be down or stuck, and thus other prometheus-based alerts may not be happening!
+- This alert is run by concourse, which checks externally that prometheus is answering queries, that data is getting into concourse, and that the alertmanager process is running.
+- This alert will get triggered if the check is unable to query the prometheus API, if the alertmanager is not responding on it's port, or if it cannot find data timestamped less than 600 seconds in the past.  There are a few queries built into the script, though these may be overridden in the job to have more.
+- Go look at Prometheus and/or it's alertmanager.  It may be down or stuck, and thus other prometheus-based alerts may not be happening!
 
 ## [TEMPLATE AlertName]
 ### Source data:
