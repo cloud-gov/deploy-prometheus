@@ -60,8 +60,10 @@ done
 
 # check to make sure that the alertmanager is alive
 if curl --max-time 5 -s "${ALERTMANAGERHOST}":9093/ | grep title.Alertmanager./title > /dev/null ; then
+  echo "alertmanager seems to be responding with data on ${ALERTMANAGERHOST}:9093/"
   ALERTMANAGEROK=yes
 else
+  echo "alertmanager seems NOT to be responding with data on ${ALERTMANAGERHOST}:9093/!"
   ALERTMANAGEROK=no
 fi
 
