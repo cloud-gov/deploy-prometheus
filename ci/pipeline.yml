@@ -136,6 +136,7 @@ jobs:
         ALERT_COMPONENT: Prometheus
     params:
       PROMETHEUSHOST: 1.prometheus.staging-monitoring.prometheus-staging.toolingbosh
+      ALERTMANAGERHOST: 1.alertmanager.staging-monitoring.prometheus-staging.toolingbosh
 
 
 - name: deploy-prometheus-staging

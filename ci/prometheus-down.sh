@@ -18,6 +18,7 @@
 set -u
 
 : ${PROMETHEUSHOST:="0.prometheus.production-monitoring.prometheus-production.toolingbosh"}
+: ${ALERTMANAGERHOST:="0.alertmanager.production-monitoring.prometheus-production.toolingbosh"}
 : ${QUERIES:="
   concourse_has_opslogin_lastcheck
   bosh_unknown_iaas_instance_lastcheck
@@ -57,6 +58,13 @@ for QUERY in ${QUERIES} ; do
   fi
 done
 
+# check to make sure that the alertmanager is alive
+if curl --max-time 5 -s "${ALERTMANAGERHOST}":9093/ | grep title.Alertmanager./title > /dev/null ; then
+  ALERTMANAGEROK=yes
+else
+  ALERTMANAGEROK=no
+fi
+
 # exit uncleanly so that the on_failure stuff will trigger a pagerduty alert
 if [ "${APIOK}" != yes ] ; then
   echo "Terrible news everybody!  Prometheus seems to be down, since I cannot query it's API!"
@@ -65,6 +73,11 @@ fi
 
 if [ "${UPDATEOK}" != yes ] ; then
   echo "Terrible news everybody!  Prometheus seems not to be getting new data, and thus is functionally down!"
+  exit 2
+fi
+
+if [ "${ALERTMANAGEROK}" != yes ] ; then
+  echo "Terrible news everybody!  Alertmanager is not running, so prometheus alerts are probably not geting generated!"
   exit 2
 fi
 
