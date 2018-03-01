@@ -204,7 +204,7 @@ instance_groups:
           json:
             enabled: true
         prometheus:
-          use_external_url: true
+          use_external_url: false
           dashboard_files:
           - /var/vcap/jobs/bosh_dashboards/*.json
           - /var/vcap/jobs/system_dashboards/*.json
