@@ -114,6 +114,9 @@ echo "Finished instance check. Checked $(cat /tmp/active_instances | wc -l) inst
 
 echo "awslogs_lastcheck $(date +'%s')" | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs"
 
+# Ensure that slack notification resource detects text file
+touch stopping/instance-id
+
 # if we need to, stop an instance
 if [ ! -z "${target_instance}" ]; then
 
