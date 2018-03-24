@@ -234,6 +234,7 @@ instance_groups:
   persistent_disk_type: ((environment))-prometheus-small
   vm_extensions:
   - ((environment))-prometheus-lb
+  - ((environment))-prometheus-target
   stemcell: default
   azs: ((azs))
   networks:
