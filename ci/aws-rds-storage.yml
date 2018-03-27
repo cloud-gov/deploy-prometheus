@@ -13,5 +13,6 @@ run:
   args:
   - -c
   - |
-    pipenv install prometheus-config/ci/aws-rds-storage
-    pipenv run prometheus-config/ci/aws-rds-storage/rds_disk_space.py
+    cd prometheus-config/ci/aws-rds-storage
+    pipenv install
+    pipenv run ./rds_disk_space.py
