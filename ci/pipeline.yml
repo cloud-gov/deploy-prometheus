@@ -8,6 +8,7 @@ groups:
   jobs:
   - awslogs-check
   - aws-mfa-check
+  - aws-rds-storage-check
   - concourse-has-auth-check
   - concourse-main-opslogin-check
   - concourse-teams-check
@@ -39,6 +40,22 @@ jobs:
         :flashing-alert: Instances should be stopped due to failure to log, but that's commented out pending SCR approval!
         <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
       text_file: stopping/instance-id
+
+- name: aws-rds-storage-check
+  serial_groups: [production]
+  plan:
+  - aggregate:
+    - get: prometheus-check-timer
+      trigger: true
+    - get: prometheus-config
+      resource: prometheus-config
+  - task: aws-rds-storage-check
+    file: prometheus-config/ci/aws-rds-storage.yml
+    params:
+      AWS_DEFAULT_REGION: {{aws-region}}
+      AWS_ACCESS_KEY_ID: {{aws-rds-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{aws-rds-secret-access-key}}
+      GATEWAY_HOST: {{gateway-host}}
 
 - name: aws-mfa-check
   serial_groups: [production]

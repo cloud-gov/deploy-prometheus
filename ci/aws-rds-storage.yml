@@ -1,0 +1,12 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: kennethreitz/pipenv
+
+inputs:
+- name: prometheus-config
+
+run:
+  path: pipenv install prometheus-config/ci/aws-rds-storage/ && pipenv run prometheus-config/ci/aws-rds-storage/rds_disk_space.py
