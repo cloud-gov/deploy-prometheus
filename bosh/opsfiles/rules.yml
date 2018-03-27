@@ -21,6 +21,21 @@
         summary: AWS IAM check is not running
         description: Check https://ci.fr.cloud.gov/teams/main/pipelines/deploy-prometheus?groups=checks for failures
 
+# AWS RDS storage alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: aws-rds-storage
+    rules:
+    - alert: AWSRDSStorage
+      expr: aws_rds_disk_free < (aws_rds_disk_allocated * .12)
+      labels:
+        service: aws-rds
+        severity: warning
+      annotations:
+        summary: AWS RDS {{$labels.instance_identifier}} has used 88% or greater disk space
+        description: Email the organization administrator for {{$labels.instance_identifier}} to inquire about provisioning a larger database.
+
 # CloudWatch logs alerts
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
