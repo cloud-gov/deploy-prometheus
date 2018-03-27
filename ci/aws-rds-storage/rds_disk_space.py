@@ -4,7 +4,6 @@ import datetime
 import requests
 import os
 import sys
-from dateutil import tz
 
 rds_client = boto3.client('rds')
 cw_client = boto3.client('cloudwatch')
@@ -33,9 +32,9 @@ def get_free_space(db_instance):
                 'Name': 'DBInstanceIdentifier',
                 'Value': db_instance
             },
-        ], 
-        StartTime=(datetime.datetime.now() - datetime.timedelta(minutes=5)), 
-        EndTime=datetime.datetime.now(), 
+        ],
+        StartTime=(datetime.datetime.now() - datetime.timedelta(minutes=5)),
+        EndTime=datetime.datetime.now(),
         Period=60,
         Statistics=['Average'],)
     free_space = min([(lambda x: x['Average'])(datapoint) for datapoint in cloudtrail_response['Datapoints']])
@@ -44,17 +43,17 @@ def get_free_space(db_instance):
 def get_prometheus_metrics(db_to_storage):
     results = ""
     for db_instance in db_to_storage:
-        results += 'aws_rds_disk_allocated{instance="' + db_instance + '"} ' + str(db_to_storage[db_instance]) + '\n'
-        results += 'aws_rds_disk_free{instance="' + db_instance + '"} ' + str(get_free_space(db_instance)) + '\n'
+        results += 'aws_rds_disk_allocated{instance_identifier="' + db_instance + '"} ' + str(db_to_storage[db_instance]) + '\n'
+        results += 'aws_rds_disk_free{instance_identifier="' + db_instance + '"} ' + str(get_free_space(db_instance)) + '\n'
     return results
 
 if __name__ == "__main__":
     if not ("GATEWAY_HOST") in os.environ:
         print("GATEWAY_HOST is required.")
         sys.exit(1)
-    
-    output = get_prometheus_metrics(db_to_storage_map())    
-    prometheus_url = os.getenv("GATEWAY_HOST") + ":" + os.getenv("GATEWAY") + "/metrics/jobs/aws_rds_storage_check"
+
+    output = get_prometheus_metrics(db_to_storage_map())
+    prometheus_url = os.getenv("GATEWAY_HOST") + ":" + os.getenv("GATEWAY_PORT", "9091") + "/metrics/jobs/aws_rds_storage_check"
     res = requests.delete(url=prometheus_url)
     res.raise_for_status()
 
