@@ -20,8 +20,7 @@ do
     fi
     echo "concourse_extra_team{team=\"${TEAM}\"} ${extra_team}" >> "${tempfile1}"
   done
-  curl -X DELETE "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_extra_teams/concourse_url/${URI}"
-  curl --data-binary "@${tempfile1}" "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_extra_teams/concourse_url/${URI}"
+  curl -X PUT --data-binary "@${tempfile1}" "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_extra_teams/concourse_url/${URI}"
 
   for TEAM in "${TEAMS_WHITELIST[@]}"
   do
@@ -31,8 +30,7 @@ do
     fi
     echo "concourse_expected_team_missing{team=\"${TEAM}\"} ${expected_team_missing}" >> "${tempfile2}"
   done
-  curl -X DELETE "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_expected_teams/concourse_url/${URI}"
-  curl --data-binary "@${tempfile2}" "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_expected_teams/concourse_url/${URI}"
+  curl -X PUT --data-binary "@${tempfile2}" "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_expected_teams/concourse_url/${URI}"
   rm -f "${tempfile1}"
   rm -f "${tempfile2}"
 done
