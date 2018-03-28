@@ -16,8 +16,7 @@ do
     echo "concourse_has_auth{team=\"${TEAM}\"} ${has_auth}" >> "${tempfile}"
   done
 
-  curl -X DELETE "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_has_auth/concourse_url/${URI}"
-  curl --data-binary "@${tempfile}" "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_has_auth/concourse_url/${URI}"
+  curl -X PUT --data-binary "@${tempfile}" "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_has_auth/concourse_url/${URI}"
 
   rm -f "${tempfile}"
 done

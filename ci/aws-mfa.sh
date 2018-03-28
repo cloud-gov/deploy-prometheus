@@ -15,8 +15,7 @@ for user in ${users}; do
   echo "aws_iam_user_mfa{instance=\"${user}\"} ${has_mfa}" >> "${tempfile}"
 done
 
-curl -X DELETE "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/aws_iam"
-curl --data-binary @${tempfile} "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/aws_iam"
+curl -X PUT --data-binary @${tempfile} "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/aws_iam"
 echo "aws_iam_user_lastcheck $(date +'%s')" | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/aws_iam/instance/lastcheck"
 
 rm -f "${tempfile}"

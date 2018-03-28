@@ -52,8 +52,7 @@ EOF
 
 done
 
-curl -X DELETE "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs_group"
-curl --data-binary @${group_metrics} "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs_group"
+curl -X PUT --data-binary @${group_metrics} "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs_group"
 
 if [ $(($(date +"%s") - ${GLOBAL_LAST_UPDATE})) -gt ${ALERT_THRESHOLD} ]; then
   STATUS=1
@@ -62,8 +61,7 @@ else
 fi
 
 # report overall log status
-curl -X DELETE "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs_group/instance/_GLOBAL"
-cat <<EOF | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs_group/instance/_GLOBAL"
+cat <<EOF | curl -X PUT --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs_group/instance/_GLOBAL"
 awslogs_loggroup_not_logging {group="_GLOBAL"} ${STATUS}
 EOF
 
@@ -107,8 +105,7 @@ EOF
 
 done
 
-curl -X DELETE "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs_instance"
-curl --data-binary @${instance_metrics} "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs_instance"
+curl -X PUT --data-binary @${instance_metrics} "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs_instance"
 
 echo "Finished instance check. Checked $(cat /tmp/active_instances | wc -l) instances."
 
