@@ -33,8 +33,8 @@
         service: aws-rds
         severity: warning
       annotations:
-        summary: AWS RDS {{$labels.instance_identifier}} has used 88% or greater disk space
-        description: Email the organization administrator for {{$labels.instance_identifier}} to inquire about provisioning a larger database.
+        summary: AWS RDS {{$labels.instance}} has used 88% or greater disk space
+        description: Email the organization administrator for {{$labels.instance}} to inquire about provisioning a larger database.
 
 # CloudWatch logs alerts
 - type: replace

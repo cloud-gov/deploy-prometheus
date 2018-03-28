@@ -43,9 +43,10 @@ def get_free_space(db_instance):
 def get_prometheus_metrics(db_to_storage):
     results = ""
     for db_instance in db_to_storage:
-        results += 'aws_rds_disk_allocated{instance_identifier="' + db_instance + '"} ' + str(db_to_storage[db_instance]) + '\n'
-        results += 'aws_rds_disk_free{instance_identifier="' + db_instance + '"} ' + str(get_free_space(db_instance)) + '\n'
+        results += 'aws_rds_disk_allocated{instance="' + db_instance + '"} ' + str(db_to_storage[db_instance]) + '\n'
+        results += 'aws_rds_disk_free{instance="' + db_instance + '"} ' + str(get_free_space(db_instance)) + '\n'
     return results
+
 
 if __name__ == "__main__":
     if not ("GATEWAY_HOST") in os.environ:
@@ -53,13 +54,11 @@ if __name__ == "__main__":
         sys.exit(1)
 
     output = get_prometheus_metrics(db_to_storage_map())
-    prometheus_url = os.getenv("GATEWAY_HOST") + ":" + os.getenv("GATEWAY_PORT", "9091") + "/metrics/jobs/aws_rds_storage_check"
-    res = requests.delete(url=prometheus_url)
-    res.raise_for_status()
+    prometheus_url = os.getenv("GATEWAY_HOST") + ":" + os.getenv("GATEWAY_PORT", "9091") + "/metrics/job/aws_rds_storage_check"
 
-    res = requests.post(url=prometheus_url,
-        data = output,
-        headers = {'Content-Type': 'application/octet-stream'})
+    res = requests.put(url=prometheus_url,
+        data=output,
+        headers={'Content-Type': 'application/octet-stream'})
     res.raise_for_status()
 
 
