@@ -10,6 +10,7 @@
       - '{__name__=~"bosh_.*"}'
       - '{__name__=~"node_.*"}'
       - '{__name__=~"nessus_.*"}'
+      - '{__name__=~"concourse.*"}'
     static_configs:
     - targets:
       - 0.prometheus-tooling.production-monitoring.prometheus-production.toolingbosh:9090
@@ -59,6 +60,18 @@
             static_configs:
             - targets:
               - localhost:9190
+          - job_name: concourse
+            file_sd_configs:
+            - files:
+              - /var/vcap/store/bosh_exporter/bosh_target_groups.json
+            relabel_configs:
+            - source_labels: [__meta_bosh_job_process_name]
+              regex: atc
+              action: keep
+            - source_labels: [__address__]
+              regex: "(.*)"
+              target_label: __address__
+              replacement: "${1}:9110"
           - job_name: node
             file_sd_configs:
             - files:
