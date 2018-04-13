@@ -126,6 +126,14 @@ https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#
 ### Guidance:
 Nessus plugins have not been updated in over 7 days. Outdated plugins will eventually cause recently published vulnerabilities to go undetected. See https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/ for more details.
 
+## NessusScandeleteFailing
+### Source data:
+https://github.com/18F/cg-nessus-manager-boshrelease/blob/master/jobs/nessus-manager/templates/bin/emit-scans.sh
+### Rule body:
+https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L220
+### Guidance:
+emit-scans.sh was unable to delete old scans for the past 2 days. See https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/ for more details.
+
 ## UAAClientAuditUnexpectedClient
 ### Source data:
 https://github.com/18F/cg-deploy-cf/blob/master/ci/uaa-client-audit.sh
