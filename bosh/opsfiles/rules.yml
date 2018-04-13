@@ -206,6 +206,15 @@
       annotations:
         summary: Nessus Manager plugins are more than 7 days old
         description: https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/
+    - alert: NessusScandeleteFailing
+      expr: time() - nessus_manager_scandelete_time > 172800
+      labels:
+        service: nessus-manager
+        severity: warning
+      annotations:
+        summary: Nessus Manager has not been able to delete scans in 2 days
+        description: https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/
+
 
 # Kubernetes etcd alerts
 # Note: Only the leader emits metrics, so take max to ignore stale metrics
