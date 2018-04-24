@@ -283,17 +283,12 @@ resources:
     secrets_passphrase: {{prometheus-production-private-passphrase}}
     bosh_cert: bosh-tooling.pem
 
-# TODO: Restore after upstream switches to prometheus 2.x
-# - name: prometheus-release
-#   type: bosh-io-release
-#   source:
-#     repository: cloudfoundry-community/prometheus-boshrelease
 - name: prometheus-release
-  type: s3-iam
+  type: github-release
   source:
-    bucket: {{s3-bosh-releases-bucket}}
-    regexp: prometheus-(.*).tgz
-    region_name: {{aws-region}}
+    owner: bosh-prometheus
+    repository: prometheus-boshrelease
+    access_token: {{github-access-token}}
 
 - name: oauth2-proxy-release
   type: s3-iam
