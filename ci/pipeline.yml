@@ -28,14 +28,14 @@ jobs:
     file: prometheus-config/ci/awslogs.yml
     tags: [iaas]
     params:
-      AWS_DEFAULT_REGION: {{aws-region}}
-      GATEWAY_HOST: {{gateway-host}}
+      AWS_DEFAULT_REGION: ((aws-region))
+      GATEWAY_HOST: ((gateway-host))
       HEARTBEAT_GROUP: /var/log/syslog
   - put: slack
     params:
-      channel: {{slack-channel}}
-      username: {{slack-username}}
-      icon_url: {{slack-icon-url}}
+      channel: ((slack-channel))
+      username: ((slack-username))
+      icon_url: ((slack-icon-url))
       text: |
         :flashing-alert: Instances should be stopped due to failure to log, but that's commented out pending SCR approval!
         <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
@@ -52,10 +52,10 @@ jobs:
   - task: aws-rds-storage-check
     file: prometheus-config/ci/aws-rds-storage.yml
     params:
-      AWS_DEFAULT_REGION: {{aws-region}}
-      AWS_ACCESS_KEY_ID: {{aws-rds-access-key-id}}
-      AWS_SECRET_ACCESS_KEY: {{aws-rds-secret-access-key}}
-      GATEWAY_HOST: {{gateway-host}}
+      AWS_DEFAULT_REGION: ((aws-region))
+      AWS_ACCESS_KEY_ID: ((aws-rds-access-key-id))
+      AWS_SECRET_ACCESS_KEY: ((aws-rds-secret-access-key))
+      GATEWAY_HOST: ((gateway-host))
 
 - name: aws-mfa-check
   serial_groups: [production]
@@ -69,8 +69,8 @@ jobs:
     file: prometheus-config/ci/aws-mfa.yml
     tags: [iaas]
     params:
-      AWS_DEFAULT_REGION: {{aws-region}}
-      GATEWAY_HOST: {{gateway-host}}
+      AWS_DEFAULT_REGION: ((aws-region))
+      GATEWAY_HOST: ((gateway-host))
 
 - name: concourse-has-auth-check
   serial_groups: [production]
@@ -83,8 +83,8 @@ jobs:
   - task: concourse-has-auth
     file: prometheus-config/ci/concourse-has-auth.yml
     params:
-      AWS_DEFAULT_REGION: {{aws-region}}
-      GATEWAY_HOST: {{gateway-host}}
+      AWS_DEFAULT_REGION: ((aws-region))
+      GATEWAY_HOST: ((gateway-host))
 
 - name: concourse-main-opslogin-check
   serial_groups: [production]
@@ -97,8 +97,8 @@ jobs:
   - task: concourse-main-opslogin
     file: prometheus-config/ci/concourse-main-opslogin.yml
     params:
-      AWS_DEFAULT_REGION: {{aws-region}}
-      GATEWAY_HOST: {{gateway-host}}
+      AWS_DEFAULT_REGION: ((aws-region))
+      GATEWAY_HOST: ((gateway-host))
 
 - name: concourse-teams-check
   serial_groups: [production]
@@ -111,8 +111,8 @@ jobs:
   - task: concourse-teams
     file: prometheus-config/ci/concourse-teams.yml
     params:
-      AWS_DEFAULT_REGION: {{aws-region}}
-      GATEWAY_HOST: {{gateway-host}}
+      AWS_DEFAULT_REGION: ((aws-region))
+      GATEWAY_HOST: ((gateway-host))
 
 - name: prometheus-down-check
   serial_groups: [production]
@@ -127,7 +127,7 @@ jobs:
       task: pagerduty-notify
       file: prometheus-config/ci/pagerduty-notify.yml
       params:
-        PAGERDUTY_KEY: {{pagerduty-key}}
+        PAGERDUTY_KEY: ((pagerduty-key))
         ALERT_MESSAGE: Prometheus seems to be down or hung!
         ALERT_SOURCE: Concourse prometheus-down-check
         ALERT_SEVERITY: critical
@@ -146,7 +146,7 @@ jobs:
       task: pagerduty-notify
       file: prometheus-config/ci/pagerduty-notify.yml
       params:
-        PAGERDUTY_KEY: {{pagerduty-key-staging}}
+        PAGERDUTY_KEY: ((pagerduty-key-staging))
         ALERT_MESSAGE: Staging Prometheus seems to be down or hung!
         ALERT_SOURCE: Concourse prometheus-down-check-staging
         ALERT_SEVERITY: warning
@@ -194,18 +194,18 @@ jobs:
       text: |
         :x: FAILED to deploy prometheus on staging
         <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
-      channel: {{slack-channel}}
-      username: {{slack-username}}
-      icon_url: {{slack-icon-url}}
+      channel: ((slack-channel))
+      username: ((slack-username))
+      icon_url: ((slack-icon-url))
   on_success:
     put: slack
     params:
       text: |
         :white_check_mark: Successfully deployed prometheus on staging
         <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
-      channel: {{slack-channel}}
-      username: {{slack-username}}
-      icon_url: {{slack-icon-url}}
+      channel: ((slack-channel))
+      username: ((slack-username))
+      icon_url: ((slack-icon-url))
 
 - name: deploy-prometheus-production
   serial: true
@@ -244,69 +244,64 @@ jobs:
       text: |
         :x: FAILED to deploy prometheus on production
         <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
-      channel: {{slack-channel}}
-      username: {{slack-username}}
-      icon_url: {{slack-icon-url}}
+      channel: ((slack-channel))
+      username: ((slack-username))
+      icon_url: ((slack-icon-url))
   on_success:
     put: slack
     params:
       text: |
         :white_check_mark: Successfully deployed prometheus on production
         <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
-      channel: {{slack-channel}}
-      username: {{slack-username}}
-      icon_url: {{slack-icon-url}}
+      channel: ((slack-channel))
+      username: ((slack-username))
+      icon_url: ((slack-icon-url))
 
 resources:
 - name: master-bosh-root-cert
   type: s3-iam
   source:
-    bucket: {{prometheus-production-private-bucket}}
-    region_name: {{aws-region}}
+    bucket: ((prometheus-production-private-bucket))
+    region_name: ((aws-region))
     versioned_file: master-bosh.crt
 
 - name: common-staging
   type: cg-common
   source:
-    region: {{prometheus-staging-private-region}}
-    bucket_name: {{prometheus-staging-private-bucket}}
+    region: ((prometheus-staging-private-region))
+    bucket_name: ((prometheus-staging-private-bucket))
     secrets_file: staging-prometheus.yml
-    secrets_passphrase: {{prometheus-staging-private-passphrase}}
+    secrets_passphrase: ((prometheus-staging-private-passphrase))
     bosh_cert: bosh-tooling.pem
 
 - name: common-production
   type: cg-common
   source:
-    region: {{prometheus-production-private-region}}
-    bucket_name: {{prometheus-production-private-bucket}}
+    region: ((prometheus-production-private-region))
+    bucket_name: ((prometheus-production-private-bucket))
     secrets_file: production-prometheus.yml
-    secrets_passphrase: {{prometheus-production-private-passphrase}}
+    secrets_passphrase: ((prometheus-production-private-passphrase))
     bosh_cert: bosh-tooling.pem
 
-# TODO: Restore after upstream switches to prometheus 2.x
-# - name: prometheus-release
-#   type: bosh-io-release
-#   source:
-#     repository: cloudfoundry-community/prometheus-boshrelease
 - name: prometheus-release
-  type: s3-iam
+  type: github-release
   source:
-    bucket: {{s3-bosh-releases-bucket}}
-    regexp: prometheus-(.*).tgz
-    region_name: {{aws-region}}
+    owner: bosh-prometheus
+    repository: prometheus-boshrelease
+    access_token: ((github-access-token))
 
 - name: oauth2-proxy-release
   type: s3-iam
   source:
-    bucket: {{s3-bosh-releases-bucket}}
+    bucket: ((s3-bosh-releases-bucket))
     regexp: oauth2-proxy-(.*).tgz
-    region_name: {{aws-region}}
+    region_name: ((aws-region))
 
 - name: prometheus-config
   type: git
   source:
-    uri: {{cg-deploy-prometheus-git-url}}
-    branch: {{cg-deploy-prometheus-git-branch}}
+    uri: ((cg-deploy-prometheus-git-url))
+    branch: ((cg-deploy-prometheus-git-branch))
 
 - name: prometheus-stemcell
   type: bosh-io-stemcell
@@ -316,31 +311,31 @@ resources:
 - name: prometheus-staging-deployment
   type: bosh-deployment
   source:
-    target: {{prometheus-staging-deployment-bosh-target}}
+    target: ((prometheus-staging-deployment-bosh-target))
     client: ci
-    client_secret: {{tooling_bosh_uaa_ci_client_secret}}
-    ca_cert: {{common_ca_cert}}
+    client_secret: ((tooling_bosh_uaa_ci_client_secret))
+    ca_cert: ((common_ca_cert))
     deployment: prometheus-staging
 
 - name: prometheus-production-deployment
   type: bosh-deployment
   source:
-    target: {{prometheus-production-deployment-bosh-target}}
+    target: ((prometheus-production-deployment-bosh-target))
     client: ci
-    client_secret: {{tooling_bosh_uaa_ci_client_secret}}
-    ca_cert: {{common_ca_cert}}
+    client_secret: ((tooling_bosh_uaa_ci_client_secret))
+    ca_cert: ((common_ca_cert))
     deployment: prometheus-production
 
 - name: pipeline-tasks
   type: git
   source:
-    uri: {{pipeline-tasks-git-url}}
-    branch: {{pipeline-tasks-git-branch}}
+    uri: ((pipeline-tasks-git-url))
+    branch: ((pipeline-tasks-git-branch))
 
 - name: slack
   type: slack-notification
   source:
-    url: {{slack-webhook-url}}
+    url: ((slack-webhook-url))
 
 - name: prometheus-check-timer
   type: time
@@ -367,4 +362,3 @@ resource_types:
   type: docker-image
   source:
     repository: 18fgsa/s3-resource
-
