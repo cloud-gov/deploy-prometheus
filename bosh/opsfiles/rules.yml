@@ -288,7 +288,7 @@
         concourse: '{{$labels.concourse_url}}'
       annotations:
         summary: Concourse team {{$labels.team}} is unexpected on {{$labels.concourse_url}}
-        description: Check Concourse {{$labels.concourse_url}} teams.  {{$labels.team}} should not be there.
+        description: Check Concourse {{$labels.concourse_url}} teams. {{$labels.team}} should not be there.
     - alert: ConcourseTeamMissing
       expr: concourse_expected_team_missing != 0
       labels:
@@ -299,3 +299,17 @@
         summary: Concourse team {{$labels.team}} is missing on {{$labels.concourse_url}}
         description: Check Concourse {{$labels.concourse_url}} configuration for missing team {{$labels.team}}
 
+# Domain broker alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: domain-broker
+    rules:
+    - alert: DomainBrokerNotEnoughALBs
+      expr: domain_broker_certificate_count / domain_broker_listener_count > 20
+      labels:
+        service: domain-broker
+        severity: warning
+      annotations:
+        summary: 'Domain broker {{$labels.instance}} is close to the certificates per listener limit: {{$value}}'
+        description: Provision more load balancers for domain broker {{$value}}

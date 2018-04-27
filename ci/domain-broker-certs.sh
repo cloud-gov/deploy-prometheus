@@ -21,7 +21,7 @@ nlbs=0
 ncerts=0
 for lb_arn in "${lb_arns[@]}"; do
   lb_listener_arns=$(aws elbv2 describe-listeners --load-balancer-arn "${lb_arn}" \
-      | jq -r ".Listeners[] | select(.Port = 443) | .ListenerArn")
+      | jq -r ".Listeners[] | select(.Port == 443) | .ListenerArn")
     for lb_listener_arn in ${lb_listener_arns}; do
       nlbs=$((nlbs + 1))
       ncerts_listener=$(aws elbv2 describe-listener-certificates --listener-arn "${lb_listener_arn}" \
