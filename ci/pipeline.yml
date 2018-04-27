@@ -9,6 +9,7 @@ groups:
   - awslogs-check
   - aws-mfa-check
   - aws-rds-storage-check
+  - domain-broker-certs
   - concourse-has-auth-check
   - concourse-main-opslogin-check
   - concourse-teams-check
@@ -71,6 +72,23 @@ jobs:
     params:
       AWS_DEFAULT_REGION: ((aws-region))
       GATEWAY_HOST: ((gateway-host))
+
+- name: domain-broker-certs
+  serial_groups: [production]
+  plan:
+  - aggregate:
+    - get: prometheus-check-timer
+      trigger: true
+    - get: prometheus-config
+      resource: prometheus-config
+  - task: domain-broker-certs-development
+    file: prometheus-config/ci/domain-broker-certs.yml
+    tags: [iaas]
+    params:
+      PREFIX: development-domains
+      ENVIRONMENT: development
+      GATEWAY_HOST: ((gateway-host))
+      AWS_DEFAULT_REGION: ((aws-region))
 
 - name: concourse-has-auth-check
   serial_groups: [production]
