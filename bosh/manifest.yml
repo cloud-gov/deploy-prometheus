@@ -270,3 +270,10 @@ instance_groups:
       cookie_secret: ((oauth-proxy-cookie-secret))
       oidc_issuer_url: https://opslogin.fr.cloud.gov/oauth/token
       email_domain: gsa.gov
+variables:
+- name: grafana-admin-password
+  type: password
+- name: oauth-proxy-client-secret
+  type: password
+- name: oauth-proxy-cookie-secret
+  type: password
