@@ -72,6 +72,10 @@
               regex: "(.*)"
               target_label: __address__
               replacement: "${1}:9110"
+            - source_labels: [__meta_bosh_deployment]
+              regex: "(.*)"
+              target_label: bosh_deployment
+              replacement: "$1"
           - job_name: node
             file_sd_configs:
             - files:
