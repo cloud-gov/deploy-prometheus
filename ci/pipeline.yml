@@ -289,7 +289,7 @@ resources:
     versioned_file: staging-prometheus-decrypted.yml
 
 - name: common-production
-  type: cg-common
+  type: s3-iam
   source:
     region_name: ((prometheus-production-private-region))
     bucket: ((prometheus-production-private-bucket))
