@@ -181,8 +181,7 @@ jobs:
     - get: master-bosh-root-cert
     - get: prometheus-config
       trigger: true
-    - get: common
-      resource: common-staging
+    - get: common-staging
       trigger: true
     - get: prometheus-release
       trigger: true
@@ -205,7 +204,7 @@ jobs:
       - prometheus-config/bosh/opsfiles/staging.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/staging.yml
-      - common/secrets.yml
+      - common-staging/staging-prometheus-decrypted.yml
   on_failure:
     put: slack
     params:
@@ -284,13 +283,11 @@ resources:
     versioned_file: master-bosh.crt
 
 - name: common-staging
-  type: cg-common
+  type: s3-iam
   source:
-    region: ((prometheus-staging-private-region))
-    bucket_name: ((prometheus-staging-private-bucket))
-    secrets_file: staging-prometheus.yml
-    secrets_passphrase: ((prometheus-staging-private-passphrase))
-    bosh_cert: bosh-tooling.pem
+    region_name: ((prometheus-staging-private-region))
+    bucket: ((prometheus-staging-private-bucket))
+    versioned_file: staging-prometheus-decrypted.yml
 
 - name: common-production
   type: cg-common
