@@ -233,8 +233,7 @@ jobs:
     - get: prometheus-config
       passed: [deploy-prometheus-staging]
       trigger: true
-    - get: common
-      resource: common-production
+    - get: common-production
       trigger: true
     - get: prometheus-release
       passed: [deploy-prometheus-staging]
@@ -254,7 +253,7 @@ jobs:
       - prometheus-config/bosh/opsfiles/production.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/production.yml
-      - common/secrets.yml
+      - common-production/production-prometheus-decrypted.yml
   on_failure:
     put: slack
     params:
@@ -292,11 +291,9 @@ resources:
 - name: common-production
   type: cg-common
   source:
-    region: ((prometheus-production-private-region))
-    bucket_name: ((prometheus-production-private-bucket))
-    secrets_file: production-prometheus.yml
-    secrets_passphrase: ((prometheus-production-private-passphrase))
-    bosh_cert: bosh-tooling.pem
+    region_name: ((prometheus-production-private-region))
+    bucket: ((prometheus-production-private-bucket))
+    versioned_file: production-prometheus-decrypted.yml
 
 - name: prometheus-release
   type: github-release
