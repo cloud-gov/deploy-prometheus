@@ -204,7 +204,7 @@ jobs:
       - prometheus-config/bosh/opsfiles/staging.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/staging.yml
-      - common-staging/staging-prometheus-decrypted.yml
+      - common-staging/staging-prometheus.yml
   on_failure:
     put: slack
     params:
@@ -253,7 +253,7 @@ jobs:
       - prometheus-config/bosh/opsfiles/production.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/production.yml
-      - common-production/production-prometheus-decrypted.yml
+      - common-production/production-prometheus.yml
   on_failure:
     put: slack
     params:
@@ -286,14 +286,14 @@ resources:
   source:
     region_name: ((prometheus-staging-private-region))
     bucket: ((prometheus-staging-private-bucket))
-    versioned_file: staging-prometheus-decrypted.yml
+    versioned_file: staging-prometheus.yml
 
 - name: common-production
   type: s3-iam
   source:
     region_name: ((prometheus-production-private-region))
     bucket: ((prometheus-production-private-bucket))
-    versioned_file: production-prometheus-decrypted.yml
+    versioned_file: production-prometheus.yml
 
 - name: prometheus-release
   type: github-release
