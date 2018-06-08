@@ -81,14 +81,31 @@ jobs:
       trigger: true
     - get: prometheus-config
       resource: prometheus-config
-  - task: domain-broker-certs-development
-    file: prometheus-config/ci/domain-broker-certs.yml
-    tags: [iaas]
-    params:
-      PREFIX: development-domains
-      ENVIRONMENT: development
-      GATEWAY_HOST: ((gateway-host))
-      AWS_DEFAULT_REGION: ((aws-region))
+  - aggregate:
+    - task: domain-broker-certs-development
+      file: prometheus-config/ci/domain-broker-certs.yml
+      tags: [iaas]
+      params:
+        PREFIX: development-domains
+        ENVIRONMENT: development
+        GATEWAY_HOST: ((gateway-host))
+        AWS_DEFAULT_REGION: ((aws-region))
+    - task: domain-broker-certs-staging
+      file: prometheus-config/ci/domain-broker-certs.yml
+      tags: [iaas]
+      params:
+        PREFIX: staging-domains
+        ENVIRONMENT: staging
+        GATEWAY_HOST: ((gateway-host))
+        AWS_DEFAULT_REGION: ((aws-region))
+    - task: domain-broker-certs-production
+      file: prometheus-config/ci/domain-broker-certs.yml
+      tags: [iaas]
+      params:
+        PREFIX: production-domains
+        ENVIRONMENT: production
+        GATEWAY_HOST: ((gateway-host))
+        AWS_DEFAULT_REGION: ((aws-region))
 
 - name: concourse-has-auth-check
   serial_groups: [production]
