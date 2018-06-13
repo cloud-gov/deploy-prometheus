@@ -313,3 +313,18 @@
       annotations:
         summary: 'Domain broker {{$labels.instance}} is close to the certificates per listener limit: {{$value}}'
         description: Provision more load balancers for domain broker {{$value}}
+
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: blackbox
+    rules:
+    - alert: SSLCertExpiringSoon
+      expr: probe_ssl_earliest_cert_expiry{job="blackbox"} - time() < 86400 * 25
+      for: 10m
+      labels:
+        service: blackbox
+        severity: warning
+      annotations:
+        summary: SSL certificate for {{$labels.instance}} is expiring within 25d
+        description: Renew SSL certificate for {{$labels.instance}}
