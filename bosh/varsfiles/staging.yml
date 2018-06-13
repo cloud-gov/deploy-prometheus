@@ -4,3 +4,5 @@ domain: fr-stage.cloud.gov
 logsearch_file_size_threshold: 25000
 logsearch_log_count_threshold: 300
 logsearch_ratio_threshold: 50
+blackbox-targets:
+- https://api.fr-stage.cloud.gov
