@@ -241,6 +241,7 @@ instance_groups:
           - /var/vcap/jobs/system_dashboards/*.json
           - /var/vcap/jobs/cloudfoundry_dashboards/*.json
           - /var/vcap/jobs/kubernetes_dashboards/*.json
+          - /var/vcap/jobs/probe_dashboards/*.json
           - /var/vcap/jobs/elasticsearch_dashboards/*.json
           - /var/vcap/jobs/concourse_dashboards/*.json
           - /var/vcap/jobs/prometheus_dashboards/*.json
@@ -251,6 +252,8 @@ instance_groups:
   - name: cloudfoundry_dashboards
     release: prometheus
   - name: kubernetes_dashboards
+    release: prometheus
+  - name: probe_dashboards
     release: prometheus
   - name: elasticsearch_dashboards
     release: prometheus
