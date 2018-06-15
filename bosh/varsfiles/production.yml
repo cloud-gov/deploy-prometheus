@@ -6,3 +6,10 @@ logsearch_log_count_threshold: 30000
 logsearch_ratio_threshold: 50
 blackbox-targets:
 - https://api.fr.cloud.gov
+- https://test-java.app.cloud.gov
+- https://test-nodejs.app.cloud.gov
+- https://test-dotnet-core.app.cloud.gov
+- https://test-python-flask.app.cloud.gov
+- https://test-php.app.cloud.gov
+- https://test-ruby-padrino.app.cloud.gov
+- https://test-ruby-sinatra.app.cloud.gov
