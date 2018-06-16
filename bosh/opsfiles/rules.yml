@@ -328,3 +328,12 @@
       annotations:
         summary: SSL certificate for {{$labels.instance}} is expiring within 25d
         description: Renew SSL certificate for {{$labels.instance}}
+    - alert: ProbeFailing
+      expr: probe_success{job="blackbox"} < 1
+      for: 5m
+      labels:
+        service: blackbox
+        severity: warning
+      annotations:
+        summary: Probe failing for {{$labels.instance}} for 5m
+        description: Check health of {{$labels.instance}}
