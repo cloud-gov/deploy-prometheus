@@ -102,6 +102,26 @@ instance_groups:
             regex: "(.*)"
             target_label: __address__
             replacement: "${1}:9114"
+        - job_name: blackbox
+          metrics_path: /probe
+          params:
+            module:
+            - http
+          static_configs:
+          - targets: ((blackbox-targets))
+          relabel_configs:
+          - source_labels: [__address__]
+            regex: (.*)
+            target_label: __param_target
+            replacement: ${1}
+          - source_labels: [__param_target]
+            regex: (.*)
+            target_label: instance
+            replacement: ${1}
+          - source_labels: []
+            regex: .*
+            target_label: __address__
+            replacement: localhost:9115
         - job_name: node
           file_sd_configs:
           - files:
@@ -148,6 +168,17 @@ instance_groups:
       kube_state_metrics_exporter:
         apiserver: ((kubernetes-apiserver-url))
         kubeconfig: ((kubernetes-config))
+  - name: blackbox_exporter
+    release: prometheus
+    properties:
+      blackbox_exporter:
+        config:
+          modules:
+            http:
+              prober: http
+              timeout: 5s
+              http:
+                preferred_ip_protocol: ip4
   - name: bosh_alerts
     release: prometheus
     properties:
@@ -210,6 +241,7 @@ instance_groups:
           - /var/vcap/jobs/system_dashboards/*.json
           - /var/vcap/jobs/cloudfoundry_dashboards/*.json
           - /var/vcap/jobs/kubernetes_dashboards/*.json
+          - /var/vcap/jobs/probe_dashboards/*.json
           - /var/vcap/jobs/elasticsearch_dashboards/*.json
           - /var/vcap/jobs/concourse_dashboards/*.json
           - /var/vcap/jobs/prometheus_dashboards/*.json
@@ -220,6 +252,8 @@ instance_groups:
   - name: cloudfoundry_dashboards
     release: prometheus
   - name: kubernetes_dashboards
+    release: prometheus
+  - name: probe_dashboards
     release: prometheus
   - name: elasticsearch_dashboards
     release: prometheus
