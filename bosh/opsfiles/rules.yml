@@ -164,7 +164,7 @@
         severity: warning
       annotations:
         summary: Logsearch log count on environment {{$labels.environment}} is too low
-        description: Logsearch log count on environment {{$labels.environment}} has been too low for 30m.  This indicates that logs are not flowing into ES like they should.  See the ingestor processes on the ingestor instances in the logsearch deployment.  They may need restarting.
+        description: Logsearch log count on environment {{$labels.environment}} has been too low for 30m.  This indicates that we may have a logging outage.  See the ingestor processes on the ingestor instances in the logsearch deployment.  They may need restarting.
     - alert: LogsearchBackupRatio
       expr: logsearch_backup_file_size / logsearch_backup_log_count < ((logsearch_ratio_threshold))
       for: 30m
