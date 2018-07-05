@@ -298,6 +298,14 @@
       annotations:
         summary: Concourse team {{$labels.team}} is missing on {{$labels.concourse_url}}
         description: Check Concourse {{$labels.concourse_url}} configuration for missing team {{$labels.team}}
+    - alert: ConcourseCheckNotRunning
+      expr: time() - push_time_seconds{job=~"concourse_.*"} > 7200
+      labels:
+        service: concourse
+        severity: warning
+      annotations:
+        summary: Concourse check {{$labels.job}} is not running
+        description: Check https://ci.fr.cloud.gov/teams/main/pipelines/deploy-prometheus?groups=checks for failures
 
 # Domain broker alerts
 - type: replace
