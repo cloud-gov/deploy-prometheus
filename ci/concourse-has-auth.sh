@@ -20,5 +20,3 @@ do
 
   rm -f "${tempfile}"
 done
-
-echo "concourse_has_auth_lastcheck $(date +'%s')" | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_has_auth/instance/lastcheck"

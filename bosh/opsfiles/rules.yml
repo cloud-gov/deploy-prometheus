@@ -13,7 +13,7 @@
         summary: AWS IAM user {{$labels.instance}} does not have MFA enabled
         description: Remind user {{$labels.instance}} to enable MFA
     - alert: AWSMFANotRunning
-      expr: time() - aws_iam_user_lastcheck > 7200
+      expr: time() - push_time_seconds{job="aws_iam"} > 7200
       labels:
         service: aws-iam
         severity: warning
@@ -51,7 +51,7 @@
         summary: CloudWatch Logs group {{$labels.group}} is not receiving logs
         description: CloudWatch Logs group {{$labels.group}} has not received a log in the last hour
     - alert: AWSLogsCheckNotRunning
-      expr: time() - awslogs_lastcheck > 7200
+      expr: time() - push_time_seconds{job=~"^awslogs.*"} > 7200
       labels:
         service: aws-logs
         severity: critical
@@ -248,7 +248,7 @@
         summary: UAA Client {{$labels.instance}} is not expected for {{$labels.uaa_url}}
         description: UAA Client {{$labels.instance}} exists but is not expected for {{$labels.uaa_url}}
     - alert: UAAClientAuditNotRunning
-      expr: time() - uaa_client_audit_lastcheck > 7200
+      expr: time() - push_time_seconds{job="uaa_client_audit"} > 7200
       labels:
         service: uaa-client-audit
         severity: warning

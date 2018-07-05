@@ -20,10 +20,7 @@ set -u
 : ${PROMETHEUSHOST:="0.prometheus.production-monitoring.prometheus-production.toolingbosh"}
 : ${ALERTMANAGERHOST:="0.alertmanager.production-monitoring.prometheus-production.toolingbosh"}
 : ${QUERIES:="
-  concourse_has_opslogin_lastcheck
-  bosh_unknown_iaas_instance_lastcheck
-  bosh_last_scrape_timestamp
-  aws_iam_user_lastcheck
+  push_time_seconds
 "}
 
 TIME=$(date +%s)
