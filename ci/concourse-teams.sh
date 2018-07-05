@@ -34,6 +34,3 @@ do
   rm -f "${tempfile1}"
   rm -f "${tempfile2}"
 done
-
-echo "concourse_extra_teams_lastcheck $(date +'%s')" | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_extra_teams/instance/lastcheck"
-echo "concourse_expected_teams_lastcheck $(date +'%s')" | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_expected_teams/instance/lastcheck"

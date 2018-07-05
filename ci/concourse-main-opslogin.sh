@@ -17,6 +17,4 @@ do
   echo "concourse_has_opslogin{instance=\"${URI}\"} ${has_opslogin}" >> "${tempfile}"
 done
 
-curl -X PUT --data-binary "@${tempfile}" "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_has_opslogin" echo "concourse_has_opslogin_lastcheck $(date +'%s')" | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_has_opslogin/instance/lastcheck"
-
 rm -f "${tempfile}"

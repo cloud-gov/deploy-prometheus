@@ -109,8 +109,6 @@ curl -X PUT --data-binary @${instance_metrics} "${GATEWAY_HOST}:${GATEWAY_PORT:-
 
 echo "Finished instance check. Checked $(cat /tmp/active_instances | wc -l) instances."
 
-echo "awslogs_lastcheck $(date +'%s')" | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs"
-
 # Ensure that slack notification resource detects text file
 touch stopping/instance-id
 

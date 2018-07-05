@@ -13,7 +13,7 @@
         summary: AWS IAM user {{$labels.instance}} does not have MFA enabled
         description: Remind user {{$labels.instance}} to enable MFA
     - alert: AWSMFANotRunning
-      expr: time() - aws_iam_user_lastcheck > 7200
+      expr: time() - push_time_seconds{job="aws_iam"} > 7200
       labels:
         service: aws-iam
         severity: warning
@@ -51,7 +51,7 @@
         summary: CloudWatch Logs group {{$labels.group}} is not receiving logs
         description: CloudWatch Logs group {{$labels.group}} has not received a log in the last hour
     - alert: AWSLogsCheckNotRunning
-      expr: time() - awslogs_lastcheck > 7200
+      expr: time() - push_time_seconds{job=~"^awslogs.*"} > 7200
       labels:
         service: aws-logs
         severity: critical
@@ -82,7 +82,7 @@
     name: bosh-unknown-instances
     rules:
     - alert: BoshUnknownInstanceCheckExpired
-      expr: time() - push_time_seconds{job="boshunknowninstance-lastcheck"} > 7200
+      expr: time() - push_time_seconds{job="bosh_unknown_instance"} > 7200
       labels:
         service: bosh-unknown-iaas-instance
         severity: critical
@@ -248,7 +248,7 @@
         summary: UAA Client {{$labels.instance}} is not expected for {{$labels.uaa_url}}
         description: UAA Client {{$labels.instance}} exists but is not expected for {{$labels.uaa_url}}
     - alert: UAAClientAuditNotRunning
-      expr: time() - uaa_client_audit_lastcheck > 7200
+      expr: time() - push_time_seconds{job="uaa_client_audit"} > 7200
       labels:
         service: uaa-client-audit
         severity: warning
@@ -298,6 +298,14 @@
       annotations:
         summary: Concourse team {{$labels.team}} is missing on {{$labels.concourse_url}}
         description: Check Concourse {{$labels.concourse_url}} configuration for missing team {{$labels.team}}
+    - alert: ConcourseCheckNotRunning
+      expr: time() - push_time_seconds{job=~"concourse_.*"} > 7200
+      labels:
+        service: concourse
+        severity: warning
+      annotations:
+        summary: Concourse check {{$labels.job}} is not running
+        description: Check https://ci.fr.cloud.gov/teams/main/pipelines/deploy-prometheus?groups=checks for failures
 
 # Domain broker alerts
 - type: replace
