@@ -82,7 +82,7 @@
     name: bosh-unknown-instances
     rules:
     - alert: BoshUnknownInstanceCheckExpired
-      expr: time() - push_time_seconds{job="boshunknowninstance-lastcheck"} > 7200
+      expr: time() - push_time_seconds{job="bosh_unknown_instance"} > 7200
       labels:
         service: bosh-unknown-iaas-instance
         severity: critical
