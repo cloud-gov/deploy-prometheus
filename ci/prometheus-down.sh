@@ -21,7 +21,6 @@ set -u
 : ${ALERTMANAGERHOST:="0.alertmanager.production-monitoring.prometheus-production.toolingbosh"}
 : ${QUERIES:="
   push_time_seconds%7Bjob%3D\"concourse_has_auth\"%7D
-  push_time_seconds%7Bjob%3D\"boshunknowninstance-lastcheck\"%7D
   push_time_seconds%7Bjob%3D\"bosh_unknown_instance\",vpc_name=\"production\"%7D
   push_time_seconds%7Bjob%3D\"aws_iam\"%7D
 "}
