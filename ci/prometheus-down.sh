@@ -47,11 +47,11 @@ for QUERY in ${QUERIES} ; do
       # make sure that the data is not too old (indicates that prometheus is not accepting data)
       TIMEDIFF=$((TIME - QTIME))
 
-      if [ "${TIMEDIFF}" -lt 1900 ] ; then
-        echo "  data for ${QUERY} is less than 1900s old"
+      if [ "${TIMEDIFF}" -lt 2400 ] ; then
+        echo "  data for ${QUERY} is less than 2400s old"
         UPDATEOK=yes
       else
-        echo "  data for ${QUERY} is greater than 1900s old! (${TIMEDIFF} seconds greater)"
+        echo "  data for ${QUERY} is greater than 2400s old! (${TIMEDIFF} seconds greater)"
       fi
     fi
   fi
