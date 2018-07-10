@@ -155,7 +155,7 @@
         severity: warning
       annotations:
         summary: Logsearch backup file size on environment {{$labels.environment}} is too low
-        description: Logsearch backup file size on environment {{$labels.environment}} has been too low for 30m
+        description: Logsearch backup file size on environment {{$labels.environment}} has been too low for 30m.  This indicates that the log archival process to s3 may be broken:  see the archiver instances in the logsearch deployment.
     - alert: LogsearchBackupLogCount
       expr: logsearch_backup_log_count < ((logsearch_log_count_threshold))
       for: 30m
@@ -163,8 +163,8 @@
         service: logsearch-backup
         severity: warning
       annotations:
-        summary: Logsearch backup log count on environment {{$labels.environment}} is too low
-        description: Logsearch backup log count on environment {{$labels.environment}} has been too low for 30m
+        summary: Logsearch log count on environment {{$labels.environment}} is too low
+        description: Logsearch log count on environment {{$labels.environment}} has been too low for 30m.  This indicates that we may have a logging outage.  See the ingestor processes on the ingestor instances in the logsearch deployment.  They may need restarting.
     - alert: LogsearchBackupRatio
       expr: logsearch_backup_file_size / logsearch_backup_log_count < ((logsearch_ratio_threshold))
       for: 30m
@@ -172,8 +172,8 @@
         service: logsearch-backup
         severity: warning
       annotations:
-        summary: Logsearch backup ratio on environment {{$labels.environment}} is too low
-        description: Logsearch backup ratio on environment {{$labels.environment}} has been too low for 30m
+        summary: Logsearch archive to index ratio on environment {{$labels.environment}} is too low
+        description: Logsearch archive to index ratio on environment {{$labels.environment}} has been too low for 30m.  The S3 archival process or the ES ingest process may not be working.  See the archival and ingestor instances in the logsearch deployment in case any of their components need restarting.
     - alert: LogsearchBackupExpired
       expr: time() - max(logsearch_backup_timestamp) > 60 * 30
       for: 5m
@@ -182,7 +182,7 @@
         severity: warning
       annotations:
         summary: Logsearch timestamp on environment {{$labels.environment}} is too old
-        description: Logsearch timestamp on environment {{$labels.environment}} has been too old for 5m
+        description: Logsearch timestamp on environment {{$labels.environment}} has been too old for 5m.  This indicates that the logsearch checks in https://github.com/18F/cg-deploy-logsearch/blob/master/ci/check-backup.sh have not run recently, so we do not have good data to alert on.
 
 # Nessus alerts
 - type: replace
