@@ -155,7 +155,7 @@
         severity: warning
       annotations:
         summary: Logsearch backup file size on environment {{$labels.environment}} is too low
-        description: Logsearch backup file size on environment {{$labels.environment}} has been too low for 30m.  This indicates that the log archival process to s3 may be broken:  see the archiver instances in the logsearch deployment.
+        description: Logsearch backup file size on environment {{$labels.environment}} has been too low for 30m.  This indicates that the log archival process to s3 may be broken.  See the archiver instances in the logsearch deployment.
     - alert: LogsearchBackupLogCount
       expr: logsearch_backup_log_count < ((logsearch_log_count_threshold))
       for: 30m
