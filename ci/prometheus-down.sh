@@ -25,7 +25,7 @@ UPDATEOK=no
 echo "querying prometheus ${PROMETHEUSHOST} for ${QUERY}"
 
 QTIME=$(curl --max-time 5 -s "${PROMETHEUSHOST}":9090/api/v1/query?query="${QUERY}" \
- | jq -r '.data.result[0].value[1]' | sed 's/\..*//')
+ | jq -r '.data.result[0].value[1]' | sed 's/\..*//' | cut -b1-10)
 
 
 # make sure that the curl worked (indicates that prometheus is down entirely)
