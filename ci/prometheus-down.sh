@@ -7,53 +7,49 @@
 # 
 # If the query fails, then something is wrong with Prometheus's query API.
 # 
-# If at least one timestamp is up to date, then we know it's probably working,
+# If at tsdb max timestamp is up to date, then we know it's probably working,
 # otherwise, something is jammed up inside probably.
-# 
-# 
-# XXX If something stops the processes that generate these timestamp metrics,
-# this will result in false positives.  Maybe a deploy might do this?
+#
 #
 
 set -u
 
 : ${PROMETHEUSHOST:="0.prometheus.production-monitoring.prometheus-production.toolingbosh"}
 : ${ALERTMANAGERHOST:="0.alertmanager.production-monitoring.prometheus-production.toolingbosh"}
-: ${QUERIES:="
-  push_time_seconds
-"}
+: ${QUERY:="prometheus_tsdb_head_max_time%7Binstance%3D\"localhost:9090\",job%3D\"prometheus\"%7D"}
 
 TIME=$(date +%s)
 APIOK=no
 UPDATEOK=no
 
-for QUERY in ${QUERIES} ; do
-  echo "querying prometheus ${PROMETHEUSHOST} for ${QUERY}"
+echo "querying prometheus ${PROMETHEUSHOST} for ${QUERY}"
 
-  QTIME=$(curl --max-time 5 -s "${PROMETHEUSHOST}":9090/api/v1/query?query="${QUERY}" \
-   | jq -r '.data.result[0].value[1]' | sed 's/\..*//')
+QTIME=$(curl --max-time 5 -s "${PROMETHEUSHOST}":9090/api/v1/query?query="${QUERY}" \
+ | jq -r '.data.result[0].value[1]' | sed 's/\..*//')
 
 
-  # make sure that the curl worked (indicates that prometheus is down entirely)
-  if [ ! -z "${QTIME}" ] ; then
-    echo "  prometheus API gateway is UP!"
-    APIOK=yes
-  
-    if [ "${QTIME}" = "null" ] ; then
-      echo "  API is OK, but no data for ${QUERY}"
+# make sure that the curl worked (indicates that prometheus is down entirely)
+if [ ! -z "${QTIME}" ] ; then
+  echo "  prometheus API gateway is UP!"
+  APIOK=yes
+
+  if [ "${QTIME}" = "null" ] ; then
+    echo "  API is OK, but no data for ${QUERY}"
+  else
+    # make sure that the data is not too old (indicates that prometheus is not accepting data)
+    # the TSDB max time switches out every 60s, so we should have something newer within 120s
+    # this makes sure that prometheus is monitoring itself properly
+    TIMEDIFF=$((TIME - QTIME))
+
+    if [ "${TIMEDIFF}" -lt 120 ] ; then
+      echo "  data for ${QUERY} is less than 120s old, so tsdb is timestamping properly"
+      UPDATEOK=yes
     else
-      # make sure that the data is not too old (indicates that prometheus is not accepting data)
-      TIMEDIFF=$((TIME - QTIME))
-
-      if [ "${TIMEDIFF}" -lt 600 ] ; then
-        echo "  data for ${QUERY} is less than 600s old"
-        UPDATEOK=yes
-      else
-        echo "  data for ${QUERY} is greater than 600s old!"
-      fi
+      echo "  data for ${QUERY} is greater than 120s old! tsdb is not timestamping properly"
     fi
   fi
-done
+fi
+
 
 # check to make sure that the alertmanager is alive
 if curl --max-time 5 -s "${ALERTMANAGERHOST}":9093/ | grep title.Alertmanager./title > /dev/null ; then
