@@ -20,7 +20,9 @@ set -u
 : ${PROMETHEUSHOST:="0.prometheus.production-monitoring.prometheus-production.toolingbosh"}
 : ${ALERTMANAGERHOST:="0.alertmanager.production-monitoring.prometheus-production.toolingbosh"}
 : ${QUERIES:="
-  push_time_seconds
+  push_time_seconds%7Bjob%3D\"concourse_has_auth\"%7D
+  push_time_seconds%7Bjob%3D\"bosh_unknown_instance\",vpc_name=\"production\"%7D
+  push_time_seconds%7Bjob%3D\"aws_iam\"%7D
 "}
 
 TIME=$(date +%s)
@@ -45,11 +47,11 @@ for QUERY in ${QUERIES} ; do
       # make sure that the data is not too old (indicates that prometheus is not accepting data)
       TIMEDIFF=$((TIME - QTIME))
 
-      if [ "${TIMEDIFF}" -lt 600 ] ; then
-        echo "  data for ${QUERY} is less than 600s old"
+      if [ "${TIMEDIFF}" -lt 2400 ] ; then
+        echo "  data for ${QUERY} is less than 2400s old"
         UPDATEOK=yes
       else
-        echo "  data for ${QUERY} is greater than 600s old!"
+        echo "  data for ${QUERY} is greater than 2400s old! (${TIMEDIFF} seconds greater)"
       fi
     fi
   fi
