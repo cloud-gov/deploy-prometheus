@@ -119,15 +119,14 @@ if [ ! -z "${target_instance}" ]; then
 
     echo "${target_instance} is being stopped!"
 
-    # This is commented out until we remove this functionality from riemann
-    # # find a list of volumes for the instance
-    # # this will also exit the program if the provided instance-id doesn't exist or is invalid
-    # VOLUMES=$(aws ec2 describe-instances --instance-ids ${target_instance} --output text --query 'Reservations[].Instances[].BlockDeviceMappings[].*.VolumeId')
-    # for vol in ${VOLUMES}; do
-    #     echo "Snapshotting ${target_instance}/${vol}"
-    #     aws ec2 create-snapshot --volume-id ${vol} --description "Created from ${target_instance} by $(hostname):${SCRIPTPATH}"
-    # done
+    # find a list of volumes for the instance
+    # this will also exit the program if the provided instance-id doesn't exist or is invalid
+    VOLUMES=$(aws ec2 describe-instances --instance-ids ${target_instance} --output text --query 'Reservations[].Instances[].BlockDeviceMappings[].*.VolumeId')
+    for vol in ${VOLUMES}; do
+        echo "Snapshotting ${target_instance}/${vol}"
+        aws ec2 create-snapshot --volume-id ${vol} --description "Created from ${target_instance} by $(hostname):${SCRIPTPATH}"
+    done
 
-    # echo "Stopping ${target_instance}"
-    # aws ec2 stop-instances --instance-ids ${target_instance}
+    echo "Stopping ${target_instance}"
+    aws ec2 stop-instances --instance-ids ${target_instance}
 fi
