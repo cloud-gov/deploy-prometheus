@@ -11,8 +11,6 @@ groups:
   - aws-rds-storage-check
   - domain-broker-certs
   - concourse-has-auth-check
-  - concourse-main-opslogin-check
-  - concourse-teams-check
   - prometheus-down-check-staging
   - prometheus-down-check
 
@@ -118,35 +116,7 @@ jobs:
   - task: concourse-has-auth
     file: prometheus-config/ci/concourse-has-auth.yml
     params:
-      AWS_DEFAULT_REGION: ((aws-region))
-      GATEWAY_HOST: ((gateway-host))
-
-- name: concourse-main-opslogin-check
-  serial_groups: [production]
-  plan:
-  - aggregate:
-    - get: prometheus-check-timer
-      trigger: true
-    - get: prometheus-config
-      resource: prometheus-config
-  - task: concourse-main-opslogin
-    file: prometheus-config/ci/concourse-main-opslogin.yml
-    params:
-      AWS_DEFAULT_REGION: ((aws-region))
-      GATEWAY_HOST: ((gateway-host))
-
-- name: concourse-teams-check
-  serial_groups: [production]
-  plan:
-  - aggregate:
-    - get: prometheus-check-timer
-      trigger: true
-    - get: prometheus-config
-      resource: prometheus-config
-  - task: concourse-teams
-    file: prometheus-config/ci/concourse-teams.yml
-    params:
-      AWS_DEFAULT_REGION: ((aws-region))
+      CONCOURSE_URIS: "https://ci.fr-stage.cloud.gov https://ci.fr.cloud.gov"
       GATEWAY_HOST: ((gateway-host))
 
 - name: prometheus-down-check
