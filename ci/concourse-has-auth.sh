@@ -8,5 +8,6 @@ for URI in ${CONCOURSE_URIS}; do
   if [ "${status_code}" == "401" ]; then
     has_auth=1
   fi
-  echo "concourse_has_auth ${has_auth}" | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_has_auth/concourse_url/${URI}"
+  safe_uri=$(echo "${URI}" | sed -E 's/https?:\/\///')
+  echo "concourse_has_auth ${has_auth}" | curl -X PUT --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/concourse_has_auth/concourse_url/${safe_uri}"
 done
