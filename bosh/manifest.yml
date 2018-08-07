@@ -34,6 +34,7 @@ instance_groups:
           retention: 720h
         route:
           receiver: notifications
+          group_by: ['alertname', 'cluster', 'service']
         receivers:
         - name: notifications
           pagerduty_configs:
