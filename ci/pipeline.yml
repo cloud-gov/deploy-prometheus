@@ -54,7 +54,7 @@ jobs:
       AWS_DEFAULT_REGION: ((aws-region))
       AWS_ACCESS_KEY_ID: ((aws-rds-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((aws-rds-secret-access-key))
-      GATEWAY_HOST: prometheus-production.service.cf.internal
+      GATEWAY_HOST: http://prometheus-production.service.cf.internal
 
 - name: aws-mfa-check
   serial_groups: [production]
