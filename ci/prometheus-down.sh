@@ -1,12 +1,12 @@
 #!/bin/bash
-# 
+#
 # This script checks a few known queries against the internal prometheus query
 # API.  These queries are chosen because they have timestamps as their values.
-# The queries and the prometheus host can be overridden with environment 
+# The queries and the prometheus host can be overridden with environment
 # variables.
-# 
+#
 # If the query fails, then something is wrong with Prometheus's query API.
-# 
+#
 # If at tsdb max timestamp is up to date, then we know it's probably working,
 # otherwise, something is jammed up inside probably.
 #
@@ -14,9 +14,7 @@
 
 set -u
 
-: ${PROMETHEUSHOST:="0.prometheus.production-monitoring.prometheus-production.toolingbosh"}
-: ${ALERTMANAGERHOST:="0.alertmanager.production-monitoring.prometheus-production.toolingbosh"}
-: ${QUERY:="prometheus_tsdb_head_max_time%7Binstance%3D\"localhost:9090\",job%3D\"prometheus\"%7D"}
+QUERY="prometheus_tsdb_head_max_time%7Binstance%3D\"localhost:9090\",job%3D\"prometheus\"%7D"
 
 TIME=$(date +%s)
 APIOK=no

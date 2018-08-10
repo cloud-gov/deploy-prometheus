@@ -12,7 +12,7 @@ groups:
   - domain-broker-certs
   - concourse-has-auth-check
   - prometheus-down-check-staging
-  - prometheus-down-check
+  - prometheus-down-check-production
 
 jobs:
 - name: awslogs-check
@@ -119,7 +119,7 @@ jobs:
       CONCOURSE_URIS: "https://ci.fr-stage.cloud.gov https://ci.fr.cloud.gov"
       GATEWAY_HOST: ((gateway-host))
 
-- name: prometheus-down-check
+- name: prometheus-down-check-production
   serial_groups: [production]
   plan:
   - aggregate:
@@ -134,9 +134,12 @@ jobs:
       params:
         PAGERDUTY_KEY: ((pagerduty-key))
         ALERT_MESSAGE: Prometheus seems to be down or hung!
-        ALERT_SOURCE: Concourse prometheus-down-check
+        ALERT_SOURCE: Concourse prometheus-down-check-production
         ALERT_SEVERITY: critical
         ALERT_COMPONENT: Prometheus
+    params:
+      PROMETHEUSHOST: prometheus-production.service.cf.internal
+      ALERTMANAGERHOST: alertmanager-production.service.cf.internal
 
 - name: prometheus-down-check-staging
   serial_groups: [staging]
@@ -157,9 +160,8 @@ jobs:
         ALERT_SEVERITY: warning
         ALERT_COMPONENT: Prometheus
     params:
-      PROMETHEUSHOST: 1.prometheus.staging-monitoring.prometheus-staging.toolingbosh
-      ALERTMANAGERHOST: 1.alertmanager.staging-monitoring.prometheus-staging.toolingbosh
-
+      PROMETHEUSHOST: prometheus-staging.service.cf.internal
+      ALERTMANAGERHOST: alertmanager-staging.service.cf.internal
 
 - name: deploy-prometheus-staging
   serial: true
