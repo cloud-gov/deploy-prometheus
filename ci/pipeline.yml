@@ -28,7 +28,7 @@ jobs:
     tags: [iaas]
     params:
       AWS_DEFAULT_REGION: ((aws-region))
-      GATEWAY_HOST: ((gateway-host))
+      GATEWAY_HOST: prometheus-production.service.cf.internal
       HEARTBEAT_GROUP: /var/log/syslog
   - put: slack
     params:
@@ -54,7 +54,7 @@ jobs:
       AWS_DEFAULT_REGION: ((aws-region))
       AWS_ACCESS_KEY_ID: ((aws-rds-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((aws-rds-secret-access-key))
-      GATEWAY_HOST: ((gateway-host))
+      GATEWAY_HOST: prometheus-production.service.cf.internal
 
 - name: aws-mfa-check
   serial_groups: [production]
@@ -69,7 +69,7 @@ jobs:
     tags: [iaas]
     params:
       AWS_DEFAULT_REGION: ((aws-region))
-      GATEWAY_HOST: ((gateway-host))
+      GATEWAY_HOST: prometheus-production.service.cf.internal
 
 - name: domain-broker-certs
   serial_groups: [production]
@@ -86,7 +86,7 @@ jobs:
       params:
         PREFIX: development-domains
         ENVIRONMENT: development
-        GATEWAY_HOST: ((gateway-host))
+        GATEWAY_HOST: prometheus-production.service.cf.internal
         AWS_DEFAULT_REGION: ((aws-region))
     - task: domain-broker-certs-staging
       file: prometheus-config/ci/domain-broker-certs.yml
@@ -94,7 +94,7 @@ jobs:
       params:
         PREFIX: staging-domains
         ENVIRONMENT: staging
-        GATEWAY_HOST: ((gateway-host))
+        GATEWAY_HOST: prometheus-production.service.cf.internal
         AWS_DEFAULT_REGION: ((aws-region))
     - task: domain-broker-certs-production
       file: prometheus-config/ci/domain-broker-certs.yml
@@ -102,7 +102,7 @@ jobs:
       params:
         PREFIX: production-domains
         ENVIRONMENT: production
-        GATEWAY_HOST: ((gateway-host))
+        GATEWAY_HOST: prometheus-production.service.cf.internal
         AWS_DEFAULT_REGION: ((aws-region))
 
 - name: concourse-has-auth-check
@@ -117,7 +117,7 @@ jobs:
     file: prometheus-config/ci/concourse-has-auth.yml
     params:
       CONCOURSE_URIS: "https://ci.fr-stage.cloud.gov https://ci.fr.cloud.gov"
-      GATEWAY_HOST: ((gateway-host))
+      GATEWAY_HOST: prometheus-production.service.cf.internal
 
 - name: prometheus-down-check-production
   serial_groups: [production]
