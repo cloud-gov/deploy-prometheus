@@ -13,7 +13,7 @@
       - '{__name__=~"concourse.*"}'
     static_configs:
     - targets:
-      - 0.prometheus-tooling.production-monitoring.prometheus-production.toolingbosh:9090
+      - prometheus-tooling.service.cf.internal:9090
 
 # Add kubernetes broker exporter
 - type: replace
