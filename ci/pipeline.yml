@@ -36,7 +36,7 @@ jobs:
       username: ((slack-username))
       icon_url: ((slack-icon-url))
       text: |
-        :flashing-alert: Instances should be stopped due to failure to log, but that's commented out pending SCR approval!
+        :flashing-alert: Instances will be stopped due to failure to log.
         <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
       text_file: stopping/instance-id
 
