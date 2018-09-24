@@ -32,7 +32,7 @@ jobs:
       HEARTBEAT_GROUP: /var/log/syslog
   - put: slack
     params:
-      channel: ((slack-channel))
+      channel: ((slack-news-channel))
       username: ((slack-username))
       icon_url: ((slack-icon-url))
       text: |
