@@ -39,6 +39,17 @@ instance_groups:
         - name: notifications
           pagerduty_configs:
           - service_key: ((pagerduty-key))
+          email_configs:
+          - to: ((cg-email-address))
+          - hello: ((smtp-hostname))
+        smtp:
+          from: ((smtp-header-from))
+          smarthost: ((smtp-hostname))
+          auth_username: ((smtp-username))
+          auth_password: ((smtp-password))
+          auth_secret: ((smtp-authsecret))
+          auth_identity: ((smtp-authidentity))
+          require_tls: true
 
 - name: prometheus
   instances: 1
