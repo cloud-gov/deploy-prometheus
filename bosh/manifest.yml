@@ -43,12 +43,10 @@ instance_groups:
           - to: ((cg-email-address))
           - hello: ((smtp-hostname))
         smtp:
-          from: ((smtp-header-from))
+          from: no-reply@cloud.gov
           smarthost: ((smtp-hostname))
           auth_username: ((smtp-username))
           auth_password: ((smtp-password))
-          auth_secret: ((smtp-authsecret))
-          auth_identity: ((smtp-authidentity))
           require_tls: true
 
 - name: prometheus
