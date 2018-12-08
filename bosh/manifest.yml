@@ -41,7 +41,6 @@ instance_groups:
           - service_key: ((pagerduty-key))
           email_configs:
           - to: ((cg-email-address))
-          - hello: ((smtp-hostname))
         smtp:
           from: no-reply@cloud.gov
           smarthost: ((smtp-hostname))
