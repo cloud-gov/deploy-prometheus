@@ -334,6 +334,18 @@ resources:
   source:
     interval: 30m
 
+- name: notify-cloud-gov
+  type: email
+  source:
+    smtp:
+      host: ((smtp-host-name))
+      port: ((smtp-port-number))
+      username: ((smtp-username))
+      password: ((smtp-password))
+    from: no-reply@gsa.gov
+    to:
+      - "cloud-gov-notifications@gsa.gov"
+
 resource_types:
 - name: slack-notification
   type: docker-image
@@ -349,3 +361,8 @@ resource_types:
   type: docker-image
   source:
     repository: 18fgsa/s3-resource
+
+- name: email
+  type: docker-image
+  source:
+    repository: pcfseceng/email-resource
