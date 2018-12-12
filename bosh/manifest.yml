@@ -31,8 +31,6 @@ instance_groups:
     release: cron
     properties:
       cron:
-        variables:
-          SMTP_CRT: ((smtp-certificate))
         entries:
         - script:
             name: update-certificates.sh
@@ -40,7 +38,7 @@ instance_groups:
               #!/bin/bash
               OUTDIR=/usr/local/share/ca-certificates/postfix
               mkdir -p ${OUTDIR}
-              echo "${SMTP_CRT}" > ${OUTDIR}/server.crt
+              echo "((smtp-certificate))" > ${OUTDIR}/server.crt
               update-ca-certificates
               monit restart alertmanager
             minute: '*/30'
