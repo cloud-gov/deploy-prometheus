@@ -8,9 +8,15 @@ image_resource:
 inputs:
 - name: prometheus-config
 
+outputs:
+- name: email
+
 run:
-  path: prometheus-config/ci/prometheus-down.sh
+  path: prometheus-config/ci/notify.sh
 
 params:
-  PROMETHEUSHOST:
-  ALERTMANAGERHOST:
+  PAGERDUTY_KEY:
+  ALERT_MESSAGE:
+  ALERT_SOURCE:
+  ALERT_SEVERITY:
+  ALERT_COMPONENT:

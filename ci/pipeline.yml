@@ -119,18 +119,23 @@ jobs:
     - get: prometheus-config
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
-    on_failure:
-      task: pagerduty-notify
-      file: prometheus-config/ci/pagerduty-notify.yml
-      params:
-        PAGERDUTY_KEY: ((pagerduty-key))
-        ALERT_MESSAGE: Prometheus seems to be down or hung!
-        ALERT_SOURCE: Concourse prometheus-down-check-production
-        ALERT_SEVERITY: critical
-        ALERT_COMPONENT: Prometheus
     params:
       PROMETHEUSHOST: prometheus-production.service.cf.internal
       ALERTMANAGERHOST: alertmanager-production.service.cf.internal
+    on_failure:
+      do:
+      - task: notify
+        file: prometheus-config/ci/notify.yml
+        params:
+          PAGERDUTY_KEY: ((pagerduty-key))
+          ALERT_MESSAGE: Prometheus seems to be down or hung!
+          ALERT_SOURCE: Concourse prometheus-down-check-production
+          ALERT_SEVERITY: critical
+          ALERT_COMPONENT: Prometheus
+      - put: notify-cloud-gov
+        params:
+          subject: email/subject.txt
+          body: email/body.txt
 
 - name: prometheus-down-check-staging
   serial_groups: [staging]
@@ -141,18 +146,23 @@ jobs:
     - get: prometheus-config
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
-    on_failure:
-      task: pagerduty-notify
-      file: prometheus-config/ci/pagerduty-notify.yml
-      params:
-        PAGERDUTY_KEY: ((pagerduty-key-staging))
-        ALERT_MESSAGE: Staging Prometheus seems to be down or hung!
-        ALERT_SOURCE: Concourse prometheus-down-check-staging
-        ALERT_SEVERITY: warning
-        ALERT_COMPONENT: Prometheus
     params:
       PROMETHEUSHOST: prometheus-staging.service.cf.internal
       ALERTMANAGERHOST: alertmanager-staging.service.cf.internal
+    on_failure:
+      do:
+      - task: notify
+        file: prometheus-config/ci/notify.yml
+        params:
+          PAGERDUTY_KEY: ((pagerduty-key-staging))
+          ALERT_MESSAGE: Staging Prometheus seems to be down or hung!
+          ALERT_SOURCE: Concourse prometheus-down-check-staging
+          ALERT_SEVERITY: warning
+          ALERT_COMPONENT: Prometheus
+      - put: notify-cloud-gov
+        params:
+          subject: email/subject.txt
+          body: email/body.txt
 
 - name: deploy-prometheus-staging
   serial: true
@@ -334,6 +344,19 @@ resources:
   source:
     interval: 30m
 
+- name: notify-cloud-gov
+  type: email
+  source:
+    smtp:
+      host: ((smtp-host-name))
+      port: ((smtp-port-number))
+      username: ((smtp-username))
+      password: ((smtp-password))
+      ca_cert: ((smtp-certificate))
+    from: no-reply@gsa.gov
+    to:
+      - "cloud-gov-notifications@gsa.gov"
+
 resource_types:
 - name: slack-notification
   type: docker-image
@@ -349,3 +372,8 @@ resource_types:
   type: docker-image
   source:
     repository: 18fgsa/s3-resource
+
+- name: email
+  type: docker-image
+  source:
+    repository: pcfseceng/email-resource

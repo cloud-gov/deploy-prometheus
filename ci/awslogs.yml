@@ -13,3 +13,8 @@ outputs:
 
 run:
   path: prometheus-config/ci/awslogs.sh
+
+params:
+  AWS_DEFAULT_REGION:
+  GATEWAY_HOST:
+  HEARTBEAT_GROUP:

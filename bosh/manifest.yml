@@ -3,6 +3,7 @@ name: prometheus-((environment))
 releases:
 - {name: prometheus, version: latest}
 - {name: oauth2-proxy, version: latest}
+- {name: cron, version: latest}
 
 stemcells:
 - alias: default
@@ -26,6 +27,26 @@ instance_groups:
   networks:
   - name: ((environment))-monitoring
   jobs:
+  - name: cron
+    release: cron
+    properties:
+      cron:
+        entries:
+        - script:
+            name: update-certificates.sh
+            contents: |
+              #!/bin/bash
+              OUTDIR=/usr/local/share/ca-certificates/postfix
+              mkdir -p ${OUTDIR}
+              echo "((smtp-certificate))" > ${OUTDIR}/server.crt
+              update-ca-certificates
+              monit restart alertmanager
+            minute: '*/30'
+            hour: '*'
+            day: '*'
+            month: '*'
+            wday: '*'
+            user: root
   - name: alertmanager
     release: prometheus
     properties:
@@ -39,6 +60,14 @@ instance_groups:
         - name: notifications
           pagerduty_configs:
           - service_key: ((pagerduty-key))
+          email_configs:
+          - to: ((cg-email-address))
+        smtp:
+          from: no-reply@gsa.gov
+          smarthost: ((smtp-hostname))
+          auth_username: ((smtp-username))
+          auth_password: ((smtp-password))
+          require_tls: true
 
 - name: prometheus
   instances: 1
