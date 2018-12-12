@@ -3,6 +3,7 @@ name: prometheus-((environment))
 releases:
 - {name: prometheus, version: latest}
 - {name: oauth2-proxy, version: latest}
+- {name: cron, version: latest}
 
 stemcells:
 - alias: default
@@ -26,6 +27,31 @@ instance_groups:
   networks:
   - name: ((environment))-monitoring
   jobs:
+  - name: update-certificates
+    templates:
+    # Remove this once 0.16 is released with TLS cert support
+    - name: cron
+      release: cron
+    properties:
+      cron:
+        variables:
+          SMTP_CRT: ((smtp-certificate))
+        entries:
+        - script:
+            name: update-certificates.sh
+            contents: |
+              #!/bin/bash
+              OUTDIR=/usr/local/share/ca-certificates/postfix
+              mkdir -p ${OUTDIR}
+              echo "${SMTP_CRT}" > ${OUTDIR}/server.crt
+              update-ca-certificates
+              monit restart alertmanager
+            minute: '*/30'
+            hour: '*'
+            day: '*'
+            month: '*'
+            wday: '*'
+            user: root
   - name: alertmanager
     release: prometheus
     properties:
