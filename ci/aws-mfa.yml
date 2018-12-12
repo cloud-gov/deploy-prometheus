@@ -10,3 +10,7 @@ inputs:
 
 run:
   path: prometheus-config/ci/aws-mfa.sh
+
+params:
+  AWS_DEFAULT_REGION:
+  GATEWAY_HOST:
