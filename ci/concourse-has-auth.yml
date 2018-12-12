@@ -10,3 +10,7 @@ inputs:
 
 run:
   path: prometheus-config/ci/concourse-has-auth.sh
+
+params:
+  CONCOURSE_URIS:
+  GATEWAY_HOST:

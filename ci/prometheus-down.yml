@@ -10,3 +10,7 @@ inputs:
 
 run:
   path: prometheus-config/ci/prometheus-down.sh
+
+params:
+  PROMETHEUSHOST:
+  ALERTMANAGERHOST:
