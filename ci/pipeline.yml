@@ -139,20 +139,24 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
+    - put: notify-cloud-gov
+      params:
+        subject: email/subject.txt
+        body: email/body.txt
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
+    params:
+      PROMETHEUSHOST: prometheus-staging.service.cf.internal
+      ALERTMANAGERHOST: alertmanager-staging.service.cf.internal
     on_failure:
-      task: pagerduty-notify
-      file: prometheus-config/ci/pagerduty-notify.yml
+      task: notify
+      file: prometheus-config/ci/notify.yml
       params:
         PAGERDUTY_KEY: ((pagerduty-key-staging))
         ALERT_MESSAGE: Staging Prometheus seems to be down or hung!
         ALERT_SOURCE: Concourse prometheus-down-check-staging
         ALERT_SEVERITY: warning
         ALERT_COMPONENT: Prometheus
-    params:
-      PROMETHEUSHOST: prometheus-staging.service.cf.internal
-      ALERTMANAGERHOST: alertmanager-staging.service.cf.internal
 
 - name: deploy-prometheus-staging
   serial: true
