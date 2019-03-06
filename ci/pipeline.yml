@@ -290,7 +290,6 @@ resources:
   source:
     owner: bosh-prometheus
     repository: prometheus-boshrelease
-    access_token: ((github-access-token))
 
 - name: oauth2-proxy-release
   type: s3-iam
