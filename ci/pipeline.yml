@@ -177,7 +177,7 @@ jobs:
       trigger: true
     - get: oauth2-proxy-release
       trigger: true
-    - get: prometheus-stemcell
+    - get: prometheus-stemcell-xenial
       trigger: true
     - get: pipeline-tasks
   - put: prometheus-staging-deployment
@@ -188,7 +188,7 @@ jobs:
       - prometheus-release/*.tgz
       - oauth2-proxy-release/*.tgz
       stemcells:
-      - prometheus-stemcell/*.tgz
+      - prometheus-stemcell-xenial/*.tgz
       ops_files:
       - prometheus-config/bosh/opsfiles/rules.yml
       - prometheus-config/bosh/opsfiles/staging.yml
@@ -231,7 +231,7 @@ jobs:
     - get: oauth2-proxy-release
       passed: [deploy-prometheus-staging]
       trigger: true
-    - get: prometheus-stemcell
+    - get: prometheus-stemcell-xenial
       passed: [deploy-prometheus-staging]
       trigger: true
     - get: pipeline-tasks
@@ -305,10 +305,10 @@ resources:
     uri: ((cg-deploy-prometheus-git-url))
     branch: ((cg-deploy-prometheus-git-branch))
 
-- name: prometheus-stemcell
+- name: prometheus-stemcell-xenial
   type: bosh-io-stemcell
   source:
-    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
+    name: bosh-aws-xen-hvm-ubuntu-xenial-go_agent
 
 - name: prometheus-staging-deployment
   type: bosh-deployment
