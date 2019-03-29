@@ -259,6 +259,7 @@ instance_groups:
           anonymous:
             enabled: true
             org_role: Admin
+            org_name: cloud.gov
           basic:
             enabled: false
         dashboards:
