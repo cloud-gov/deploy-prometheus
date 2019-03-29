@@ -334,6 +334,9 @@ instance_groups:
       cookie_secret: ((oauth-proxy-cookie-secret))
       oidc_issuer_url: https://opslogin.fr.cloud.gov/oauth/token
       email_domain: gsa.gov
+      # these are both set in nginx via *security-headers, and setting them twice breaks them
+      browser_xss_filter: False
+      content_type_nosniff: False
 variables:
 - name: grafana-admin-password
   type: password
