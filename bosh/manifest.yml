@@ -179,6 +179,16 @@ instance_groups:
             client_secret: ((bosh-client-secret))
         metrics:
           environment: ((environment))
+  - name: cf_exporter
+    release: prometheus
+    properties:
+      cf_exporter:
+        cf:
+          api_url: https://api.((domain))
+          client_id: ((cf-exporter-client-id))
+          client_secret: ((cf-exporter-client-secret))
+        metrics:
+          environment: ((environment))
   - name: firehose_exporter
     release: prometheus
     properties:
