@@ -187,6 +187,7 @@ instance_groups:
           api_url: https://api.((domain))
           client_id: ((cf-exporter-client-id))
           client_secret: ((cf-exporter-client-secret))
+          deployment_name: cf-((environment))
         metrics:
           environment: ((environment))
   - name: firehose_exporter
