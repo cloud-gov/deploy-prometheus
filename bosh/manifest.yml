@@ -112,6 +112,10 @@ instance_groups:
           static_configs:
           - targets:
             - localhost:9190
+        - job_name: cf
+          static_configs:
+          - targets:
+            - localhost:9193
         - job_name: firehose
           static_configs:
           - targets:
