@@ -113,6 +113,8 @@ instance_groups:
           - targets:
             - localhost:9190
         - job_name: cf
+          scrape_interval: 1m
+          scrape_timeout: 1m
           static_configs:
           - targets:
             - localhost:9193
