@@ -112,6 +112,12 @@ instance_groups:
           static_configs:
           - targets:
             - localhost:9190
+        - job_name: cf
+          scrape_interval: 1m
+          scrape_timeout: 1m
+          static_configs:
+          - targets:
+            - localhost:9193
         - job_name: firehose
           static_configs:
           - targets:
@@ -177,6 +183,17 @@ instance_groups:
             url: ((bosh-url)):8443
             client_id: ((bosh-client-id))
             client_secret: ((bosh-client-secret))
+        metrics:
+          environment: ((environment))
+  - name: cf_exporter
+    release: prometheus
+    properties:
+      cf_exporter:
+        cf:
+          api_url: https://api.((domain))
+          client_id: ((cf-exporter-client-id))
+          client_secret: ((cf-exporter-client-secret))
+          deployment_name: cf-((environment))
         metrics:
           environment: ((environment))
   - name: firehose_exporter
