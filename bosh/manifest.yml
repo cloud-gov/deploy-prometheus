@@ -330,8 +330,6 @@ instance_groups:
           server_name: prometheus.((domain))
           headers: &security-headers
             X-Frame-Options: DENY
-            X-Content-Type-Options: nosniff
-            X-XSS-Protection: "1; mode=block"
             Strict-Transport-Security: "max-age=31536000; preload"
         alertmanager:
           http_port: 8081
@@ -352,9 +350,8 @@ instance_groups:
       cookie_secret: ((oauth-proxy-cookie-secret))
       oidc_issuer_url: https://opslogin.fr.cloud.gov/oauth/token
       email_domain: gsa.gov
-      # these are both set in nginx via *security-headers, and setting them twice breaks them
-      browser_xss_filter: False
-      content_type_nosniff: False
+      browser_xss_filter: True
+      content_type_nosniff: True
 variables:
 - name: grafana-admin-password
   type: password
