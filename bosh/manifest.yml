@@ -211,6 +211,7 @@ instance_groups:
           environment: ((environment))
         logging:
           url: wss://doppler.((domain)):443
+          use_legacy_firehose: true
   - name: kube_state_metrics_exporter
     release: prometheus
     properties:
