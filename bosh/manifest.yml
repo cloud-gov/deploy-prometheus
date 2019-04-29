@@ -86,7 +86,8 @@ instance_groups:
       prometheus:
         storage:
           tsdb:
-            retention: 30d
+            retention:
+              time: 30d
         web:
           external_url: https://prometheus.((domain))
         rule_files:
@@ -205,10 +206,12 @@ instance_groups:
           client_id: ((firehose-client-id))
           client_secret: ((firehose-client-secret))
         doppler:
-          url: wss://doppler.((domain)):443
           subscription_id: prometheus
         metrics:
           environment: ((environment))
+        logging:
+          url: wss://doppler.((domain)):443
+          use_legacy_firehose: true
   - name: kube_state_metrics_exporter
     release: prometheus
     properties:
