@@ -58,8 +58,6 @@ instance_groups:
           group_by: ['alertname', 'cluster', 'service']
         receivers:
         - name: notifications
-          pagerduty_configs:
-          - service_key: ((pagerduty-key))
           email_configs:
           - to: ((cg-email-address))
         smtp:

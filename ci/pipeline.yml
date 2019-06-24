@@ -192,6 +192,7 @@ jobs:
       ops_files:
       - prometheus-config/bosh/opsfiles/rules.yml
       - prometheus-config/bosh/opsfiles/staging.yml
+      - prometheus-config/bosh/opsfiles/add-ops-genie.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/staging.yml
       - common-staging/staging-prometheus.yml
