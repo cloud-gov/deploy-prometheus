@@ -6,3 +6,4 @@ logsearch_log_count_threshold: 300
 logsearch_ratio_threshold: 50
 blackbox-targets:
 - https://api.fr-stage.cloud.gov
+opsgenie_url: https://api.opsgenie.com
