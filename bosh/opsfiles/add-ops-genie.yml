@@ -1,5 +1,5 @@
 - type: replace
   path: /instance_groups/name=alertmanager/jobs/name=alertmanager/properties/alertmanager/opsgenie?
   value:
-    api_key: ((opsgenie-api-key))
+    api_key: ((alertmanager_opsgenie_api_key))
     api_url: ((opsgenie-url))
