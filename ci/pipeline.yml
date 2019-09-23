@@ -18,7 +18,7 @@ jobs:
 - name: awslogs-check
   serial_groups: [production]
   plan:
-  - aggregate:
+  - in_parallel:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
@@ -34,7 +34,7 @@ jobs:
 - name: aws-rds-storage-check
   serial_groups: [production]
   plan:
-  - aggregate:
+  - in_parallel:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
@@ -50,7 +50,7 @@ jobs:
 - name: aws-mfa-check
   serial_groups: [production]
   plan:
-  - aggregate:
+  - in_parallel:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
@@ -65,12 +65,12 @@ jobs:
 - name: domain-broker-certs
   serial_groups: [production]
   plan:
-  - aggregate:
+  - in_parallel:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
       resource: prometheus-config
-  - aggregate:
+  - in_parallel:
     - task: domain-broker-certs-development
       file: prometheus-config/ci/domain-broker-certs.yml
       tags: [iaas]
@@ -99,7 +99,7 @@ jobs:
 - name: concourse-has-auth-check
   serial_groups: [production]
   plan:
-  - aggregate:
+  - in_parallel:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
@@ -113,7 +113,7 @@ jobs:
 - name: prometheus-down-check-production
   serial_groups: [production]
   plan:
-  - aggregate:
+  - in_parallel:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
@@ -140,7 +140,7 @@ jobs:
 - name: prometheus-down-check-staging
   serial_groups: [staging]
   plan:
-  - aggregate:
+  - in_parallel:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
@@ -167,7 +167,7 @@ jobs:
 - name: deploy-prometheus-staging
   serial: true
   plan:
-  - aggregate:
+  - in_parallel:
     - get: master-bosh-root-cert
     - get: prometheus-config
       trigger: true
@@ -218,7 +218,7 @@ jobs:
   serial: true
   serial_groups: [production]
   plan:
-  - aggregate:
+  - in_parallel:
     - get: master-bosh-root-cert
     - get: prometheus-config
       passed: [deploy-prometheus-staging]
