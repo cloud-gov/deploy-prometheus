@@ -192,6 +192,8 @@ jobs:
       ops_files:
       - prometheus-config/bosh/opsfiles/rules.yml
       - prometheus-config/bosh/opsfiles/staging.yml
+      - prometheus-config/bosh/opsfiles/add-ops-genie.yml
+      - prometheus-config/bosh/opsfiles/alertmanager-opsgenie-receiver.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/staging.yml
       - common-staging/staging-prometheus.yml
@@ -290,7 +292,6 @@ resources:
   source:
     owner: bosh-prometheus
     repository: prometheus-boshrelease
-    access_token: ((github-access-token))
 
 - name: oauth2-proxy-release
   type: s3-iam
