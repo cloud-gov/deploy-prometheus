@@ -41,12 +41,12 @@ instance_groups:
               echo "((smtp-certificate))" > ${OUTDIR}/server.crt
               update-ca-certificates
               monit restart alertmanager
-            minute: '*/30'
-            hour: '*'
-            day: '*'
-            month: '*'
-            wday: '*'
-            user: root
+          minute: '*/30'
+          hour: '*'
+          day: '*'
+          month: '*'
+          wday: '*'
+          user: root
   - name: alertmanager
     release: prometheus
     properties:
