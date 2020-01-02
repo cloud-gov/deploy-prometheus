@@ -175,6 +175,8 @@ jobs:
       trigger: true
     - get: prometheus-release
       trigger: true
+    - get: prometheus-release-src
+      trigger: true
     - get: oauth2-proxy-release
       trigger: true
     - get: prometheus-stemcell-xenial
@@ -193,7 +195,7 @@ jobs:
       - prometheus-config/bosh/opsfiles/rules.yml
       - prometheus-config/bosh/opsfiles/staging.yml
       - prometheus-config/bosh/opsfiles/add-ops-genie.yml
-      - prometheus-release/manifests/operators/alertmanager-opsgenie-receiver.yml
+      - prometheus-config/bosh/opsfiles/alertmanager-opsgenie-receiver.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/staging.yml
       - common-staging/staging-prometheus.yml
@@ -293,6 +295,8 @@ resources:
     owner: bosh-prometheus
     repository: prometheus-boshrelease
     access_token: ((github-access-token))
+    # we can't upgrade past this until k8s is upgraded.
+    tag_filter: ((prometheus-release-version-filter))
 
 - name: oauth2-proxy-release
   type: s3-iam
@@ -302,10 +306,20 @@ resources:
     region_name: ((aws-region))
 
 - name: prometheus-config
+  icon: github-circle
   type: git
   source:
     uri: ((cg-deploy-prometheus-git-url))
     branch: ((cg-deploy-prometheus-git-branch))
+
+- name: prometheus-release-src
+  icon: github-circle
+  type: git
+  source:
+    uri: ((prometheus-release-git-url))
+    branch: ((prometheus-release-git-branch))
+    # we can't upgrade past this until k8s is upgraded.
+    tag_filter: ((prometheus-release-version-filter))
 
 - name: prometheus-stemcell-xenial
   type: bosh-io-stemcell
