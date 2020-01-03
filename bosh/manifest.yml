@@ -90,7 +90,12 @@ instance_groups:
           external_url: https://prometheus.((domain))
         rule_files:
         - /var/vcap/jobs/bosh_alerts/*.alerts.yml
-        - /var/vcap/jobs/cloudfoundry_alerts/*.alerts.yml
+        - /var/vcap/jobs/cloudfoundry_alerts/cf_cells.alerts.yml
+        - /var/vcap/jobs/cloudfoundry_alerts/cf_diego.alerts.yml
+        - /var/vcap/jobs/cloudfoundry_alerts/cf_doppler.alerts.yml
+        - /var/vcap/jobs/cloudfoundry_alerts/cf_routers.alerts.yml
+        - /var/vcap/jobs/cloudfoundry_alerts/prometheus_cf_exporter.alerts.yml
+        - /var/vcap/jobs/cloudfoundry_alerts/prometheus_firehose_exporter.alerts.yml
         - /var/vcap/jobs/kubernetes_alerts/*.alerts.yml
         - /var/vcap/jobs/elasticsearch_alerts/*.alerts.yml
         - /var/vcap/jobs/concourse_alerts/*.alerts.yml
