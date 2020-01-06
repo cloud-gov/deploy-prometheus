@@ -357,3 +357,26 @@
       annotations:
         summary: "CF Application `{{$labels.environment}}/{{$labels.deployment}}/{{$labels.organization_name}}/{{$labels.space_name}}/{{$labels.application_name}}` does not have any instance running"
         description: "CF Application `{{$labels.application_name}}` at environment `{{$labels.environment}}`, deployment `{{$labels.deployment}}`, org `{{$labels.organization_name}}`, and space `{{$labels.space_name}}` has not had any instance running. You might want to look into that."
+
+# Network watchers
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: networker
+    rules:
+    - alert: NetworkTrafficBurst
+      expr: delta(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m]) >= 10000
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: Burst in incoming network traffic
+        description: "The platform has seen a burst in incoming network traffic, please review this dashboard: https://grafana.fr.cloud.gov/d/cf_router/cf-router"
+    - alert: LargeNetworkTrafficBurst
+      expr: delta(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m]) >= 15000
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: Burst in incoming network traffic
+        description: "The platform has seen a very large burst in incoming network traffic, please review this dashboard: https://grafana.fr.cloud.gov/d/cf_router/cf-router"
