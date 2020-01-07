@@ -365,7 +365,7 @@
     name: networker
     rules:
     - alert: NetworkTrafficBurst
-      expr: delta(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m]) >= 10000
+      expr: avg by (environment) (irate(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m] offset 5m)) / avg by (environment) (irate(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m])) >= 1.40
       for: 5m
       labels:
         severity: warning
@@ -373,7 +373,7 @@
         summary: Burst in incoming network traffic
         description: "The platform has seen a burst in incoming network traffic, please review this dashboard: https://grafana.fr.cloud.gov/d/cf_router/cf-router"
     - alert: LargeNetworkTrafficBurst
-      expr: delta(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m]) >= 15000
+      expr: avg by (environment) (irate(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m] offset 5m)) / avg by (environment) (irate(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m])) >= 1.50
       for: 5m
       labels:
         severity: critical
