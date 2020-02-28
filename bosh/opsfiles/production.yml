@@ -115,3 +115,11 @@
   path: /instance_groups/name=nginx/jobs/name=nginx/consumes?
   value:
     prometheus: {from: prometheus-primary}
+
+# instance types.
+- type: replace
+  path: /instance_groups/name=prometheus/vm_type
+  value: m5.large
+- type: replace
+  path: /instance_groups/name=prometheus-tooling/vm_type
+  value: m5.large
