@@ -358,32 +358,6 @@
         summary: "CF Application `{{$labels.environment}}/{{$labels.deployment}}/{{$labels.organization_name}}/{{$labels.space_name}}/{{$labels.application_name}}` does not have any instance running"
         description: "CF Application `{{$labels.application_name}}` at environment `{{$labels.environment}}`, deployment `{{$labels.deployment}}`, org `{{$labels.organization_name}}`, and space `{{$labels.space_name}}` has not had any instance running. You might want to look into that."
 
-# monitor Federalist proxy
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
-  value:
-    name: federalist-proxy
-    rules:
-    - alert: FederalistProxyUnhealthy
-      # get all the cf application instances with matching org, space, and app IDs. 
-      # Subtract from that all the instances with matching org, space, app ids with state Running.
-      # Take the minimum of that, and see if it's more than zero
-      expr: min(cf_application_instances{organization_id="((federalist_org_id))", space_id="((federalist_proxy_space_id))", application_id="((federalist_proxy_app_id))"} - cf_application_instances_running{state=~"STARTED", organization_id="((federalist_org_id))"", space_id="((federalist_proxy_space_id))"", application_id=((federalist_proxy_app_id))"} ) > 0
-      for: 5m
-      labels:
-        severity: warning
-      annotations:
-        summary: "Federalist proxy app unhealthy"
-        description: "Reach out to Federalist"
-    - alert: FederalistProxyCrashed
-      # get all the cf application instances with matching org, space, and app IDs in state started. If there are zero, alert. 
-      expr: sum(cf_application_instances_running{organization_id="((federalist_org_id))", space_id="((federalist_proxy_space_id))", application_id="((federalist_proxy_app_id))"}) == 0
-      for: 5m
-      labels:
-        severity: critical
-      annotations:
-        summary: "Federalist proxy app crashed"
-        description: "Reach out to Federalist"
 
 # Network watchers
 - type: replace
