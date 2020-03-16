@@ -342,7 +342,7 @@
     name: cg-operators
     rules:
     - alert: CFOperatorAppUnhealthy
-      expr: min(cf_application_instances{state=~"STARTED", organization_id="4175a5b2-78a4-42b0-94c2-280f8be41e7f"} - cf_application_instances_running{state=~"STARTED"}) by(environment, deployment, organization_name, space_name, application_name) > 0
+      expr: min(cf_application_instances{organization_id="4175a5b2-78a4-42b0-94c2-280f8be41e7f"} - cf_application_instances_running{state=~"STARTED"}) by(environment, deployment, organization_name, space_name, application_name) > 0
       for: 5m
       labels:
         severity: warning
@@ -357,6 +357,29 @@
       annotations:
         summary: "CF Application `{{$labels.environment}}/{{$labels.deployment}}/{{$labels.organization_name}}/{{$labels.space_name}}/{{$labels.application_name}}` does not have any instance running"
         description: "CF Application `{{$labels.application_name}}` at environment `{{$labels.environment}}`, deployment `{{$labels.deployment}}`, org `{{$labels.organization_name}}`, and space `{{$labels.space_name}}` has not had any instance running. You might want to look into that."
+
+# monitor Federalist proxy
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: federalist-proxy
+    rules:
+    - alert: FederalistProxyUnhealthy
+      expr: min(cf_application_instances{organization_id="{{federalist_org_id}}"", space_id="{{federalist_proxy_space_id}}"", application_id={{federalist_proxy_app_id}}"} - cf_application_instances_running{state=~"STARTED", organization_id="{{federalist_org_id}}"", space_id="{{federalist_proxy_space_id}}"", application_id={{federalist_proxy_app_id}}"} ) > 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Federalist proxy app unhealthy"
+        description: "Reach out to Federalist"
+    - alert: FederalistProxyCrashed
+      expr: sum(cf_application_instances_running{organization_id="{{federalist_org_id}}"", space_id="{{federalist_proxy_space_id}}"", application_id={{federalist_proxy_app_id}}"}) == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Federalist proxy app crashed"
+        description: "Reach out to Federalist"
 
 # Network watchers
 - type: replace
