@@ -365,7 +365,7 @@
     name: federalist-proxy
     rules:
     - alert: FederalistProxyUnhealthy
-      expr: min(cf_application_instances{organization_id="{{federalist_org_id}}"", space_id="{{federalist_proxy_space_id}}"", application_id={{federalist_proxy_app_id}}"} - cf_application_instances_running{state=~"STARTED", organization_id="{{federalist_org_id}}"", space_id="{{federalist_proxy_space_id}}"", application_id={{federalist_proxy_app_id}}"} ) > 0
+      expr: min(cf_application_instances{organization_id="{{federalist_org_id}}", space_id="{{federalist_proxy_space_id}}", application_id="{{federalist_proxy_app_id}}"} - cf_application_instances_running{state=~"STARTED", organization_id="{{federalist_org_id}}"", space_id="{{federalist_proxy_space_id}}"", application_id={{federalist_proxy_app_id}}"} ) > 0
       for: 5m
       labels:
         severity: warning
@@ -373,7 +373,7 @@
         summary: "Federalist proxy app unhealthy"
         description: "Reach out to Federalist"
     - alert: FederalistProxyCrashed
-      expr: sum(cf_application_instances_running{organization_id="{{federalist_org_id}}"", space_id="{{federalist_proxy_space_id}}"", application_id={{federalist_proxy_app_id}}"}) == 0
+      expr: sum(cf_application_instances_running{organization_id="{{federalist_org_id}}", space_id="{{federalist_proxy_space_id}}", application_id="{{federalist_proxy_app_id}}"}) == 0
       for: 5m
       labels:
         severity: critical
