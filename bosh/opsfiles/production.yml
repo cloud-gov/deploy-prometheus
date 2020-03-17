@@ -135,7 +135,7 @@
       # get all the cf application instances with matching org, space, and app IDs. 
       # Subtract from that all the instances with matching org, space, app ids with state Running.
       # Take the minimum of that, and see if it's more than zero
-      expr: min(cf_application_instances{organization_id="((federalist_org_id))", space_id="((federalist_proxy_space_id))", application_id="((federalist_proxy_app_id))"} - cf_application_instances_running{state=~"STARTED", organization_id="((federalist_org_id))"", space_id="((federalist_proxy_space_id))"", application_id=((federalist_proxy_app_id))"} ) > 0
+      expr: min(cf_application_instances{organization_id="((federalist_org_id))", space_id="((federalist_proxy_space_id))", application_id="((federalist_proxy_app_id))"} - cf_application_instances_running{state=~"STARTED", organization_id="((federalist_org_id))", space_id="((federalist_proxy_space_id))", application_id=((federalist_proxy_app_id))"} ) > 0
       for: 5m
       labels:
         severity: warning
