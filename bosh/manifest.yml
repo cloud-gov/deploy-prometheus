@@ -39,8 +39,8 @@ instance_groups:
               OUTDIR=/usr/local/share/ca-certificates/postfix
               mkdir -p ${OUTDIR}
               echo "((smtp-certificate))" > ${OUTDIR}/server.crt
-              update-ca-certificates
-              monit restart alertmanager
+              /usr/sbin/update-ca-certificates
+              /var/vcap/bosh/bin/monit restart alertmanager
           minute: '*/30'
           hour: '*'
           day: '*'
