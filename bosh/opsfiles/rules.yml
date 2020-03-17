@@ -320,21 +320,6 @@
         summary: Probe failing for {{$labels.instance}} for 5m
         description: Check health of {{$labels.instance}}
 
-# Tripwire alerts
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
-  value:
-    name: tripwire
-    rules:
-    - alert: TripwireViolation
-      expr: tripwire_violation_count > 0
-      labels:
-        service: tripwire
-        severity: warning
-      annotations:
-        summary: 'Tripwire found violations for {{$labels.instance}}, with action {{$labels.action}} in section {{$labels.section}}'
-        description: Review Tripwire report in CloudWatch logs
-
 # CF Core - non-customer stuff.
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
