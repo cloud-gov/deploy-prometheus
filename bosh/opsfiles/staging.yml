@@ -23,4 +23,4 @@
       - kubernetes-broker-exporter.fr-stage.cloud.gov:443
 - type: replace
   path: /instance_groups/name=prometheus/vm_type
-  value: m4.large
+  value: m5.large
