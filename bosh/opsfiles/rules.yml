@@ -91,6 +91,7 @@
         description: Check bosh director {{$labels.instance}} for errors
     - alert: BoshUnknownInstanceExpired
       expr: bosh_unknown_iaas_instance > 0
+      for: 5m
       labels:
         service: bosh-unknown-iaas-instance
         severity: critical
