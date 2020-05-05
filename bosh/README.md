@@ -6,17 +6,17 @@ This document contains notes for reviewing each type of alert fired in PagerDuty
 
 ## AWSLogsCheckNotRunning
 ### Source data:
-https://github.com/18F/cg-deploy-prometheus/blob/master/ci/awslogs.sh
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/ci/awslogs.sh
 ### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/alerts/awslogs.alerts
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L53
 ### Guidance:
 The concourse job to run awslogs-check is not running and no longer emitting logs to prometheus. Check recent builds of awslogs-check in https://ci.fr.cloud.gov/teams/main/pipelines/deploy-prometheus?groups=checks for more details.
 
 ## AWSMFADisabled
 ### Source data:
-https://github.com/18F/cg-deploy-prometheus/blob/master/ci/aws-mfa.sh
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/ci/aws-mfa.sh
 ### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/alerts/aws_iam_mfa.alerts
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L7
 ### Guidance:
 An AWS user does not have MFA enabled for their account. Remind them to enable MFA for their account through the AWS console at https://console.amazonaws-us-gov.com/iam?region=us-gov-west-1 .
 
@@ -24,9 +24,9 @@ If you cannot identify the AWS user flagged follow the security incident respons
 
 ## AWSMFANotRunning
 ### Source data:
-https://github.com/18F/cg-deploy-prometheus/blob/master/ci/aws-mfa.sh
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/ci/aws-mfa.sh
 ### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/alerts/aws_iam_mfa.alerts
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L15
 ### Guidance:
 The concourse job to run aws-mfa-check is not running and no longer emitting logs to prometheus. Check recent builds of aws-mfa-check in https://ci.fr.cloud.gov/teams/main/pipelines/deploy-prometheus?groups=checks for more details.
 
@@ -98,7 +98,7 @@ If you cannot identify the AWS instance flagged follow the security incident res
 ### Source data:
 https://github.com/bosh-prometheus/bosh_exporter
 ### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/alerts/kubernetes_broker.alerts
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L108
 ### Guidance:
 A kubernetes brokered elasticsearch instance has not responded for over 5 minutes. Review the relevant kubernetes pod status and logs for more details.
 
@@ -106,55 +106,55 @@ A kubernetes brokered elasticsearch instance has not responded for over 5 minute
 ### Source data:
 https://github.com/bosh-prometheus/bosh_exporter
 ### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/alerts/kubernetes_broker.alerts
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L117
 ### Guidance:
 A kubernetes brokered elasticsearch instance has been unhealthy for over 5 minutes. Review the relevant kubernetes pod status and logs for more details.
 
 ## NessusManagerLicenseInvalid
 ### Source data:
-https://github.com/18F/cg-nessus-manager-boshrelease/blob/master/jobs/nessus-manager/templates/bin/health.sh#L4
+https://github.com/cloud-gov/cg-nessus-manager-boshrelease/blob/master/jobs/nessus-manager/templates/bin/health.sh#L4
 ### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L209
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L194
 ### Guidance:
 Nessus manager is reporting a license issue. See https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/ for more details.
 
 ## NessusPluginsOutdated
 ### Source data:
-https://github.com/18F/cg-nessus-manager-boshrelease/blob/master/jobs/nessus-manager/templates/bin/health.sh#L7
+https://github.com/cloud-gov/cg-nessus-manager-boshrelease/blob/master/jobs/nessus-manager/templates/bin/health.sh#L7
 ### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L220
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L202
 ### Guidance:
 Nessus plugins have not been updated in over 7 days. Outdated plugins will eventually cause recently published vulnerabilities to go undetected. See https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/ for more details.
 
 ## NessusScandeleteFailing
 ### Source data:
-https://github.com/18F/cg-nessus-manager-boshrelease/blob/master/jobs/nessus-manager/templates/bin/emit-scans.sh
+https://github.com/cloud-gov/cg-nessus-manager-boshrelease/blob/master/jobs/nessus-manager/templates/bin/emit-scans.sh
 ### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L220
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L210
 ### Guidance:
 emit-scans.sh was unable to delete old scans for the past 2 days. See https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/ for more details.
 
 ## UAAClientAuditUnexpectedClient
 ### Source data:
-https://github.com/18F/cg-deploy-cf/blob/master/ci/uaa-client-audit.sh
+https://github.com/cloud-gov/cg-deploy-cf/blob/master/ci/uaa-client-audit.sh
 ### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L247
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L242
 ### Guidance:
-An unexpected UAA Client has been detected on this UAA. Review the UAA Client name and usage, and add the client in https://github.com/18F/cg-deploy-cf/blob/master/bosh/opsfiles/clients.yml if necessary.
+An unexpected UAA Client has been detected on this UAA. Review the UAA Client name and usage, and add the client in https://github.com/cloud-gov/cg-deploy-cf/blob/master/bosh/opsfiles/clients.yml if necessary.
 
 If you cannot identify the UAA Client detected follow the security incident response guide.
 
 ## UAAClientAuditNotRunning
 ### Source data:
-https://github.com/18F/cg-deploy-cf/blob/master/ci/uaa-client-audit.sh
+https://github.com/cloud-gov/cg-deploy-cf/blob/master/ci/uaa-client-audit.sh
 ### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L263
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L251
 ### Guidance:
 UAA Client audits have not run in this environment for more then 2 hours. Check recent builds for `uaa-client-audit-*` in https://ci.fr.cloud.gov/teams/main/pipelines/deploy-cf-deployment for more details.
 
 ## Prometheus seems to be down or hung!
 ### Source data:
-https://github.com/18F/cg-deploy-cf/blob/master/ci/prometheus-down.sh
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/ci/prometheus-down.sh
 ### Guidance:
 - This alert is run by concourse, which checks externally that prometheus is answering queries, that data is getting into concourse, and that the alertmanager process is running.
 - This alert will get triggered if the check is unable to query the prometheus API, if the alertmanager is not responding on it's port, or if it cannot find data timestamped less than 600 seconds in the past.  There are a few queries built into the script, though these may be overridden in the job to have more.
