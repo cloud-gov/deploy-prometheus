@@ -367,3 +367,17 @@
       annotations:
         summary: Burst in incoming network traffic
         description: "The platform has seen a very large burst in incoming network traffic, please review this dashboard: https://grafana.fr.cloud.gov/d/cf_router/cf-router"
+
+- type: replace	
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-	
+  value:	
+    name: aide
+    rules:	
+    - alert: aide	
+      expr: aide_violation_count > 0	
+      labels:	
+        service: aide	
+        severity: warning	
+      annotations:	
+        summary: 'AIDE found violations for {{$labels.instance}}, with action {{$labels.action}}'	
+        description: Review AIDE report in CloudWatch logs
