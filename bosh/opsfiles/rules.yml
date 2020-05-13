@@ -373,11 +373,11 @@
   value:	
     name: aide
     rules:	
-    - alert: aide	
+    - alert: AideViolations
       expr: aide_violation_count > 0	
       labels:	
         service: aide	
         severity: warning	
       annotations:	
         summary: 'AIDE found violations for {{$labels.instance}}, with action {{$labels.action}}'	
-        description: Review AIDE report in CloudWatch logs
+        description: Review AIDE report in logs-platform - if changes are expected, update AIDE database on alerting VM
