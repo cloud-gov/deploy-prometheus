@@ -258,6 +258,22 @@
         summary: UAA Client Audit has not run in two hours
         description: Check https://ci.fr.cloud.gov/teams/main/pipelines/deploy-cf-deployment for failures
 
+# UAA Monitor Account Creation alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: uaa-monitor-account-creation
+    rules:
+    - alert: UAAMonitorAccountCreation
+      expr: uaa_monitor_account_creation > 50
+      labels:
+        service: uaa-monitor-account-creation
+        severity: warning
+        uaa: '{{$labels.uaa_url}}'
+      annotations:
+        summary: UAA has created more accounts than expected in the past week for {{$labels.uaa_url}}.
+        description: UAA has created many more new accounts than normal. Verify the spike in new UAA accounts are legitimate.
+
 # Concourse alerts
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
@@ -368,16 +384,16 @@
         summary: Burst in incoming network traffic
         description: "The platform has seen a very large burst in incoming network traffic, please review this dashboard: https://grafana.fr.cloud.gov/d/cf_router/cf-router"
 
-- type: replace	
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-	
-  value:	
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
     name: aide
-    rules:	
+    rules:
     - alert: AideViolations
-      expr: aide_violation_count > 0	
-      labels:	
-        service: aide	
-        severity: warning	
-      annotations:	
-        summary: 'AIDE found violations for {{$labels.instance}}, with action {{$labels.action}}'	
+      expr: aide_violation_count > 0
+      labels:
+        service: aide
+        severity: warning
+      annotations:
+        summary: 'AIDE found violations for {{$labels.instance}}, with action {{$labels.action}}'
         description: Review AIDE report in logs-platform - if changes are expected, update AIDE database on alerting VM
