@@ -158,7 +158,7 @@ https://github.com/cloud-gov/cg-deploy-cf/blob/master/ci/uaa-monitor-account-cre
 ### Rule body:
 https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L261
 ### Guidance:
-UAA Monitor Account Creation monitors the number of new accounts in the past week and alerts if there are more than 50. Check recent builds for `uaa-monitor-account-creation` in https://ci.fr.cloud.gov/teams/main/pipelines/deploy-cf-deployment for more details.
+UAA Monitor Account Creation monitors the number of new accounts in the past four days and alerts if there are more than 50. Check recent builds for `uaa-monitor-account-creation` in https://ci.fr.cloud.gov/teams/main/pipelines/deploy-cf-deployment for more details.
 
 ## Prometheus seems to be down or hung!
 ### Source data:

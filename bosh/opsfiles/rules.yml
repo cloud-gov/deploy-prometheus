@@ -271,7 +271,7 @@
         severity: warning
         uaa: '{{$labels.uaa_url}}'
       annotations:
-        summary: UAA has created more accounts than expected in the past week for {{$labels.uaa_url}}.
+        summary: UAA has created more accounts than expected in the past four days for {{$labels.uaa_url}}.
         description: UAA has created many more new accounts than normal. Verify the spike in new UAA accounts are legitimate.
 
 # Concourse alerts
