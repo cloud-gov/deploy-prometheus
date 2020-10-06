@@ -152,6 +152,14 @@ https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#
 ### Guidance:
 UAA Client audits have not run in this environment for more then 2 hours. Check recent builds for `uaa-client-audit-*` in https://ci.fr.cloud.gov/teams/main/pipelines/deploy-cf-deployment for more details.
 
+## UAAMonitorAccountCreation
+### Source data:
+https://github.com/cloud-gov/cg-deploy-cf/blob/master/ci/uaa-monitor-account-creation.sh
+### Rule body:
+https://github.com/cloud-gov/cg-deploy-prometheus/blob/master/bosh/opsfiles/rules.yml#L261
+### Guidance:
+UAA Monitor Account Creation monitors the number of new accounts in the past four days and alerts if there are more than 50. Check recent builds for `uaa-monitor-account-creation` in https://ci.fr.cloud.gov/teams/main/pipelines/deploy-cf-deployment for more details.
+
 ## Prometheus seems to be down or hung!
 ### Source data:
 https://github.com/18F/cg-deploy-cf/blob/master/ci/prometheus-down.sh
