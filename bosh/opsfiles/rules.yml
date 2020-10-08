@@ -305,13 +305,21 @@
     name: domain-broker
     rules:
     - alert: DomainBrokerNotEnoughALBs
-      expr: domain_broker_certificate_count / domain_broker_listener_count > 20
+      expr: (domain_broker_listener_count * 25) - domain_broker_certificate_count < 5
       labels:
         service: domain-broker
         severity: warning
       annotations:
-        summary: 'Domain broker {{$labels.instance}} is close to the certificates per listener limit: {{$value}}'
-        description: Provision more load balancers for domain broker {{$value}}
+        summary: 'External domain broker has too few available certificates: {{$value}}'
+        description: Provision more load balancers for domain broker in Terraform and update external-domain-broker config with new ALB 
+    - alert: DomainBrokerFullALB
+      expr: alb_listener_certificate_count > 23
+      labels:
+        service: domain-broker
+        severity: warning
+      annotations:
+        summary: 'Alb listener {{$labels.alb_arn}} has too many certificates'
+        description: "If DomainBrokerNotEnoughALBs isn't firing, the external-domain-broker is probably either placing instances incorrectly or not cleaning up certificates."
 
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
