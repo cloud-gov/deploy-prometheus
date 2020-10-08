@@ -397,3 +397,18 @@
       annotations:
         summary: 'AIDE found violations for {{$labels.instance}}, with action {{$labels.action}}'
         description: Review AIDE report in logs-platform - if changes are expected, update AIDE database on alerting VM
+
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: alb-certificate-expiration
+    rules:
+    - alert: AlbCertificateExpiring
+      # Reducing the time on the left side of the comparator *should* make this more human readable
+      expr: (domain_broker_certificate_expiration - time())/(24*60*60) < 15
+      labels:
+        service: ALB
+        severity: warning
+      annotations:
+        summary: '{{$labels.certificate_name}}, expires in less than 15 days: {{$labels.value}}'
+        description: Find out why the certificate is not expiring. The service instance ID is probably in the certificate name
