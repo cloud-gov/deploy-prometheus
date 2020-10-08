@@ -40,7 +40,7 @@ for cert_name in ${cert_names}; do
   cert_expirations="${cert_expirations}"$'\n'"domain_broker_certificate_expiration{certificate_name=\"${cert_name}\"} ${cert_expiration}"
 done
 
-cat <<EOF  | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/domain_broker/instance/${ENVIRONMENT}"
+cat <<EOF | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/domain_broker/instance/${ENVIRONMENT}"
 domain_broker_listener_count ${nlbs}
 domain_broker_certificate_count ${ncerts}
 ${cert_expirations}
