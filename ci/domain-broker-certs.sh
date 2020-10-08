@@ -34,7 +34,6 @@ done
 cert_expirations=""
 for cert_name in ${cert_names}; do
   cert_metadata=$(aws iam get-server-certificate --server-certificate-name ${cert_name})
-  cert_id=$(echo "${cert_metadata}" | jq -r '.ServerCertificate | .ServerCertificateMetadata | .ServerCertificateId')
   cert_date=$(echo "${cert_metadata}" | jq -r '.ServerCertificate | .ServerCertificateMetadata | .Expiration')
   cert_expiration=$(date --date "${cert_date}" +%s)
   cert_expirations="${cert_expirations}"$'\n'"domain_broker_certificate_expiration{certificate_name=\"${cert_name}\"} ${cert_expiration}"

@@ -408,7 +408,7 @@
       expr: (domain_broker_certificate_expiration - time())/(24*60*60) < 15
       labels:
         service: ALB
-        severity: warning
+        severity: critical
       annotations:
         summary: '{{$labels.certificate_name}}, expires in less than 15 days: {{$labels.value}}'
         description: Find out why the certificate is not expiring. The service instance ID is probably in the certificate name
