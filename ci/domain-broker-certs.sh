@@ -19,7 +19,6 @@ done
 
 nlbs=0
 ncerts=0
-cert_names=""
 alb_listeners=""
 cert_expirations=""
 for lb_arn in "${lb_arns[@]}"; do
@@ -28,7 +27,7 @@ for lb_arn in "${lb_arns[@]}"; do
   for lb_listener_arn in ${lb_listener_arns}; do
     nlbs=$((nlbs + 1))
     certs_listener=$(aws elbv2 describe-listener-certificates --listener-arn "${lb_listener_arn}")
-    cert_names="${cert_names}"$'\n'"$(echo ${certs_listener} | jq -r '.Certificates[] | .CertificateArn'  | awk -F/ '{ print $NF }')"
+    cert_names="$(echo ${certs_listener} | jq -r '.Certificates[] | .CertificateArn'  | awk -F/ '{ print $NF }')"
       for cert_name in ${cert_names}; do
         cert_metadata=$(aws iam get-server-certificate --server-certificate-name ${cert_name})
         cert_date=$(echo "${cert_metadata}" | jq -r '.ServerCertificate | .ServerCertificateMetadata | .Expiration')
