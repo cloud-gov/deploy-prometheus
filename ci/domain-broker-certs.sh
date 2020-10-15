@@ -31,7 +31,7 @@ for lb_arn in "${lb_arns[@]}"; do
       for cert_name in ${cert_names}; do
         cert_metadata=$(aws iam get-server-certificate --server-certificate-name ${cert_name})
         cert_date=$(echo "${cert_metadata}" | jq -r '.ServerCertificate | .ServerCertificateMetadata | .Expiration')
-        cert_expiration=$(gdate --date "${cert_date}" +%s)
+        cert_expiration=$(date --date "${cert_date}" +%s)
         cert_expirations="${cert_expirations}"$'\n'"domain_broker_certificate_expiration{certificate_name=\"${cert_name}\",listener_arn=\"${lb_listener_arn}\"} ${cert_expiration}"
       done
     ncerts_listener=$(echo "${certs_listener}" | jq -r ".Certificates | length")
