@@ -37,7 +37,7 @@ for lb_arn in "${lb_arns[@]}"; do
       done
     ncerts_listener=$(echo "${certs_listener}" | jq -r ".Certificates | length")
     ncerts=$((ncerts + ncerts_listener))
-    alb_listeners="${alb_listeners}"$'\n'"alb_listener_certificate_count{listener_arn=\"${listener_arn}\"} ${ncerts_listener}"
+    alb_listeners="${alb_listeners}"$'\n'"alb_listener_certificate_count{listener_arn=\"${lb_listener_arn}\"} ${ncerts_listener}"
   done
 done
 
