@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -euxo pipefail
 
 lb_arns=()
 lb_selector='.LoadBalancers[] | select(.LoadBalancerName | startswith($prefix)) | .LoadBalancerArn'
