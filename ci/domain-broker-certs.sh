@@ -20,6 +20,7 @@ done
 nlbs=0
 ncerts=0
 cert_names=""
+alb_listeners=""
 cert_expirations=""
 for lb_arn in "${lb_arns[@]}"; do
   lb_listener_arns=$(aws elbv2 describe-listeners --load-balancer-arn "${lb_arn}" \
@@ -36,6 +37,7 @@ for lb_arn in "${lb_arns[@]}"; do
       done
     ncerts_listener=$(echo "${certs_listener}" | jq -r ".Certificates | length")
     ncerts=$((ncerts + ncerts_listener))
+    alb_listeners="${alb_listeners}"$'\n'"alb_listener_certificate_count{listener_arn=\"${listener_arn}\"} ${ncerts_listener}"
   done
 done
 
@@ -43,5 +45,6 @@ cert_expirations=$(echo "${cert_expirations}" | sort | uniq)
 cat <<EOF | curl --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/domain_broker/instance/${ENVIRONMENT}"
 domain_broker_listener_count ${nlbs}
 domain_broker_certificate_count ${ncerts}
+${alb_listeners}
 ${cert_expirations}
 EOF
