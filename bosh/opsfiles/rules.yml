@@ -418,5 +418,5 @@
         service: ALB
         severity: critical
       annotations:
-        summary: '{{$labels.certificate_name}}, expires in less than 15 days: {{$labels.value}}'
-        description: Find out why the certificate is not expiring. The service instance ID is probably in the certificate name
+        summary: '{{$labels.certificate_name}}, expires in less than 15 days. Days until expiration: {{$labels.value}}'
+        description: Find out why the certificate is not renewing. The service instance ID is probably in the certificate name. 
