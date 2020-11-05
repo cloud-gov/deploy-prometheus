@@ -432,5 +432,5 @@
         service: CDN
         severity: critical
       annotations:
-        summary: '{{$labels.arn}} with domain {{$labels.alias}}, expires in less than 15 days. Days until expiration: {{$labels.value}}'
-        description: Find out why the certificate is not renewing. The CloudFront instance ID is {{$labels.id}}.
+        summary: '{{$labels.arn}} with alias {{$labels.alias}} and cloudfront domain {{$labels.domain}}, expires in less than 15 days. Days until expiration: {{$labels.value}}'
+        description: 'Find out why the certificate is not renewing. The CloudFront instance ID is {{$labels.id}}.'
