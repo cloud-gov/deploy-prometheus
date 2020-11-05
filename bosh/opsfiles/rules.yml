@@ -311,7 +311,7 @@
         severity: warning
       annotations:
         summary: 'External domain broker has too few available certificates: {{$value}}'
-        description: Provision more load balancers for domain broker in Terraform and update external-domain-broker config with new ALB 
+        description: Provision more load balancers for domain broker in Terraform and update external-domain-broker config with new ALB
     - alert: DomainBrokerFullALB
       expr: alb_listener_certificate_count > 23
       labels:
@@ -419,4 +419,18 @@
         severity: critical
       annotations:
         summary: '{{$labels.certificate_name}}, expires in less than 15 days. Days until expiration: {{$labels.value}}'
-        description: Find out why the certificate is not renewing. The service instance ID is probably in the certificate name. 
+        description: Find out why the certificate is not renewing. The service instance ID is probably in the certificate name.
+
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: cdn-certificate-expiration
+    rules:
+    - alert: CDNCertificateExpiring
+      expr: cdn_certificate_expiration < 15
+      labels:
+        service: CDN
+        severity: critical
+      annotations:
+        summary: '{{$labels.arn}} with domain {{$labels.alias}}, expires in less than 15 days. Days until expiration: {{$labels.value}}'
+        description: Find out why the certificate is not renewing. The CloudFront instance ID is {{$labels.id}}.
