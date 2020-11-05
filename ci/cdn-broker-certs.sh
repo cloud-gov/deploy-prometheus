@@ -4,12 +4,12 @@ set -euxo pipefail
 
 ## Calculate the days to expiration from now
 function days_to_cert_expiration {
-  local client=$1;
-  local server=$2;
+  local cloudfront=$1;
+  local alias=$2;
   local date_today=$(date +%s);
 
   ## Get expirationdate and convert to epoch
-  expirationdate=$(date -d "$(: | openssl s_client -connect $client:443 -servername $server 2>/dev/null \
+  expirationdate=$(date -d "$(: | openssl s_client -connect $cloudfront:443 -servername $alias 2>/dev/null \
     | openssl x509 -text \
     | grep 'Not After' \
     | awk '{print $4,$5,$7}')" '+%s');
