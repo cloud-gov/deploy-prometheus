@@ -8,7 +8,7 @@ GLOBAL_LAST_UPDATE=0
 ALERT_THRESHOLD=3600
 STOP_THRESHOLD=5400
 
-# monitor these log grouips
+# monitor these log groups
 cat <<EOF > /tmp/monitor_loggroups
 kubernetes-development
 kubernetes-production
@@ -76,7 +76,8 @@ instance_metrics=$(mktemp)
 target_instance=""
 # Emit a metric for each entry in our heatbeat group, where host = logStreamName, and metric = seconds since last update
 IFS=$'\n'
-for streaminfo in $(aws logs describe-log-streams --output text --max-items 1000 --order-by LastEventTime --descending --log-group-name=$HEARTBEAT_GROUP --query "logStreams[?lastEventTimestamp > \`$(($(($(date +%s) - 14400)) * 1000))\`][logStreamName, lastEventTimestamp]" | grep -v None); do
+# get all the log streams that have had an ingestion in the last 4 hours, returning their name (which is conveniently the EC2 instance id) and the time the last log was ingested
+for streaminfo in $(aws logs describe-log-streams --output text --max-items 1000 --order-by LastEventTime --descending --log-group-name=$HEARTBEAT_GROUP --query "logStreams[?lastIngstionTime > \`$(($(($(date +%s) - 14400)) * 1000))\`][logStreamName, lastIngestionTime]" | grep -v None); do
     aws_id=$(echo ${streaminfo} | cut -f1)
     last=$(( $(echo ${streaminfo} | cut -f2) / 1000 ))
 
@@ -86,14 +87,7 @@ for streaminfo in $(aws logs describe-log-streams --output text --max-items 1000
         continue
     fi
 
-    # stop an instance if it hasn't been logging for a while (see below
-    # note: this intentionally only stops one instance, so in case of an awslogs failure
-    # instances will be gradually stopped (one each time this script is run)
-    # and not destory the entire environment at once
-    if [ $(($(date +"%s") - ${last})) -gt ${STOP_THRESHOLD} ] && [ -z "${target_instance}" ]; then
-        target_instance=${aws_id}
-        STATUS=2
-    elif [ $(($(date +"%s") - ${last})) -gt ${ALERT_THRESHOLD} ] ; then
+    if [ $(($(date +"%s") - ${last})) -gt ${ALERT_THRESHOLD} ] ; then
         STATUS=1
     else
         STATUS=0
@@ -108,26 +102,3 @@ done
 curl -X PUT --data-binary @${instance_metrics} "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs_instance"
 
 echo "Finished instance check. Checked $(cat /tmp/active_instances | wc -l) instances."
-
-# Ensure that slack notification resource detects text file
-touch stopping/instance-id
-
-# if we need to, stop an instance
-if [ ! -z "${target_instance}" ]; then
-
-    echo "$target_instance" > stopping/instance-id
-
-    echo "${target_instance} is being stopped!"
-
-    # This is commented out until we remove this functionality from riemann
-    # # find a list of volumes for the instance
-    # # this will also exit the program if the provided instance-id doesn't exist or is invalid
-    # VOLUMES=$(aws ec2 describe-instances --instance-ids ${target_instance} --output text --query 'Reservations[].Instances[].BlockDeviceMappings[].*.VolumeId')
-    # for vol in ${VOLUMES}; do
-    #     echo "Snapshotting ${target_instance}/${vol}"
-    #     aws ec2 create-snapshot --volume-id ${vol} --description "Created from ${target_instance} by $(hostname):${SCRIPTPATH}"
-    # done
-
-    # echo "Stopping ${target_instance}"
-    # aws ec2 stop-instances --instance-ids ${target_instance}
-fi
