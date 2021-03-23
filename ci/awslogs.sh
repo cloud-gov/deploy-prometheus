@@ -10,7 +10,6 @@ STOP_THRESHOLD=5400
 
 # monitor these log groups
 cat <<EOF > /tmp/monitor_loggroups
-kubernetes-development
 kubernetes-production
 kubernetes-staging
 EOF
