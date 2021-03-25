@@ -1,15 +1,3 @@
-# Add kubernetes broker exporters
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/scrape_configs/-
-  value:
-    job_name: kubernetes_broker_exporter_staging
-    scheme: https
-    basic_auth:
-      username: ((kubernetes-broker-exporter-username-staging))
-      password: ((kubernetes-broker-exporter-password-staging))
-    static_configs:
-    - targets:
-      - kubernetes-broker-exporter.fr-stage.cloud.gov:443
 - type: replace
   path: /instance_groups/name=prometheus/vm_type
   value: m5.large
