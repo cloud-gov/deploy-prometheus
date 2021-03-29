@@ -42,14 +42,6 @@
   value:
     name: aws-logs
     rules:
-    - alert: AWSLogsGroupExpired
-      expr: awslogs_loggroup_not_logging > 0
-      labels:
-        service: aws-logs
-        severity: warning
-      annotations:
-        summary: CloudWatch Logs group {{$labels.group}} is not receiving logs
-        description: CloudWatch Logs group {{$labels.group}} has not received a log in the last hour
     - alert: AWSLogsCheckNotRunning
       expr: time() - push_time_seconds{job=~"^awslogs.*"} > 7200
       labels:
@@ -66,14 +58,6 @@
       annotations:
         summary: EC2 instance {{$labels.instance_id}} is not logging
         description: EC2 instance {{$labels.instance_id}} is not logging
-    - alert: AWSLogsInstanceStopping
-      expr: awslogs_instance_not_logging > 1
-      labels:
-        service: aws-logs
-        severity: critical
-      annotations:
-        summary: EC2 instance {{$labels.instance_id}} will be stopped due to not logging
-        description: EC2 instance {{$labels.instance_id}} will be stopped due to not logging
 
 # BOSH unknown instance alerts
 - type: replace
@@ -98,49 +82,6 @@
       annotations:
         summary: Bosh found unknown IaaS instance {{$labels.iaas_id}} in VPC {{$labels.vpc_name}}
         description: Unknown IaaS instance {{$labels.iaas_id}} with bosh id {{$labels.bosh_id}} found in VPC {{$labels.vpc_name}}
-
-# Kubernetes broker alerts
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
-  value:
-    name: kubernetes-broker
-    rules:
-    - alert: BrokeredElasticsearchAlive
-      expr: kubernetes_broker_elasticsearch_alive != 1
-      for: 5m
-      labels:
-        service: kubernetes-broker-elasticsearch
-        severity: warning
-      annotations:
-        summary: Brokered elasticsearch instance {{$labels.instance_guid}} is not responding
-        description: Brokered elasticsearch instance {{$labels.instance_guid}} has not been responding for 5m
-    - alert: BrokeredElasticsearchHealthy
-      expr: kubernetes_broker_elasticsearch_healthy != 1
-      for: 5m
-      labels:
-        service: kubernetes-broker-elasticsearch
-        severity: warning
-      annotations:
-        summary: Brokered elasticsearch instance {{$labels.instance_guid}} is not healthy
-        description: Brokered elasticsearch instance {{$labels.instance_guid}} has not been healthy for 5m
-    - alert: BrokeredRedisAlive
-      expr: kubernetes_broker_redis_alive != 1
-      for: 5m
-      labels:
-        service: kubernetes-broker-redis
-        severity: warning
-      annotations:
-        summary: Brokered redis instance {{$labels.instance_guid}} is not responding
-        description: Brokered redis instance {{$labels.instance_guid}} has not been responding for 5m
-    - alert: BrokeredRedisHealthy
-      expr: kubernetes_broker_redis_healthy != 1
-      for: 5m
-      labels:
-        service: kubernetes-broker-redis
-        severity: warning
-      annotations:
-        summary: Brokered redis instance {{$labels.instance_guid}} is not healthy
-        description: Brokered redis instance {{$labels.instance_guid}} has not been healthy for 5m
 
 # Logsearch backup alerts
 - type: replace
@@ -215,23 +156,6 @@
       annotations:
         summary: Nessus Manager has not been able to delete scans in 2 days
         description: https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/
-
-
-# Kubernetes etcd alerts
-# Note: Only the leader emits metrics, so take max to ignore stale metrics
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
-  value:
-    name: kubernetes-backup
-    rules:
-    - alert: KubernetesEtcdBackupExpired
-      expr: time() - max(kubernetes_etcd_backup) by (environment) > 1800
-      labels:
-        service: kubernetes-etcd
-        severity: warning
-      annotations:
-        summary: Kubernetes etcd backup is out of date
-        description: Check kubernetes etcd backup
 
 # UAA Client Audit alerts
 - type: replace
