@@ -94,22 +94,6 @@ An AWS instance which the relevant bosh director doesn’t know about has been d
 
 If you cannot identify the AWS instance flagged follow the security incident response guide.
 
-## BrokeredElasticsearchAlive
-### Source data:
-https://github.com/bosh-prometheus/bosh_exporter
-### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/alerts/kubernetes_broker.alerts
-### Guidance:
-A kubernetes brokered elasticsearch instance has not responded for over 5 minutes. Review the relevant kubernetes pod status and logs for more details.
-
-## BrokeredElasticsearchHealthy
-### Source data:
-https://github.com/bosh-prometheus/bosh_exporter
-### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/alerts/kubernetes_broker.alerts
-### Guidance:
-A kubernetes brokered elasticsearch instance has been unhealthy for over 5 minutes. Review the relevant kubernetes pod status and logs for more details.
-
 ## NessusManagerLicenseInvalid
 ### Source data:
 https://github.com/18F/cg-nessus-manager-boshrelease/blob/master/jobs/nessus-manager/templates/bin/health.sh#L4

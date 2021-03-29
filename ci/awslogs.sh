@@ -6,64 +6,6 @@ GLOBAL_LAST_UPDATE=0
 
 # in seconds
 ALERT_THRESHOLD=3600
-STOP_THRESHOLD=5400
-
-# monitor these log groups
-cat <<EOF > /tmp/monitor_loggroups
-kubernetes-production
-EOF
-
-echo "Starting log group check..."
-GROUP_COUNT=0
-
-LOG_GROUPS=$(aws logs describe-log-groups | jq -r .logGroups[].logGroupName)
-
-group_metrics=$(mktemp)
-
-for GROUP in ${LOG_GROUPS}; do
-    LAST_UPDATE=$(aws logs describe-log-streams --log-group-name=$GROUP --order-by LastEventTime --descending --max-items 1 | jq .logStreams[].lastEventTimestamp)
-    if [ -z "${LAST_UPDATE}" ] || [ "${LAST_UPDATE}" == "null" ]; then
-        LAST_UPDATE=0
-    fi
-
-    NICE_GROUP=$(echo $GROUP | tr /. - | sed s/^-//)
-    LAST_UPDATE=$((${LAST_UPDATE} / 1000))
-
-    GROUP_COUNT=$((GROUP_COUNT+1))
-
-    if [ "$LAST_UPDATE" -gt "$GLOBAL_LAST_UPDATE" ]; then
-        GLOBAL_LAST_UPDATE=$LAST_UPDATE
-    fi
-
-    if ! grep "^${NICE_GROUP}$" /tmp/monitor_loggroups; then
-        # send positive alerts for groups we don't want to monitor
-        STATUS=0
-    elif [ $(($(date +"%s") - ${LAST_UPDATE})) -gt ${ALERT_THRESHOLD} ]; then
-        STATUS=1
-    else
-        STATUS=0
-    fi
-
-    cat <<EOF >> ${group_metrics}
-awslogs_loggroup_not_logging {group="${NICE_GROUP}"} ${STATUS}
-EOF
-
-done
-
-curl -X PUT --data-binary @${group_metrics} "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs_group"
-
-if [ $(($(date +"%s") - ${GLOBAL_LAST_UPDATE})) -gt ${ALERT_THRESHOLD} ]; then
-  STATUS=1
-else
-  STATUS=0
-fi
-
-# report overall log status
-cat <<EOF | curl -X PUT --data-binary @- "${GATEWAY_HOST}:${GATEWAY_PORT:-9091}/metrics/job/awslogs_group/instance/_GLOBAL"
-awslogs_loggroup_not_logging {group="_GLOBAL"} ${STATUS}
-EOF
-
-echo "Finished group check. Checked ${GROUP_COUNT} groups."
 
 echo "Starting instance check..."
 
