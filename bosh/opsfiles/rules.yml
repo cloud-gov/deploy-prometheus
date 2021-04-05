@@ -43,7 +43,7 @@
     name: aws-logs
     rules:
     - alert: AWSLogsCheckNotRunning
-      expr: time() - push_time_seconds{job=~"^awslogs.*"} > 7200
+      expr: time() - push_time_seconds{job=~"^awslogs_instance"} > 7200
       labels:
         service: aws-logs
         severity: critical
