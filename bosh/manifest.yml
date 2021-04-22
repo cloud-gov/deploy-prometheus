@@ -85,7 +85,7 @@ instance_groups:
         storage:
           tsdb:
             retention:
-              time: 30d
+              time: 180d
         web:
           external_url: https://prometheus.((domain))
         rule_files:
