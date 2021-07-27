@@ -337,12 +337,12 @@
     rules:
     - alert: AlbCertificateExpiring
       # Reducing the time on the left side of the comparator *should* make this more human readable
-      expr: (domain_broker_certificate_expiration - time())/(24*60*60) < 15
+      expr: (domain_broker_certificate_expiration - time())/(24*60*60) < 25
       labels:
         service: ALB
         severity: critical
       annotations:
-        summary: '{{$labels.certificate_name}}, expires in less than 15 days. Days until expiration: {{$labels.value}}'
+        summary: '{{$labels.certificate_name}}, expires in less than 15 days. Days until expiration: {{$value}}'
         description: Find out why the certificate is not renewing. The service instance ID is probably in the certificate name.
 
 - type: replace
@@ -351,10 +351,10 @@
     name: cdn-certificate-expiration
     rules:
     - alert: CDNCertificateExpiring
-      expr: cdn_certificate_expiration < 15
+      expr: cdn_certificate_expiration < 25
       labels:
         service: CDN
         severity: critical
       annotations:
-        summary: '{{$labels.arn}} with alias {{$labels.alias}} and cloudfront domain {{$labels.domain}}, expires in less than 15 days. Days until expiration: {{$labels.value}}'
+        summary: '{{$labels.arn}} with alias {{$labels.alias}} and cloudfront domain {{$labels.domain}}, expires in less than 25 days. Days until expiration: {{$value}}'
         description: 'Find out why the certificate is not renewing. The CloudFront instance ID is {{$labels.id}}.'
