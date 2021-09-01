@@ -254,7 +254,7 @@ jobs:
     - get: oauth2-proxy-release
       passed: [deploy-prometheus-staging]
       trigger: true
-    - get: prometheus-stemcell-xenial
+    - get: prometheus-stemcell-bionic
       passed: [deploy-prometheus-staging]
       trigger: true
     - get: pipeline-tasks
@@ -339,11 +339,6 @@ resources:
     branch: ((prometheus-release-git-branch))
     # we can't upgrade past this until k8s is upgraded.
     tag_filter: ((prometheus-release-version-filter))
-
-- name: prometheus-stemcell-xenial
-  type: bosh-io-stemcell
-  source:
-    name: bosh-aws-xen-hvm-ubuntu-xenial-go_agent
 
 - name: prometheus-stemcell-bionic
   type: bosh-io-stemcell
