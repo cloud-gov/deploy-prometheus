@@ -226,16 +226,16 @@ instance_groups:
     properties:
       bosh_alerts:
         job_ephemeral_disk_full:
-          threshold: 75
+          threshold: 78
           evaluation_time: 10m
         job_ephemeral_persistent_disk_full:
-          threshold: 75
+          threshold: 78
           evaluation_time: 10m
         job_persistent_disk_full:
-          threshold: 75
+          threshold: 78
           evaluation_time: 10m
         job_predict_persistent_disk_full:
-          threshold: 75
+          threshold: 78
           evaluation_time: 10m
   - name: cloudfoundry_alerts
     release: prometheus
