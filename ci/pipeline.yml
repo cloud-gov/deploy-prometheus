@@ -309,7 +309,7 @@ resources:
     versioned_file: production-prometheus.yml
 
 - name: prometheus-release
-  type: github-release
+  type: github-release-alt
   source:
     owner: bosh-prometheus
     repository: prometheus-boshrelease
@@ -412,3 +412,8 @@ resource_types:
   type: docker-image
   source:
     repository: pcfseceng/email-resource
+
+- name: github-release-alt
+  type: registry-image
+  source:
+    repository: concourse/github-release-resource
