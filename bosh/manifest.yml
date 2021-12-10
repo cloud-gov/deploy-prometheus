@@ -262,6 +262,7 @@ instance_groups:
         server:
           root_url: https://grafana.((domain))
         security:
+          allow_embedding: true
           admin_password: ((grafana-admin-password))
         session:
           cookie_secure: "true"
