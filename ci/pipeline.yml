@@ -4,7 +4,7 @@ groups:
   jobs:
   - deploy-prometheus-staging
   - deploy-prometheus-production
-  - deploy-prometheus-prod-east
+  - deploy-prometheus-prod-west
 - name: checks
   jobs:
   - awslogs-check
@@ -287,7 +287,7 @@ jobs:
       username: ((slack-username))
       icon_url: ((slack-icon-url))
 
-- name: deploy-prometheus-prod-east
+- name: deploy-prometheus-prod-west
   serial: true
   serial_groups: [production]
   plan:
@@ -308,20 +308,20 @@ jobs:
       passed: [deploy-prometheus-staging]
       trigger: true
     - get: pipeline-tasks
-  - put: prometheus-prod-east-deployment
+  - put: prometheus-prod-west-deployment
     params:
       <<: *deploy-params
       ops_files:
       - prometheus-config/bosh/opsfiles/rules.yml
-      - prometheus-config/bosh/opsfiles/prod-east.yml
+      - prometheus-config/bosh/opsfiles/prod-common.yml
       vars_files:
-      - prometheus-config/bosh/varsfiles/east.yml
+      - prometheus-config/bosh/varsfiles/west.yml
       - common-production/production-prometheus.yml
   on_failure:
     put: slack
     params:
       text: |
-        :x: FAILED to deploy prometheus on east
+        :x: FAILED to deploy prometheus on west
         <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
       channel: ((slack-channel))
       username: ((slack-username))
@@ -330,7 +330,7 @@ jobs:
     put: slack
     params:
       text: |
-        :white_check_mark: Successfully deployed prometheus on east
+        :white_check_mark: Successfully deployed prometheus on west
         <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
       channel: ((slack-channel))
       username: ((slack-username))
@@ -412,14 +412,14 @@ resources:
     ca_cert: ((common_ca_cert))
     deployment: prometheus-production
 
-- name: prometheus-prod-east-deployment
+- name: prometheus-prod-west-deployment
   type: bosh-deployment
   source:
     target: ((prometheus-production-deployment-bosh-target))
     client: ci
     client_secret: ((tooling_bosh_uaa_ci_client_secret))
     ca_cert: ((common_ca_cert))
-    deployment: prometheus-prod-east
+    deployment: prometheus-prod-west
 
 - name: pipeline-tasks
   type: git
