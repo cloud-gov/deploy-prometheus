@@ -339,7 +339,7 @@ instance_groups:
       client_id: ((oauth-proxy-client-id))
       client_secret: ((oauth-proxy-client-secret))
       cookie_secret: ((oauth-proxy-cookie-secret))
-      oidc_issuer_url: https://opslogin.fr.cloud.gov/oauth/token
+      oidc_issuer_url: ((oauth-proxy-oidc-issuer-url))
       email_domain: gsa.gov
       browser_xss_filter: True
       content_type_nosniff: True
@@ -350,3 +350,5 @@ variables:
   type: password
 - name: oauth-proxy-cookie-secret
   type: password
+- name: oauth-proxy-oicd-issuer-url
+  type: value
