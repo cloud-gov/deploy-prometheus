@@ -58,7 +58,7 @@ else
   ALERTMANAGEROK=no
 fi
 
-# exit uncleanly so that the on_failure stuff will trigger a pagerduty alert
+# exit uncleanly so that the on_failure stuff will trigger an alert
 if [ "${APIOK}" != yes ] ; then
   echo "Terrible news everybody!  Prometheus seems to be down, since I cannot query it's API!"
   exit 1

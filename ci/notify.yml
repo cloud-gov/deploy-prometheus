@@ -17,7 +17,6 @@ run:
   path: prometheus-config/ci/notify.sh
 
 params:
-  PAGERDUTY_KEY:
   ALERT_MESSAGE:
   ALERT_SOURCE:
   ALERT_SEVERITY:
