@@ -62,7 +62,7 @@ instance_groups:
           - to: ((cg-email-address))
         smtp:
           from: no-reply@gsa.gov
-          smarthost: ((smtp-hostname))
+          smarthost: ((terraform_outputs.production_smtp_private_ip)):25
           auth_username: ((smtp-username))
           auth_password: ((smtp-password))
           require_tls: true
