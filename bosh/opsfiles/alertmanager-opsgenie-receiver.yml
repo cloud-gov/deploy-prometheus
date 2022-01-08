@@ -1,4 +1,0 @@
-- type: replace
-  path: /instance_groups/name=alertmanager/jobs/name=alertmanager/properties/alertmanager/receivers/name=notifications/opsgenie_configs?/-
-  value:
-    api_key: "((alertmanager_opsgenie_api_key))"

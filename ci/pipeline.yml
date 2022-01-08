@@ -147,7 +147,6 @@ jobs:
       - task: notify
         file: prometheus-config/ci/notify.yml
         params:
-          PAGERDUTY_KEY: ((pagerduty-key))
           ALERT_MESSAGE: Prometheus seems to be down or hung!
           ALERT_SOURCE: Concourse prometheus-down-check-production
           ALERT_SEVERITY: critical
@@ -174,7 +173,6 @@ jobs:
       - task: notify
         file: prometheus-config/ci/notify.yml
         params:
-          PAGERDUTY_KEY: ((pagerduty-key-staging))
           ALERT_MESSAGE: Staging Prometheus seems to be down or hung!
           ALERT_SOURCE: Concourse prometheus-down-check-staging
           ALERT_SEVERITY: warning
@@ -215,8 +213,6 @@ jobs:
       ops_files:
       - prometheus-config/bosh/opsfiles/rules.yml
       - prometheus-config/bosh/opsfiles/staging.yml
-      - prometheus-config/bosh/opsfiles/add-ops-genie.yml
-      - prometheus-config/bosh/opsfiles/alertmanager-opsgenie-receiver.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/staging.yml
       - common-staging/staging-prometheus.yml
