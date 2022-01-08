@@ -421,11 +421,11 @@ resources:
 - name: prometheus-prod-west-deployment
   type: bosh-deployment
   source:
-    target: ((prometheus-production-deployment-bosh-target))
+    target: ((prometheus-west-deployment-bosh-target))
     client: ci
-    client_secret: ((tooling_bosh_uaa_ci_client_secret))
+    client_secret: ((tooling_west_bosh_uaa_ci_client_secret))
     ca_cert: ((common_ca_cert))
-    deployment: prometheus-prod-west
+    deployment: prometheus-west
 
 - name: pipeline-tasks
   type: git
