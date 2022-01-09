@@ -428,7 +428,7 @@ resources:
     client: ci
     client_secret: ((tooling_west_bosh_uaa_ci_client_secret))
     ca_cert: ((common_ca_cert))
-    deployment: prometheus-west
+    deployment: prometheus-production
 
 - name: pipeline-tasks
   type: git
