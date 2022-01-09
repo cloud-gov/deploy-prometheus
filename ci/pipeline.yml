@@ -317,7 +317,7 @@ jobs:
       - prometheus-config/bosh/opsfiles/prod-common.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/west.yml
-      - common-production/production-prometheus.yml
+      - common-west/west-prometheus.yml
       - terraform-prod-west-yml/state.yml
   on_failure:
     put: slack
