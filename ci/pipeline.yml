@@ -5,6 +5,7 @@ groups:
   - deploy-prometheus-staging
   - deploy-prometheus-production
   - deploy-prometheus-prod-west
+  - deploy-prometheus-prod-east
 - name: checks
   jobs:
   - awslogs-check
@@ -294,7 +295,7 @@ jobs:
   - in_parallel:
     - get: master-bosh-root-cert
     - get: prometheus-config
-      passed: [deploy-prometheus-staging]
+      resource: prometheus-config-west
       trigger: true
     - get: common-west
       trigger: true
@@ -315,6 +316,7 @@ jobs:
       ops_files:
       - prometheus-config/bosh/opsfiles/rules.yml
       - prometheus-config/bosh/opsfiles/prod-common.yml
+      - prometheus-config/bosh/opsfiles/west.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/west.yml
       - common-west/west-prometheus.yml
@@ -333,6 +335,57 @@ jobs:
     params:
       text: |
         :white_check_mark: Successfully deployed prometheus on prod-west
+        <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+      channel: ((slack-channel))
+      username: ((slack-username))
+
+- name: deploy-prometheus-prod-east
+  serial: true
+  serial_groups: [east]
+  plan:
+  - in_parallel:
+    - get: master-bosh-root-cert
+    - get: prometheus-config
+      passed: [deploy-prometheus-staging]
+      trigger: true
+    - get: common-east
+      trigger: true
+    - get: prometheus-release
+      passed: [deploy-prometheus-staging]
+      trigger: true
+    - get: oauth2-proxy-release
+      passed: [deploy-prometheus-staging]
+      trigger: true
+    - get: prometheus-stemcell-bionic
+      passed: [deploy-prometheus-staging]
+      trigger: true
+    - get: pipeline-tasks
+    - get: terraform-prod-east-yml
+  - put: prometheus-prod-east-deployment
+    params:
+      <<: *deploy-params
+      ops_files:
+      - prometheus-config/bosh/opsfiles/rules.yml
+      - prometheus-config/bosh/opsfiles/prod-common.yml
+      - prometheus-config/bosh/opsfiles/east.yml
+      vars_files:
+      - prometheus-config/bosh/varsfiles/east.yml
+      - common-east/east-prometheus.yml
+      - terraform-prod-west-yml/state.yml
+  on_failure:
+    put: slack
+    params:
+      text: |
+        :x: FAILED to deploy prometheus on prod-east
+        <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+      channel: ((slack-channel))
+      username: ((slack-username))
+      icon_url: ((slack-icon-url))
+  on_success:
+    put: slack
+    params:
+      text: |
+        :white_check_mark: Successfully deployed prometheus on prod-east
         <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
       channel: ((slack-channel))
       username: ((slack-username))
@@ -358,6 +411,14 @@ resources:
     region_name: ((prometheus-production-private-region))
     bucket: ((prometheus-production-private-bucket))
     versioned_file: west-prometheus.yml
+  
+- name: common-east
+  type: s3-iam
+  source:
+    region_name: ((prometheus-production-private-region))
+    bucket: ((prometheus-production-private-bucket))
+    versioned_file: east-prometheus.yml
+
 
 - name: common-production
   type: s3-iam
@@ -388,6 +449,13 @@ resources:
   source:
     uri: ((cg-deploy-prometheus-git-url))
     branch: ((cg-deploy-prometheus-git-branch))
+
+- name: prometheus-config-west
+  icon: github-circle
+  type: git
+  source:
+    uri: ((cg-deploy-prometheus-git-url))
+    branch: westb-continued
 
 - name: prometheus-release-src
   icon: github-circle
@@ -427,6 +495,15 @@ resources:
     target: ((prometheus-west-deployment-bosh-target))
     client: ci
     client_secret: ((tooling_west_bosh_uaa_ci_client_secret))
+    ca_cert: ((common_ca_cert))
+    deployment: prometheus-production
+
+- name: prometheus-prod-east-deployment
+  type: bosh-deployment
+  source:
+    target: ((prometheus-east-deployment-bosh-target))
+    client: ci
+    client_secret: ((tooling_east_bosh_uaa_ci_client_secret))
     ca_cert: ((common_ca_cert))
     deployment: prometheus-production
 
@@ -480,12 +557,12 @@ resources:
     bucket: terraform-state
     versioned_file: master-west/state.yml
 
-#- name: terraform-prod-east-yml
-#  type: s3-iam
-#  source:
-#    region_name: ((prometheus-production-private-region))
-#    bucket: terraform-state
-#    versioned_file: master-east/state.yml
+- name: terraform-prod-east-yml
+  type: s3-iam
+  source:
+    region_name: ((prometheus-production-private-region))
+    bucket: terraform-state
+    versioned_file: master-east/state.yml
 
 resource_types:
 - name: slack-notification
