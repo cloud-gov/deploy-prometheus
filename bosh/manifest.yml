@@ -189,7 +189,8 @@ instance_groups:
     properties:
       cf_exporter:
         cf:
-          api_url: https://api.((domain))
+          #api_url: https://api.((domain))
+          api_url: https://api.((domain1))
           client_id: ((cf-exporter-client-id))
           client_secret: ((cf-exporter-client-secret))
           deployment_name: cf-((environment))
@@ -200,7 +201,8 @@ instance_groups:
     properties:
       firehose_exporter:
         uaa:
-          url: https://login.((domain))
+          #url: https://login.((domain))
+          url: https://login.((domain1))
           client_id: ((firehose-client-id))
           client_secret: ((firehose-client-secret))
         doppler:
@@ -208,7 +210,8 @@ instance_groups:
         metrics:
           environment: ((environment))
         logging:
-          url: wss://doppler.((domain)):443
+          #url: wss://doppler.((domain)):443
+          url: wss://doppler.((domain1)):443
           use_legacy_firehose: true
   - name: blackbox_exporter
     release: prometheus
