@@ -316,7 +316,8 @@ jobs:
       ops_files:
       - prometheus-config/bosh/opsfiles/rules.yml
       - prometheus-config/bosh/opsfiles/prod-common.yml
-      - prometheus-config/bosh/opsfiles/west.yml
+      # temp take out to work on getting cf in
+      #- prometheus-config/bosh/opsfiles/west.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/west.yml
       - common-west/west-prometheus.yml
