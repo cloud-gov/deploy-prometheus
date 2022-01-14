@@ -100,5 +100,5 @@
 
 # instance types.
 - type: replace
-  path: /instance_groups/name=prometheus-tooling/vm_type
+  path: /instance_groups/name=prometheus-((2ndenv))/vm_type
   value: m5.large
