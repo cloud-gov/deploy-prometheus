@@ -100,6 +100,11 @@
 
 # add bosh-dns alias to save on rtc-dns config
 
+- type: replace
+  path: /addons?/-
+  value:
+    name: bosh-dns-aliases
+    jobs:
     - name: bosh-dns-aliases
       release: bosh-dns-aliases
       properties:
@@ -118,6 +123,8 @@
   value:
     name: bosh-dns-aliases
     version: latest
+
+
 
 # Scrape 2ndenv prometheus via federation
 - type: replace
