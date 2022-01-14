@@ -132,7 +132,7 @@
   value:
     job_name: secondenv
     honor_labels: true
-    metrics_path: secondenv
+    metrics_path: federate
     params:
       match[]:
       - '{__name__=~"bosh_.*"}'
