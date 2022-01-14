@@ -112,7 +112,12 @@
             network: ((environment))-monitoring
             domain: bosh
 
-
+# add in bosh-dns-alias release
+- type: replace
+  path: /releases/name=bosh-dns-aliases?
+  value:
+    name: bosh-dns-aliases
+    version: latest
 
 # Scrape 2ndenv prometheus via federation
 - type: replace
