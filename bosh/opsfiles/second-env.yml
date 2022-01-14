@@ -1,4 +1,4 @@
-# Add tooling prometheus
+# Add 2ndenv prometheus
 - type: replace
   path: /instance_groups/-
   value:
@@ -98,6 +98,22 @@
             url: wss://doppler.((2nddomain)):443
             use_legacy_firehose: true
 
+# add bosh-dns alias to save on rtc-dns config
+
+    - name: bosh-dns-aliases
+      release: bosh-dns-aliases
+      properties:
+        aliases:
+        - domain: prometheus-((2ndenv)).service.monitoring
+          targets:
+          - query: 'q-s4'
+            instance_group: prometheus-((2ndenv))
+            deployment: prometheus-((environment))
+            network: ((environment))-monitoring
+            domain: bosh
+
+
+
 # Scrape 2ndenv prometheus via federation
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/scrape_configs/-
@@ -114,7 +130,7 @@
     static_configs:
     - targets:
       #- prometheus-((2ndenv)).service.cf.internal:9090
-      - prometheus-((2ndenv)).production-monitoring.prometheus-production.bosh
+      - prometheus-((2ndenv)).service.monitoring:9090
 
 # instance types.
 - type: replace
