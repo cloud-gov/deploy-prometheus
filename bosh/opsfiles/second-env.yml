@@ -98,6 +98,23 @@
             url: wss://doppler.((2nddomain)):443
             use_legacy_firehose: true
 
+# Scrape 2ndenv prometheus via federation
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/scrape_configs/-
+  value:
+    job_name: federate
+    honor_labels: true
+    metrics_path: /federate
+    params:
+      match[]:
+      - '{__name__=~"bosh_.*"}'
+      - '{__name__=~"node_.*"}'
+      - '{__name__=~"nessus_.*"}'
+      - '{__name__=~"concourse.*"}'
+    static_configs:
+    - targets:
+      - prometheus-((2ndenv)).service.cf.internal:9090
+
 # instance types.
 - type: replace
   path: /instance_groups/name=prometheus-((2ndenv))/vm_type
