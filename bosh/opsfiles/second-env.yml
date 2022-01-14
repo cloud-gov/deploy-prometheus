@@ -113,7 +113,8 @@
       - '{__name__=~"concourse.*"}'
     static_configs:
     - targets:
-      - prometheus-((2ndenv)).service.cf.internal:9090
+      #- prometheus-((2ndenv)).service.cf.internal:9090
+      - prometheus-((2ndenv)).production-monitoring.prometheus-production.bosh
 
 # instance types.
 - type: replace
