@@ -106,7 +106,7 @@
         aliases:
         - domain: prometheus-((2ndenv)).service.monitoring
           targets:
-          - query: 'q-s4'
+          - query: '*'
             instance_group: prometheus-((2ndenv))
             deployment: prometheus-((environment))
             network: ((environment))-monitoring
