@@ -63,22 +63,22 @@
       properties:
         bosh_exporter:
           bosh:
-            url: ((tooling-bosh-url))
-            ca_cert: ((bosh-ca-cert))
+            url: ((bosh2-url))
+            ca_cert: ((bosh2-ca-cert))
             uaa:
-              url: ((tooling-bosh-url)):8443
-              client_id: ((tooling-bosh-client-id))
-              client_secret: ((tooling-bosh-client-secret))
+              url: ((bosh2-url)):8443
+              client_id: ((bosh2-client-id))
+              client_secret: ((bosh2-client-secret))
           metrics:
-            environment: tooling
+            environment: ((2ndenv))
     - name: cf_exporter
       release: prometheus
       properties:
         cf_exporter:
           cf:
             api_url: https://api.((2nddomain))
-            client_id: ((cf-exporter-client-id))
-            client_secret: ((cf-exporter-client-secret))
+            client_id: ((cf-exporter2-client-id))
+            client_secret: ((cf-exporter2-client-secret))
             deployment_name: cf-((environment))
           metrics:
             environment: ((environment))
@@ -87,10 +87,9 @@
       properties:
         firehose_exporter:
           uaa:
-            #url: https://login.((2nddomain))
             url: https://login.((2nddomain))
-            client_id: ((firehose-client-id))
-            client_secret: ((firehose-client-secret))
+            client_id: ((firehose2-client-id))
+            client_secret: ((firehose2-client-secret))
           doppler:
             subscription_id: prometheus
           metrics:
