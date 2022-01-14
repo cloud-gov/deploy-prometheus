@@ -18,7 +18,7 @@
       properties:
         prometheus:
           external_labels:
-            federate: prometheus-tooling
+            federate: prometheus-((2ndenv))
           scrape_configs:
           - job_name: prometheus
             static_configs:
@@ -143,10 +143,6 @@
     - targets:
       #- prometheus-((2ndenv)).service.cf.internal:9090
       - prometheus-((2ndenv)).service.monitoring:9090
-
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/external_labels/federate2?
-  value: prometheus-((2ndenv))
 
 # instance types.
 - type: replace
