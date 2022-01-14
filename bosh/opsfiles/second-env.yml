@@ -144,6 +144,10 @@
       #- prometheus-((2ndenv)).service.cf.internal:9090
       - prometheus-((2ndenv)).service.monitoring:9090
 
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/external_labels/federate2?
+  value: prometheus-((2ndenv))
+
 # instance types.
 - type: replace
   path: /instance_groups/name=prometheus-((2ndenv))/vm_type
