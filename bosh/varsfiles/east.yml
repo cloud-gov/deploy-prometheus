@@ -3,6 +3,7 @@ environment: east
 environment: production # this is just for deployment name and bosh resource types, so we want prod
 domain: fr.east.cloud.gov
 domain1: fr.ea.cloud.gov
+1stenv: prod-eastb
 2ndenv: prod-eastc
 2nddomain: fr.eb.cloud.gov
 logsearch_file_size_threshold: 3000000

@@ -2,6 +2,7 @@ azs: [z1]
 environment: production # this is just for deployment name and bosh resource types, so we want prod
 domain: fr.west.cloud.gov
 domain1: fr.wb.cloud.gov
+1stenv: prod-westb
 2ndenv: prod-westc
 2nddomain: fr.wc.cloud.gov
 logsearch_file_size_threshold: 3000000
