@@ -183,7 +183,7 @@ instance_groups:
             client_id: ((bosh-client-id))
             client_secret: ((bosh-client-secret))
         metrics:
-          environment: ((environment))
+          environment: ((1stenv))
   - name: cf_exporter
     release: prometheus
     properties:
@@ -193,9 +193,9 @@ instance_groups:
           api_url: https://api.((domain1))
           client_id: ((cf-exporter-client-id))
           client_secret: ((cf-exporter-client-secret))
-          deployment_name: cf-((environment))
+          deployment_name: cf-((1stenv))
         metrics:
-          environment: ((environment))
+          environment: ((1stenv))
   - name: firehose_exporter
     release: prometheus
     properties:
@@ -208,7 +208,7 @@ instance_groups:
         doppler:
           subscription_id: prometheus
         metrics:
-          environment: ((environment))
+          environment: ((1stenv))
         logging:
           #url: wss://doppler.((domain)):443
           url: wss://doppler.((domain1)):443
