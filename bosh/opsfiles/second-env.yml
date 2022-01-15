@@ -79,9 +79,9 @@
             api_url: https://api.((2nddomain))
             client_id: ((cf-exporter2-client-id))
             client_secret: ((cf-exporter2-client-secret))
-            deployment_name: cf-((environment))
+            deployment_name: cf-((2ndenv))
           metrics:
-            environment: ((environment))
+            environment: ((2ndenv))
     - name: firehose_exporter
       release: prometheus
       properties:
@@ -93,7 +93,7 @@
           doppler:
             subscription_id: prometheus
           metrics:
-            environment: ((environment))
+            environment: ((2ndenv))
           logging:
             url: wss://doppler.((2nddomain)):443
             use_legacy_firehose: true
