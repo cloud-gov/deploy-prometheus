@@ -314,11 +314,9 @@ jobs:
     params:
       <<: *deploy-params
       ops_files:
-      - prometheus-config/bosh/opsfiles/rules.yml
+      - prometheus-config/bosh/opsfiles/rules-test.yml
       - prometheus-config/bosh/opsfiles/prod-common.yml
       - prometheus-config/bosh/opsfiles/second-env.yml
-      # temp take out to work on getting cf in
-      #- prometheus-config/bosh/opsfiles/west.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/west.yml
       - common-west/west-prometheus.yml
@@ -348,7 +346,7 @@ jobs:
   - in_parallel:
     - get: master-bosh-root-cert
     - get: prometheus-config
-      passed: [deploy-prometheus-staging]
+      resource: prometheus-config-west
       trigger: true
     - get: common-east
       trigger: true
@@ -367,13 +365,13 @@ jobs:
     params:
       <<: *deploy-params
       ops_files:
-      - prometheus-config/bosh/opsfiles/rules.yml
+      - prometheus-config/bosh/opsfiles/rules-test.yml
       - prometheus-config/bosh/opsfiles/prod-common.yml
-      - prometheus-config/bosh/opsfiles/east.yml
+      - prometheus-config/bosh/opsfiles/second-env.yml
       vars_files:
       - prometheus-config/bosh/varsfiles/east.yml
       - common-east/east-prometheus.yml
-      - terraform-prod-west-yml/state.yml
+      - terraform-prod-east-yml/state.yml
   on_failure:
     put: slack
     params:

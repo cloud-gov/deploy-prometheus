@@ -1,0 +1,230 @@
+# AWS RDS storage alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: aws-rds-storage
+    rules:
+    - alert: AWSRDSStorage
+      expr: aws_rds_disk_free < (aws_rds_disk_allocated * .12)
+      labels:
+        service: aws-rds
+        severity: warning
+      annotations:
+        summary: AWS RDS {{$labels.instance}} has used 88% or greater disk space
+        description: Email the organization administrator for {{$labels.instance}} to inquire about provisioning a larger database.
+
+# BOSH unknown instance alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: bosh-unknown-instances
+    rules:
+    - alert: BoshUnknownInstanceCheckExpired
+      expr: time() - push_time_seconds{job="bosh_unknown_instance"} > 7200
+      labels:
+        service: bosh-unknown-iaas-instance
+        severity: critical
+      annotations:
+        summary: Bosh Unknown Instance Check for VPC {{$labels.instance}} has not run in two hours
+        description: Check bosh director {{$labels.instance}} for errors
+    - alert: BoshUnknownInstanceExpired
+      expr: bosh_unknown_iaas_instance > 0
+      for: 5m
+      labels:
+        service: bosh-unknown-iaas-instance
+        severity: critical
+      annotations:
+        summary: Bosh found unknown IaaS instance {{$labels.iaas_id}} in VPC {{$labels.vpc_name}}
+        description: Unknown IaaS instance {{$labels.iaas_id}} with bosh id {{$labels.bosh_id}} found in VPC {{$labels.vpc_name}}
+
+# Logsearch backup alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: logsearch-backup
+    rules:
+    - alert: LogsearchBackupFileSize
+      expr: logsearch_backup_file_size < ((logsearch_file_size_threshold))
+      for: 30m
+      labels:
+        service: logsearch-backup
+        severity: warning
+      annotations:
+        summary: Logsearch backup file size on environment {{$labels.environment}} is too low
+        description: Logsearch backup file size on environment {{$labels.environment}} has been too low for 30m.  This indicates that the log archival process to s3 may be broken.  See the archiver instances in the logsearch deployment.
+    - alert: LogsearchBackupLogCount
+      expr: logsearch_backup_log_count < ((logsearch_log_count_threshold))
+      for: 30m
+      labels:
+        service: logsearch-backup
+        severity: warning
+      annotations:
+        summary: Logsearch log count on environment {{$labels.environment}} is too low
+        description: Logsearch log count on environment {{$labels.environment}} has been too low for 30m.  This indicates that we may have a logging outage.  See the ingestor processes on the ingestor instances in the logsearch deployment.  They may need restarting.
+    - alert: LogsearchBackupRatio
+      expr: logsearch_backup_file_size / logsearch_backup_log_count < ((logsearch_ratio_threshold))
+      for: 30m
+      labels:
+        service: logsearch-backup
+        severity: warning
+      annotations:
+        summary: Logsearch archive to index ratio on environment {{$labels.environment}} is too low
+        description: Logsearch archive to index ratio on environment {{$labels.environment}} has been too low for 30m.  The S3 archival process or the ES ingest process may not be working.  See the archival and ingestor instances in the logsearch deployment in case any of their components need restarting.
+    - alert: LogsearchBackupExpired
+      expr: time() - max(logsearch_backup_timestamp) > 60 * 30
+      for: 5m
+      labels:
+        service: logsearch-backup
+        severity: warning
+      annotations:
+        summary: Logsearch timestamp on environment {{$labels.environment}} is too old
+        description: Logsearch timestamp on environment {{$labels.environment}} has been too old for 5m.  This indicates that the logsearch checks in https://github.com/18F/cg-deploy-logsearch/blob/master/ci/check-backup.sh have not run recently, so we do not have good data to alert on.
+
+# UAA Client Audit alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: uaa-client-audit
+    rules:
+    - alert: UAAClientAuditUnexpectedClient
+      expr: uaa_client_audit != 1
+      labels:
+        service: uaa-client-audit
+        severity: warning
+        uaa: '{{$labels.uaa_url}}'
+      annotations:
+        summary: UAA Client {{$labels.instance}} is not expected for {{$labels.uaa_url}}
+        description: UAA Client {{$labels.instance}} exists but is not expected for {{$labels.uaa_url}}
+    - alert: UAAClientAuditNotRunning
+      expr: time() - push_time_seconds{job="uaa_client_audit"} > 7200
+      labels:
+        service: uaa-client-audit
+        severity: warning
+        uaa: '{{$labels.uaa_url}}'
+      annotations:
+        summary: UAA Client Audit has not run in two hours
+        description: Check https://ci.fr.cloud.gov/teams/main/pipelines/deploy-cf-deployment for failures
+
+# UAA Monitor Account Creation alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: uaa-monitor-account-creation
+    rules:
+    - alert: UAAMonitorAccountCreation
+      expr: uaa_monitor_account_creation > 50
+      labels:
+        service: uaa-monitor-account-creation
+        severity: warning
+        uaa: '{{$labels.uaa_url}}'
+      annotations:
+        summary: UAA has created more accounts than expected in the past four days for {{$labels.uaa_url}}.
+        description: UAA has created many more new accounts than normal. Verify the spike in new UAA accounts are legitimate.
+
+
+# Domain broker alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: domain-broker
+    rules:
+    - alert: DomainBrokerNotEnoughALBs
+      expr: (domain_broker_listener_count * 25) - domain_broker_certificate_count < 5
+      labels:
+        service: domain-broker
+        severity: warning
+      annotations:
+        summary: 'External domain broker has too few available certificates: {{$value}}'
+        description: Provision more load balancers for domain broker in Terraform and update external-domain-broker config with new ALB
+    - alert: DomainBrokerFullALB
+      expr: alb_listener_certificate_count > 23
+      labels:
+        service: domain-broker
+        severity: warning
+      annotations:
+        summary: 'Alb listener {{$labels.alb_arn}} has too many certificates'
+        description: "If DomainBrokerNotEnoughALBs isn't firing, the external-domain-broker is probably either placing instances incorrectly or not cleaning up certificates."
+
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: blackbox
+    rules:
+    - alert: SSLCertExpiringSoon
+      expr: probe_ssl_earliest_cert_expiry{job="blackbox"} - time() < 86400 * 25
+      for: 10m
+      labels:
+        service: blackbox
+        severity: warning
+      annotations:
+        summary: SSL certificate for {{$labels.instance}} is expiring within 25d
+        description: Renew SSL certificate for {{$labels.instance}}
+    - alert: ProbeFailing
+      expr: probe_success{job="blackbox"} < 1
+      for: 5m
+      labels:
+        service: blackbox
+        severity: warning
+      annotations:
+        summary: Probe failing for {{$labels.instance}} for 5m
+        description: Check health of {{$labels.instance}}
+
+# CF Core - non-customer stuff.
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: cg-operators
+    rules:
+    - alert: CFOperatorAppUnhealthy
+      expr: min(cf_application_instances{} - cf_application_instances_running{state=~"STARTED"}) by(environment, deployment, organization_name, space_name, application_name) > 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "CF Application `{{$labels.environment}}/{{$labels.deployment}}/{{$labels.organization_name}}/{{$labels.space_name}}/{{$labels.application_name}}` is unhealthy"
+        description: "CF Application `{{$labels.application_name}}` at environment `{{$labels.environment}}`, deployment `{{$labels.deployment}}`, org `{{$labels.organization_name}}`, and space `{{$labels.space_name}}` isn't in good shape, you might want to take a look."
+    - alert: CFOperatorAppCrashed
+      expr: sum(cf_application_instances_running{state=~"STARTED"}) by(environment, deployment, organization_name, space_name, application_name) == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "CF Application `{{$labels.environment}}/{{$labels.deployment}}/{{$labels.organization_name}}/{{$labels.space_name}}/{{$labels.application_name}}` does not have any instance running"
+        description: "CF Application `{{$labels.application_name}}` at environment `{{$labels.environment}}`, deployment `{{$labels.deployment}}`, org `{{$labels.organization_name}}`, and space `{{$labels.space_name}}` has not had any instance running. You might want to look into that."
+
+# Network watchers
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: networker
+    rules:
+    - alert: NetworkTrafficBurst
+      expr: avg by (environment) (irate(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m] offset 5m)) / avg by (environment) (irate(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m])) >= 1.40
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: Burst in incoming network traffic
+        description: "The platform has seen a burst in incoming network traffic, please review this dashboard: https://grafana.fr.cloud.gov/d/cf_router/cf-router"
+    - alert: LargeNetworkTrafficBurst
+      expr: avg by (environment) (irate(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m] offset 5m)) / avg by (environment) (irate(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m])) >= 1.50
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: Burst in incoming network traffic
+        description: "The platform has seen a very large burst in incoming network traffic, please review this dashboard: https://grafana.fr.cloud.gov/d/cf_router/cf-router"
+
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: aide
+    rules:
+    - alert: AideViolations
+      expr: aide_violation_count > 0
+      labels:
+        service: aide
+        severity: warning
+      annotations:
+        summary: 'AIDE found violations for {{$labels.instance}}, with action {{$labels.action}}'
+        description: Review AIDE report in logs-platform - if changes are expected, update AIDE database on alerting VM
