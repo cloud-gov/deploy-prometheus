@@ -4,6 +4,7 @@ releases:
 - {name: prometheus, version: latest}
 - {name: oauth2-proxy, version: latest}
 - {name: cron, version: latest}
+- {name: bosh-dns-alias, version: latest}
 
 stemcells:
 - alias: default
@@ -237,6 +238,18 @@ instance_groups:
         job_predict_persistent_disk_full:
           threshold: 78
           evaluation_time: 10m
+  - name: bosh-dns-aliases
+    release: bosh-dns-aliases
+    properties:
+      aliases:
+      - domain: concourse-((environment)).service.monitoring
+        targets:
+        - deployment: concourse-((environment))
+          domain: bosh
+          instance_group: web
+          network: ((environment))-concourse
+          query: '*'
+    
   - name: cloudfoundry_alerts
     release: prometheus
   - name: elasticsearch_alerts
