@@ -170,6 +170,12 @@ instance_groups:
             regex: "(.*)"
             target_label: __address__
             replacement: "${1}:9100"
+        - job_name: concourse-((environment))
+          scrape_interval: 1m
+          scrape_timeout: 1m
+          static_configs:
+          - targets:
+            - concourse-((environment)).service.monitoring:9110
   - name: pushgateway
     release: prometheus
   - name: bosh_exporter
