@@ -4,7 +4,7 @@ releases:
 - {name: prometheus, version: latest}
 - {name: oauth2-proxy, version: latest}
 - {name: cron, version: latest}
-- {name: bosh-dns-alias, version: latest}
+- {name: bosh-dns-aliases, version: latest}
 
 stemcells:
 - alias: default
