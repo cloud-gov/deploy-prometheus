@@ -209,7 +209,7 @@ jobs:
       releases:
       - prometheus-release/*.tgz
       - oauth2-proxy-release/*.tgz
-      - secureproxy-release
+      - secureproxy-release/*.tgz
       stemcells:
       - prometheus-stemcell-bionic/*.tgz
       ops_files:
