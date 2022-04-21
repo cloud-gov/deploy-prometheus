@@ -5,6 +5,7 @@ releases:
 - {name: oauth2-proxy, version: latest}
 - {name: cron, version: latest}
 - {name: bosh-dns-aliases, version: latest}
+- {name: secureproxy, version: latest}
 
 stemcells:
 - alias: default
@@ -336,24 +337,24 @@ instance_groups:
     properties:
       nginx:
         prometheus:
-          http_port: 8081
+          http_port: 8082
           server_name: prometheus.((domain))
           headers: &security-headers
             X-Frame-Options: DENY
             Strict-Transport-Security: "max-age=31536000; preload"
         alertmanager:
-          http_port: 8081
+          http_port: 8082
           server_name: alertmanager.((domain))
           headers: *security-headers
         grafana:
-          http_port: 8081
+          http_port: 8082
           server_name: grafana.((domain))
           headers: *security-headers
   - name: oauth2-proxy
     release: oauth2-proxy
     properties:
-      address: http://0.0.0.0:8080
-      upstream: http://127.0.0.1:8081
+      address: http://0.0.0.0:8081
+      upstream: http://127.0.0.1:8082
       provider: oidc
       client_id: ((oauth-proxy-client-id))
       client_secret: ((oauth-proxy-client-secret))
@@ -362,6 +363,12 @@ instance_groups:
       email_domain: gsa.gov
       browser_xss_filter: True
       content_type_nosniff: True
+  - name: secureproxy
+    properties:
+      secureproxy:
+        listen_port: 8080
+        proxy_port: 8081
+    release: secureproxy
 variables:
 - name: grafana-admin-password
   type: password

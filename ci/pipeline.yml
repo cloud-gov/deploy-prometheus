@@ -198,6 +198,8 @@ jobs:
       trigger: true
     - get: prometheus-stemcell-bionic
       trigger: true
+    - get: secureproxy-release
+      trigger: true
     - get: pipeline-tasks
     - get: terraform-staging-yml
   - put: prometheus-staging-deployment
@@ -207,6 +209,7 @@ jobs:
       releases:
       - prometheus-release/*.tgz
       - oauth2-proxy-release/*.tgz
+      - secureproxy-release/*.tgz
       stemcells:
       - prometheus-stemcell-bionic/*.tgz
       ops_files:
@@ -253,6 +256,9 @@ jobs:
       passed: [deploy-prometheus-staging]
       trigger: true
     - get: prometheus-stemcell-bionic
+      passed: [deploy-prometheus-staging]
+      trigger: true
+    - get: secureproxy-release
       passed: [deploy-prometheus-staging]
       trigger: true
     - get: pipeline-tasks
@@ -323,6 +329,13 @@ resources:
     bucket: ((s3-bosh-releases-bucket))
     regexp: oauth2-proxy-(.*).tgz
     region_name: ((aws-region))
+
+- name: secureproxy-release
+  source:
+    bucket: ((s3-bosh-releases-bucket))
+    regexp: secureproxy-(.*).tgz
+    region_name: ((aws-region))
+  type: s3-iam
 
 - name: prometheus-config
   icon: github-circle
