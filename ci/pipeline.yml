@@ -343,6 +343,7 @@ resources:
   source:
     uri: ((cg-deploy-prometheus-git-url))
     branch: ((cg-deploy-prometheus-git-branch))
+    commit_verification_keys: ((cloud-gov-pgp-keys))
 
 - name: prometheus-release-src
   icon: github-circle
@@ -381,6 +382,7 @@ resources:
   source:
     uri: ((pipeline-tasks-git-url))
     branch: ((pipeline-tasks-git-branch))
+    commit_verification_keys: ((cloud-gov-pgp-keys))
 
 - name: slack
   type: slack-notification
