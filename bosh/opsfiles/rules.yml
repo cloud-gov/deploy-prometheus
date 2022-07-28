@@ -358,3 +358,19 @@
       annotations:
         summary: '{{$labels.arn}} with alias {{$labels.alias}} and cloudfront domain {{$labels.domain}}, expires in less than 25 days. Days until expiration: {{$value}}'
         description: 'Find out why the certificate is not renewing. The CloudFront instance ID is {{$labels.id}}.'
+
+# ClamAV Alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: clamav
+    rules:
+    - alert: ClamAV Alert
+      expr: clamav_virus_detected > 0
+      labels:
+        service: clamav
+        severity: warning
+      annotations:
+        summary: ClamAV scan alert for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}
+        description: ClamAV alert for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}} - check the logs on the instance to establish threat and follow procedures
+
