@@ -16,6 +16,14 @@ groups:
   - prometheus-down-check-production
 
 jobs:
+- name: set-self
+  plan:
+    - get: cg-deploy-prometheus
+      trigger: true
+    - set_pipeline: self
+      file: cg-deploy-prometheus/ci/pipeline.yml
+      var_files:
+        - cg-deploy-prometheus/ci/config.yml
 - name: awslogs-check
   serial_groups: [production]
   plan:
