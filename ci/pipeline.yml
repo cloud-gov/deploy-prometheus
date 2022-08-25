@@ -2,6 +2,7 @@
 groups:
 - name: deployment
   jobs:
+  - set-self
   - deploy-prometheus-staging
   - deploy-prometheus-production
 - name: checks
