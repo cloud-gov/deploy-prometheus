@@ -6,6 +6,7 @@ groups:
   - deploy-prometheus-production
 - name: checks
   jobs:
+  - set-self
   - awslogs-check
   - aws-mfa-check
   - aws-rds-storage-check
@@ -18,12 +19,13 @@ groups:
 jobs:
 - name: set-self
   plan:
-    - get: cg-deploy-prometheus
+    - get: prometheus-config
       trigger: true
     - set_pipeline: self
-      file: cg-deploy-prometheus/ci/pipeline.yml
+      file: prometheus-config/ci/pipeline.yml
       var_files:
-        - cg-deploy-prometheus/ci/config.yml
+        - prometheus-config/ci/config.yml
+
 - name: awslogs-check
   serial_groups: [production]
   plan:
@@ -31,7 +33,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      resource: prometheus-config
+      passed: [set-self]
   - task: awslogs
     file: prometheus-config/ci/awslogs.yml
     tags: [iaas]
@@ -47,7 +49,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      resource: prometheus-config
+      passed: [set-self]
   - task: aws-rds-storage-check
     file: prometheus-config/ci/aws-rds-storage.yml
     params:
@@ -63,7 +65,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      resource: prometheus-config
+      passed: [set-self]
   - task: aws-mfa
     file: prometheus-config/ci/aws-mfa.yml
     tags: [iaas]
@@ -78,7 +80,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      resource: prometheus-config
+      passed: [set-self]
   - in_parallel:
     - task: cdn-broker-certs-production
       file: prometheus-config/ci/cdn-broker-certs.yml
@@ -96,7 +98,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      resource: prometheus-config
+      passed: [set-self]
   - in_parallel:
     - task: domain-broker-certs-development
       file: prometheus-config/ci/domain-broker-certs.yml
@@ -130,7 +132,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      resource: prometheus-config
+      passed: [set-self]
   - task: concourse-has-auth
     file: prometheus-config/ci/concourse-has-auth.yml
     params:
@@ -144,6 +146,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
+      passed: [set-self]
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
     params:
@@ -170,6 +173,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
+      passed: [set-self]
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
     params:
@@ -195,6 +199,7 @@ jobs:
   - in_parallel:
     - get: master-bosh-root-cert
     - get: prometheus-config
+      passed: [set-self]
       trigger: true
     - get: common-staging
       trigger: true
@@ -253,7 +258,7 @@ jobs:
   - in_parallel:
     - get: master-bosh-root-cert
     - get: prometheus-config
-      passed: [deploy-prometheus-staging]
+      passed: [deploy-prometheus-staging, set-self]
       trigger: true
     - get: common-production
       trigger: true
