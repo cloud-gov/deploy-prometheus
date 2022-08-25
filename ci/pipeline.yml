@@ -259,7 +259,7 @@ jobs:
   - in_parallel:
     - get: master-bosh-root-cert
     - get: prometheus-config
-      passed: [deploy-prometheus-staging, set-self]
+      passed: [deploy-prometheus-staging]
       trigger: true
     - get: common-production
       trigger: true
