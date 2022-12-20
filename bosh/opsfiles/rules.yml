@@ -244,7 +244,7 @@
       annotations:
         summary: 'Alb listener {{$labels.alb_arn}} has too many certificates'
         description: "If DomainBrokerNotEnoughALBs isn't firing, the external-domain-broker is probably either placing instances incorrectly or not cleaning up certificates."
-    - alert: DomainBrokerMultipleServiceCertificates
+    - alert: DomainBrokerServiceMultipleCertificates
       expr: service_instance_cert_count > 1
       labels:
         service: domain-broker
