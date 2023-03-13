@@ -373,8 +373,8 @@ resources:
   source:
     name: bosh-aws-xen-hvm-ubuntu-bionic-go_agent
 
-- name: prometheus-jammy-bionic
-  type: bosh-io-jammy
+- name: prometheus-stemcell-jammy
+  type: bosh-io-stemcell
   source:
     name: bosh-aws-xen-hvm-ubuntu-jammy-go_agent
 
