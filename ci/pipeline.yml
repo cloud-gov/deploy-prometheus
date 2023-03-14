@@ -355,6 +355,7 @@ resources:
   icon: github-circle
   type: git
   source:
+    #uri: ((cg-deploy-prometheus-git-url))
     uri: ((cg-deploy-prometheus-git-url))
     branch: test-deploy-jammy
     commit_verification_keys: ((cloud-gov-pgp-keys))
