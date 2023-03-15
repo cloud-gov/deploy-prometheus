@@ -199,7 +199,8 @@ jobs:
   plan:
   - in_parallel:
     - get: master-bosh-root-cert
-    - get: prometheus-staging-config
+    - get: prometheus-config
+      passed: [set-self]
       trigger: true
     - get: common-staging
       trigger: true
@@ -218,7 +219,7 @@ jobs:
   - put: prometheus-staging-deployment
     params: &deploy-params
       cert: master-bosh-root-cert/master-bosh.crt
-      manifest: prometheus-staging-config/bosh/manifest.yml
+      manifest: prometheus-config/bosh/manifest.yml
       releases:
       - prometheus-release/*.tgz
       - oauth2-proxy-release/*.tgz
@@ -226,10 +227,10 @@ jobs:
       stemcells:
       - prometheus-stemcell-jammy/*.tgz
       ops_files:
-      - prometheus-staging-config/bosh/opsfiles/rules.yml
-      - prometheus-staging-config/bosh/opsfiles/staging.yml
+      - prometheus-config/bosh/opsfiles/rules.yml
+      - prometheus-config/bosh/opsfiles/staging.yml
       vars_files:
-      - prometheus-staging-config/bosh/varsfiles/staging.yml
+      - prometheus-config/bosh/varsfiles/staging.yml
       - common-staging/staging-prometheus.yml
       - terraform-staging-yml/state.yml
   on_failure:
@@ -258,7 +259,7 @@ jobs:
   - in_parallel:
     - get: master-bosh-root-cert
     - get: prometheus-config
-      passed: [set-self, deploy-prometheus-staging]
+      passed: [deploy-prometheus-staging]
       trigger: true
     - get: common-production
       trigger: true
@@ -286,7 +287,6 @@ jobs:
       - prometheus-config/bosh/varsfiles/production.yml
       - common-production/production-prometheus.yml
       - terraform-prod-yml/state.yml
-      manifest: prometheus-config/bosh/manifest.yml
   on_failure:
     put: slack
     params:
@@ -357,14 +357,6 @@ resources:
   source:
     uri: ((cg-deploy-prometheus-git-url))
     branch: ((cg-deploy-prometheus-git-branch))
-    commit_verification_keys: ((cloud-gov-pgp-keys))
-
-- name: prometheus-staging-config
-  icon: github-circle
-  type: git
-  source:
-    uri: ((cg-deploy-prometheus-staging-git-url))
-    branch: ((cg-deploy-prometheus-staging-git-branch))
     commit_verification_keys: ((cloud-gov-pgp-keys))
 
 - name: prometheus-release-src
