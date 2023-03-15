@@ -1,5 +1,4 @@
-#cg-deploy-prometheus-staging-git-branch: test-deploy-jammy
-cg-deploy-prometheus-staging-git-branch: main
+cg-deploy-prometheus-staging-git-branch: test-deploy-jammy
 cg-deploy-prometheus-staging-git-url: https://github.com/cloud-gov/cg-deploy-prometheus.git
 
 cg-deploy-prometheus-git-branch: main

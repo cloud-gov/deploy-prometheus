@@ -199,7 +199,7 @@ jobs:
   plan:
   - in_parallel:
     - get: master-bosh-root-cert
-    - get: prometheus-config
+    - get: prometheus-staging-config
       passed: [set-self]
       trigger: true
     - get: common-staging
@@ -357,6 +357,14 @@ resources:
   source:
     uri: ((cg-deploy-prometheus-git-url))
     branch: ((cg-deploy-prometheus-git-branch))
+    commit_verification_keys: ((cloud-gov-pgp-keys))
+
+- name: prometheus-staging-config
+  icon: github-circle
+  type: git
+  source:
+    uri: ((cg-deploy-prometheus-staging-git-url))
+    branch: ((cg-deploy-prometheus-staging-git-branch))
     commit_verification_keys: ((cloud-gov-pgp-keys))
 
 - name: prometheus-release-src
