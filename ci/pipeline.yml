@@ -210,7 +210,7 @@ jobs:
       trigger: true
     - get: oauth2-proxy-release
       trigger: true
-    - get: prometheus-stemcell-bionic
+    - get: prometheus-stemcell-jammy
       trigger: true
     - get: secureproxy-release
       trigger: true
@@ -225,7 +225,7 @@ jobs:
       - oauth2-proxy-release/*.tgz
       - secureproxy-release/*.tgz
       stemcells:
-      - prometheus-stemcell-bionic/*.tgz
+      - prometheus-stemcell-jammy/*.tgz
       ops_files:
       - prometheus-config/bosh/opsfiles/rules.yml
       - prometheus-config/bosh/opsfiles/staging.yml
@@ -269,7 +269,7 @@ jobs:
     - get: oauth2-proxy-release
       passed: [deploy-prometheus-staging]
       trigger: true
-    - get: prometheus-stemcell-bionic
+    - get: prometheus-stemcell-jammy
       passed: [deploy-prometheus-staging]
       trigger: true
     - get: secureproxy-release
@@ -368,10 +368,11 @@ resources:
     # we can't upgrade past this until k8s is upgraded.
     tag_filter: ((prometheus-release-version-filter))
 
-- name: prometheus-stemcell-bionic
+- name: prometheus-stemcell-jammy
   type: bosh-io-stemcell
   source:
-    name: bosh-aws-xen-hvm-ubuntu-bionic-go_agent
+    name: bosh-aws-xen-hvm-ubuntu-jammy-go_agent
+
 
 - name: prometheus-staging-deployment
   type: bosh-deployment
