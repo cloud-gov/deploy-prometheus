@@ -1,11 +1,23 @@
 name: prometheus-((environment))
 
+addons:
+- include:
+    stemcell:
+    - os: ubuntu-bionic
+    - os: ubuntu-jammy
+  jobs:
+  - name: bpm
+    release: bpm
+  name: bpm
+
+
 releases:
 - {name: prometheus, version: latest}
 - {name: oauth2-proxy, version: latest}
 - {name: cron, version: latest}
 - {name: bosh-dns-aliases, version: latest}
 - {name: secureproxy, version: latest}
+- {name: bpm, version: latest}
 
 stemcells:
 - alias: default
@@ -195,6 +207,8 @@ instance_groups:
   - name: cf_exporter
     release: prometheus
     properties:
+      bpm:
+        enabled: true
       cf_exporter:
         cf:
           api_url: https://api.((domain))
