@@ -5,6 +5,7 @@ logsearch_file_size_threshold: 3000000
 logsearch_log_count_threshold: 30000
 logsearch_ratio_threshold: 50
 blackbox-targets:
+- https://dashboard.fr.cloud.gov
 - https://login.fr.cloud.gov
 - https://api.fr.cloud.gov
 - https://test-java.app.cloud.gov
@@ -16,3 +17,6 @@ blackbox-targets:
 - https://test-ruby-sinatra.app.cloud.gov
 - https://www.fdic.gov
 - https://www.fec.gov
+- https://api.data.gov
+- https://fire.airnow.gov
+- https://www.airnow.gov
