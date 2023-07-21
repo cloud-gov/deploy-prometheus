@@ -7,7 +7,10 @@ logsearch_ratio_threshold: 50
 blackbox-targets:
 - https://dashboard.fr.cloud.gov
 - https://login.fr.cloud.gov
+- https://uaa.fr.cloud.gov
 - https://api.fr.cloud.gov
+- https://logs.fr.cloud.gov
+- https://idp.fr.cloud.gov
 - https://test-java.app.cloud.gov
 - https://test-nodejs.app.cloud.gov
 - https://test-dotnet-core.app.cloud.gov
