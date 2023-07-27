@@ -130,14 +130,14 @@ instance_groups:
           - targets:
             - localhost:9190
         - job_name: cf
-          scrape_interval: 90s
-          scrape_timeout: 75s
+          scrape_interval: 2m
+          scrape_timeout: 100s
           static_configs:
           - targets:
             - localhost:9193
         - job_name: firehose
-          scrape_interval: 90s
-          scrape_timeout: 75s
+          scrape_interval: 2m
+          scrape_timeout: 100s
           static_configs:
           - targets:
             - localhost:9186
