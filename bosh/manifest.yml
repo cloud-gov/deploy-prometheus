@@ -184,12 +184,18 @@ instance_groups:
               port: 443
           relabel_configs:
             - source_labels: [__address__]
+              regex: (.*)
               target_label: __param_target
-              replacement: https://$1/ 
-            - target_label: __address__
+              replacement: https://$1/  
+            - source_labels: [__param_target]
+              target_label: instance
+              regex: (.*)
+            - source_labels: []
+              regex: .*
+              target_label: __address__
               replacement: localhost:9115
             - source_labels: [__meta_dns_name]
-              target_label: __param_hostname 
+              target_label: __param_hostname
             - source_labels: [__meta_dns_name]
               target_label: vhost
         - job_name: node
