@@ -173,6 +173,25 @@ instance_groups:
             regex: .*
             target_label: __address__
             replacement: localhost:9115
+        - job_name: blackbox_tls
+          metrics_path: /probe
+          params:
+            module:
+            - http
+          dns_sd_configs:
+            - names: ((blackbox_tls-targets))
+              type: A
+              port: 443
+          relabel_configs:
+            - source_labels: [__address__]
+              target_label: __param_target
+              replacement: https://$1/ 
+            - target_label: __address__
+              replacement: localhost:9115
+            - source_labels: [__meta_dns_name]
+              target_label: __param_hostname 
+            - source_labels: [__meta_dns_name]
+              target_label: vhost
         - job_name: node
           file_sd_configs:
           - files:

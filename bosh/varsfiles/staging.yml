@@ -6,4 +6,15 @@ logsearch_log_count_threshold: 300
 logsearch_ratio_threshold: 50
 blackbox-targets:
 - https://api.fr-stage.cloud.gov
+- https://idp.fr-stage.cloud.gov
+- https://login.fr-stage.cloud.gov
+- https://uaa.fr-stage.cloud.gov
+- https://logs.fr-stage.cloud.gov
+- https://ci.fr-stage.cloud.gov
+- https://dashboard.fr-stage.cloud.gov
+blackbox_tls-targets:
+- graphana.fr-stage.cloud.gov
+- prometheus.fr-stage.cloud.gov
+- alertmanager.fr-stage.cloud.gov
+- logs-platform.fr-stage.cloud.gov
 opsgenie-url: https://api.opsgenie.com

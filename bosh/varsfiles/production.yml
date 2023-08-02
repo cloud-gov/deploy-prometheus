@@ -25,14 +25,15 @@ blackbox-targets:
 - https://www.airnow.gov
 - https://account.fr.cloud.gov
 - https://cloud.gov
-- https://alertmanager.fr.cloud.gov
 - https://ci.fr.cloud.gov
-- https://grafana.fr.cloud.gov
-- https://logs-platform.fr.cloud.gov
 - https://opslogin.fr.cloud.gov
-- https://prometheus.fr.cloud.gov
 - https://doomsday.fr.cloud.gov
 - https://pages-staging.cloud.gov
 - https://pages.cloud.gov
 - https://admin.pages-staging.cloud.gov
 - https://admin.pages.cloud.gov
+blackbox_tls-targets:
+- prometheus.fr.cloud.gov
+- logs-platform.fr.cloud.gov
+- alertmanager.fr.cloud.gov
+- grafana.fr.cloud.gov
