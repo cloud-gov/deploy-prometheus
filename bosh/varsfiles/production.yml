@@ -32,8 +32,3 @@ blackbox-targets:
 - https://pages.cloud.gov
 - https://admin.pages-staging.cloud.gov
 - https://admin.pages.cloud.gov
-blackbox_tls-targets:
-- prometheus.fr.cloud.gov
-- logs-platform.fr.cloud.gov
-- alertmanager.fr.cloud.gov
-- grafana.fr.cloud.gov
