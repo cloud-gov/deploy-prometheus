@@ -277,30 +277,6 @@
         summary: Probe failing for {{$labels.instance}} for 5m
         description: Check health of {{$labels.instance}}
 
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
-  value:
-    name: blackbox_tls
-    rules:
-    - alert: SSLCertExpiringSoon
-      expr: probe_ssl_earliest_cert_expiry{job="blackbox_tls"} - time() < 86400 * 25
-      for: 10m
-      labels:
-        service: blackbox_tls
-        severity: warning
-      annotations:
-        summary: SSL certificate for {{$labels.vhost}} is expiring within 25d
-        description: Renew SSL certificate for {{$labels.vhost}}
-    - alert: ProbeFailing
-      expr: probe_success{job="blackbox_tls"} < 1
-      for: 5m
-      labels:
-        service: blackbox_tls
-        severity: warning
-      annotations:
-        summary: Probe failing for {{$labels.vhost}} for 5m
-        description: Check health of {{$labels.vhost}}
-
 # CF Core - non-customer stuff.
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
