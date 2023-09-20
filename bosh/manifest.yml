@@ -328,7 +328,7 @@ instance_groups:
           dashboard_files:
           - /var/vcap/jobs/bosh_dashboards/*.json
           - /var/vcap/jobs/system_dashboards/*.json
-          - /var/vcap/jobs/cloudfoundry_dashboard-attics/*.json
+          - /var/vcap/jobs/cloudfoundry_dashboards-attic/*.json
           - /var/vcap/jobs/probe_dashboards/*.json
           - /var/vcap/jobs/elasticsearch_dashboards/*.json
           - /var/vcap/jobs/concourse_dashboards/*.json
@@ -337,7 +337,7 @@ instance_groups:
     release: prometheus
   - name: system_dashboards
     release: prometheus
-  - name: cloudfoundry_dashboard-attics
+  - name: cloudfoundry_dashboards-attic
     release: prometheus
   - name: probe_dashboards
     release: prometheus
