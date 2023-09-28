@@ -9,5 +9,6 @@ name = "pypi"
 "boto3" = "*"
 requests = "*"
 "psycopg2-binary" = "*"
+peewee = "*"
 
 
