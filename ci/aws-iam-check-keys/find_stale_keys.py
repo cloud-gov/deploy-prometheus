@@ -138,7 +138,7 @@ def main():
     keys_db_models.create_tables()
     
     # pipeline will pull in resource for the csv file so it's local
-    load_reference_data("prometheus-config/ci/aws-iam-check-keys/seed_thresholds.csv")
+    load_reference_data("seed_thresholds.csv")
     search_for_keys()
     
     et_cpu_time = time.process_time()
