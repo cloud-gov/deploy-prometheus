@@ -1,0 +1,30 @@
+---
+platform: linux
+image_resource:
+  type: registry-image
+  source:
+    repository: kennethreitz/pipenv
+    registry_mirror:
+      host: docker-registry-mirror.app.cloud.gov:443
+
+inputs:
+- name: prometheus-config
+
+run:
+  path: sh
+  args:
+  - -c
+  - |
+    cd prometheus-config/ci/aws-iam-check-keys
+    pipenv install
+    pipenv run ./find_stale_keys.py
+
+params:
+  AWS_DEFAULT_REGION:
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  IAM_KEYS_DB:
+  IAM_KEYS_USER:
+  IAM_KEYS_PASSWORD:
+  IAM_KEYS_HOST:
+  IAM_KEYS_PORT:

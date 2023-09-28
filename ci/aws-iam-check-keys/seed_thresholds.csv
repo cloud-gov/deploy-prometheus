@@ -1,0 +1,11 @@
+user_string,is_wildcard,account_type,alert,warn,violation
+chris.mcgowan,N,Operator,Y,75,90
+van.nguyen,N,Operator,Y,75,90
+break.glass,N,Platform,Y,165,180
+cg-ecr,N,Platform,Y,165,180
+clamav_mirror_sync,N,Application,Y,165,180
+s3-logstash,N,Application,Y,165,180
+cg-s3-,Y,Customer,N,,
+cg-broker-,Y,Customer,N,,
+zachbiller,N,Payer,N,,
+danabiller,N,Payer,N,,
