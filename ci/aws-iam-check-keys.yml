@@ -17,7 +17,7 @@ run:
   - |
     cd prometheus-config/ci/aws-iam-check-keys
     pipenv install
-    pipenv run config/ci/aws-iam-check-keys/find_stale_keys.py
+    pipenv run prometheus-config/ci/aws-iam-check-keys/find_stale_keys.py
 
 params:
   AWS_DEFAULT_REGION:
