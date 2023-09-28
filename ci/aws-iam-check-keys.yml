@@ -17,7 +17,6 @@ run:
   - |
     cd prometheus-config/ci/aws-iam-check-keys
     pipenv install
-    pipenv --python 3.11
     pipenv run ./find_stale_keys.py
 
 params:
