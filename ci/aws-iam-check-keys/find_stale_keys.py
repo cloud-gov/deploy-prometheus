@@ -151,6 +151,8 @@ def main():
     #     search_for_keys(com_key, com_secret, com_profile)
     
     # now gov
+    print(f'about to look at the first one: {iam_gov_profiles[0]}')
+    print(f'inside of iam_gov_profiles: {iam_gov_profiles}')
     for gov_profile in iam_gov_profiles:
         print(f'looking at gov profile: {gov_profile}')
         search_for_keys(gov_key, gov_secret, gov_profile)
