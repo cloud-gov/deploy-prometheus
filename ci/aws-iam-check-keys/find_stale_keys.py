@@ -1,7 +1,5 @@
-# import json
-import csv
-import time
 import boto3
+import csv
 from datetime import timedelta, datetime
 from dateutil.parser import parse
 from keys_db_models import (
@@ -9,9 +7,17 @@ from keys_db_models import (
 	Event_Type,
 	Event)
 import keys_db_models
+import os
+import time
 
 
-db = keys_db_models.db
+#db = keys_db_models.db
+com_key = os.getenv('IAM_COM_KEY')
+com_secret = os.getenv('IAM_COM_SECRET')
+gov_key = os.getenv('IAM_GOV_KEY')
+gov_secret = os.getenv('IAM_GOV_SECRET')
+iam_com_profiles = [os.getenv('IAM_COM_PROFILES')]
+iam_gov_profiles = [os.getenv('IAM_GOV_PROFILES')]
 
 """
 Reference Table info:
@@ -68,7 +74,7 @@ def user_dict_for_user(user):
             return row
         
 def check_retention_for_key(key_num, access_key_last_rotated, user_row, alert, warn_days, violation_days):
-    user = user_row['user']
+    #user = user_row['user']
     if (access_key_last_rotated != 'N/A'):
         (alert_type, expired) = check_retention(warn_days, violation_days, access_key_last_rotated)
         if (expired):
@@ -96,9 +102,9 @@ def check_user_thresholds(user_thresholds, report_row):
     alert = user_thresholds['alert']
     check_access_keys(report_row, alert, warn_days, violation_days)
 
-def search_for_keys():
+def search_for_keys(key, secret, profile):
     # read in csv
-    session = boto3.Session()
+    session = boto3.Session(aws_access_key_id=key, aws_secret_access_key=secret, profile_name=profile)
     iam = session.client('iam')
 
     w_time = 0
@@ -139,8 +145,16 @@ def main():
     
     # pipeline will pull in resource for the csv file so it's local
     load_reference_data("seed_thresholds.csv")
-    search_for_keys()
+    # loop over both com and gov accounts and each profile
+    # com first
+    # for com_profile in iam_com_profiles:
+    #     search_for_keys(com_key, com_secret, com_profile)
     
+    # now gov
+    for gov_profile in iam_gov_profiles:
+        print(f'looking at gov profile: {gov_profile}')
+        search_for_keys(gov_key, gov_secret, gov_profile)
+
     et_cpu_time = time.process_time()
     et = time.time()
     
