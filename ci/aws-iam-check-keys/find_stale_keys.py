@@ -143,9 +143,10 @@ def main():
     
     # pipeline will pull in resource for the csv file so it's local
     load_reference_data("seed_thresholds.csv")
-    # loop over both com and gov accounts and each profile
+    
+    # Check both com and gov accounts 
     # com first
-    # search_for_keys(com_key, com_secret)
+    search_for_keys(com_key, com_secret)
     
     # now gov
     search_for_keys(gov_key, gov_secret)
