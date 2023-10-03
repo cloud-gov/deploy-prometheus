@@ -16,8 +16,6 @@ com_key = os.getenv('IAM_COM_KEY')
 com_secret = os.getenv('IAM_COM_SECRET')
 gov_key = os.getenv('IAM_GOV_KEY')
 gov_secret = os.getenv('IAM_GOV_SECRET')
-iam_com_profiles = eval(os.getenv('IAM_COM_PROFILES'))
-iam_gov_profiles = eval(os.getenv('IAM_GOV_PROFILES'))
 
 """
 Reference Table info:
@@ -102,9 +100,9 @@ def check_user_thresholds(user_thresholds, report_row):
     alert = user_thresholds['alert']
     check_access_keys(report_row, alert, warn_days, violation_days)
 
-def search_for_keys(key, secret, profile):
+def search_for_keys(key, secret):
     # read in csv
-    session = boto3.Session(aws_access_key_id=key, aws_secret_access_key=secret, profile_name=profile)
+    session = boto3.Session(aws_access_key_id=key, aws_secret_access_key=secret)
     iam = session.client('iam')
 
     w_time = 0
@@ -147,15 +145,10 @@ def main():
     load_reference_data("seed_thresholds.csv")
     # loop over both com and gov accounts and each profile
     # com first
-    # for com_profile in iam_com_profiles:
-    #     search_for_keys(com_key, com_secret, com_profile)
+    # search_for_keys(com_key, com_secret)
     
     # now gov
-    print(f'about to look at the first one: {iam_gov_profiles[0]}')
-    print(f'inside of iam_gov_profiles: {iam_gov_profiles}')
-    for gov_profile in iam_gov_profiles:
-        print(f'looking at gov profile: {gov_profile}')
-        search_for_keys(gov_key, gov_secret, gov_profile)
+    search_for_keys(gov_key, gov_secret)
 
     et_cpu_time = time.process_time()
     et = time.time()
