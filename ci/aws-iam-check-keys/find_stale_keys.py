@@ -16,8 +16,8 @@ com_key = os.getenv('IAM_COM_KEY')
 com_secret = os.getenv('IAM_COM_SECRET')
 gov_key = os.getenv('IAM_GOV_KEY')
 gov_secret = os.getenv('IAM_GOV_SECRET')
-iam_com_profiles = os.getenv('IAM_COM_PROFILES').split(',')
-iam_gov_profiles = os.getenv('IAM_GOV_PROFILES').split(',')
+iam_com_profiles = os.getenv('IAM_COM_PROFILES')
+iam_gov_profiles = os.getenv('IAM_GOV_PROFILES')
 
 """
 Reference Table info:
