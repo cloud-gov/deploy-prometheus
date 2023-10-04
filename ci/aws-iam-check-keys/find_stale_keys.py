@@ -16,6 +16,8 @@ com_key = os.getenv('IAM_COM_KEY')
 com_secret = os.getenv('IAM_COM_SECRET')
 gov_key = os.getenv('IAM_GOV_KEY')
 gov_secret = os.getenv('IAM_GOV_SECRET')
+com_region = 'us-east-1'
+gov_region = 'us-gov-west-1'
 
 """
 Reference Table info:
@@ -100,9 +102,9 @@ def check_user_thresholds(user_thresholds, report_row):
     alert = user_thresholds['alert']
     check_access_keys(report_row, alert, warn_days, violation_days)
 
-def search_for_keys(key, secret):
+def search_for_keys(region_name, key, secret):
     # read in csv
-    session = boto3.Session(aws_access_key_id=key, aws_secret_access_key=secret)
+    session = boto3.Session(region_name=region_name, aws_access_key_id=key, aws_secret_access_key=secret)
     iam = session.client('iam')
 
     w_time = 0
@@ -146,10 +148,10 @@ def main():
     
     # Check both com and gov accounts 
     # com first
-    search_for_keys(com_key, com_secret)
+    search_for_keys(com_region, com_key, com_secret)
     
     # now gov
-    # search_for_keys(gov_key, gov_secret)
+    # search_for_keys(gov_region, gov_key, gov_secret)
 
     et_cpu_time = time.process_time()
     et = time.time()
