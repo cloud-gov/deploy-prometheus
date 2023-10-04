@@ -16,8 +16,8 @@ com_key = os.getenv('IAM_COM_KEY')
 com_secret = os.getenv('IAM_COM_SECRET')
 gov_key = os.getenv('IAM_GOV_KEY')
 gov_secret = os.getenv('IAM_GOV_SECRET')
-com_region = 'us-east-1'
-gov_region = 'us-gov-west-1'
+com_region = "us-east-1"
+gov_region = "us-gov-west-1"
 
 """
 Reference Table info:
@@ -104,8 +104,7 @@ def check_user_thresholds(user_thresholds, report_row):
 
 def search_for_keys(region_name, key, secret):
     # read in csv
-    # region_name=region_name, commenting out to see if this works
-    session = boto3.Session( aws_access_key_id=key, aws_secret_access_key=secret)
+    session = boto3.Session(region_name=region_name, aws_access_key_id=key, aws_secret_access_key=secret)
     iam = session.client('iam')
 
     w_time = 0
