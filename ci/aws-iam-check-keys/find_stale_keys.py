@@ -149,7 +149,7 @@ def main():
     search_for_keys(com_key, com_secret)
     
     # now gov
-    search_for_keys(gov_key, gov_secret)
+    # search_for_keys(gov_key, gov_secret)
 
     et_cpu_time = time.process_time()
     et = time.time()
