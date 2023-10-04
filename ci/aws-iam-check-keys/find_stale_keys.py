@@ -104,8 +104,6 @@ def check_user_thresholds(user_thresholds, report_row):
 
 def search_for_keys(region_name, key, secret):
     # read in csv
-    #print(f'key last 3: {key[-3:]} ')
-    #print(f'sec last 3 is: {secret[-3:]}')
     session = boto3.Session(region_name=region_name, aws_access_key_id=key, aws_secret_access_key=secret)
     iam = session.client('iam')
 
@@ -153,7 +151,7 @@ def main():
     search_for_keys(com_region, com_key, com_secret)
     
     # now gov
-    # search_for_keys(gov_region, gov_key, gov_secret)
+    search_for_keys(gov_region, gov_key, gov_secret)
 
     et_cpu_time = time.process_time()
     et = time.time()
