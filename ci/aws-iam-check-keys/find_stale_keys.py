@@ -12,10 +12,10 @@ import time
 
 
 #db = keys_db_models.db
-com_key = os.getenv('IAM_COM_KEY')
-com_secret = os.getenv('IAM_COM_SECRET')
-gov_key = os.getenv('IAM_GOV_KEY')
-gov_secret = os.getenv('IAM_GOV_SECRET')
+com_key = os.getenv('IAM_COM_ACCESS_KEY')
+com_secret = os.getenv('IAM_COM_SECRET_KEY')
+gov_key = os.getenv('IAM_GOV_ACCESS_KEY')
+gov_secret = os.getenv('IAM_GOV_SECRET_KEY')
 com_region = "us-east-1"
 gov_region = "us-gov-west-1"
 
@@ -104,6 +104,8 @@ def check_user_thresholds(user_thresholds, report_row):
 
 def search_for_keys(region_name, key, secret):
     # read in csv
+    #print(f'key last 3: {key[-3:]} ')
+    #print(f'sec last 3 is: {secret[-3:]}')
     session = boto3.Session(region_name=region_name, aws_access_key_id=key, aws_secret_access_key=secret)
     iam = session.client('iam')
 
