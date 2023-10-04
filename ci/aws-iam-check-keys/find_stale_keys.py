@@ -104,7 +104,8 @@ def check_user_thresholds(user_thresholds, report_row):
 
 def search_for_keys(region_name, key, secret):
     # read in csv
-    session = boto3.Session(region_name=region_name, aws_access_key_id=key, aws_secret_access_key=secret)
+    # region_name=region_name, commenting out to see if this works
+    session = boto3.Session( aws_access_key_id=key, aws_secret_access_key=secret)
     iam = session.client('iam')
 
     w_time = 0
