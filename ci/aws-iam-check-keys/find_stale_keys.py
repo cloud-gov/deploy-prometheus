@@ -142,6 +142,7 @@ def main():
     st_cpu_time = time.process_time()
     st = time.time()
 
+    print(f'create_tables_bool: {create_tables_bool}')
     if create_tables_bool == True:
         keys_db_models.create_tables()
     
