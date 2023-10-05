@@ -148,9 +148,11 @@ def main():
     
     # Check both com and gov accounts 
     # com first
+    print(f'searching commercial accounts')
     search_for_keys(com_region, com_key, com_secret)
     
     # now gov
+    print(f'searching govcloud accounts')
     search_for_keys(gov_region, gov_key, gov_secret)
 
     et_cpu_time = time.process_time()

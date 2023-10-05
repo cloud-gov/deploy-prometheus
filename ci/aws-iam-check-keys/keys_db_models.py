@@ -23,9 +23,9 @@ class BaseModel(Model):
     class Meta:
         database = db
 
-# Model for IAM_Keys, note the attributes that allow null and those that don'text_type
+# Model for IAM_Keys, note the attributes that allow null and those that don't
 class IAM_Keys(BaseModel):
-    iam_user = CharField(unique=True)
+    iam_user = CharField()
     aws_account = CharField()
     arn= CharField(unique=True)
     user_creation_time= DateTimeField(null=True)
