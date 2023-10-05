@@ -2,6 +2,7 @@ import boto3
 import csv
 from datetime import timedelta, datetime
 from dateutil.parser import parse
+import json
 from keys_db_models import (
 	IAM_Keys,
 	Event_Type,
@@ -16,7 +17,10 @@ com_key = os.getenv('IAM_COM_ACCESS_KEY')
 com_secret = os.getenv('IAM_COM_SECRET_KEY')
 gov_key = os.getenv('IAM_GOV_ACCESS_KEY')
 gov_secret = os.getenv('IAM_GOV_SECRET_KEY')
+iam_com_creds = os.getenv('IAM_COM_CREDS')
+iam_gov_creds = os.getenv('IAM_GOV_CREDS')
 create_tables_bool = os.getenv('IAM_CREATE_TABLES')
+test_array = os.getenv('IAM_TEST')
 com_region = "us-east-1"
 gov_region = "us-gov-west-1"
 
@@ -142,6 +146,7 @@ def main():
     st_cpu_time = time.process_time()
     st = time.time()
 
+    
     if create_tables_bool == "true":
         print("creating tables...")
         keys_db_models.create_tables()
@@ -149,14 +154,19 @@ def main():
     # pipeline will pull in resource for the csv file so it's local
     load_reference_data("seed_thresholds.csv")
     
+    print(f'test array is: {test_array}')
     # Check both com and gov accounts 
     # com first
     print(f'searching commercial accounts')
-    search_for_keys(com_region, com_key, com_secret)
+    com_creds = json.loads(iam_com_creds)
+    for com_access_key in com_creds.keys():
+        search_for_keys(com_region, com_access_key, com_creds[com_access_key])
     
     # now gov
     print(f'searching govcloud accounts')
-    search_for_keys(gov_region, gov_key, gov_secret)
+    gov_creds = json.loads(iam_gov_creds)
+    for gov_access_key in gov_creds.keys():
+        search_for_keys(gov_region, gov_access_key, gov_creds[gov_access_key])
 
     et_cpu_time = time.process_time()
     et = time.time()
