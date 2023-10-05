@@ -142,8 +142,8 @@ def main():
     st_cpu_time = time.process_time()
     st = time.time()
 
-    print(f'create_tables_bool: {create_tables_bool}')
-    if create_tables_bool == True:
+    if create_tables_bool == "true":
+        print("creating tables...")
         keys_db_models.create_tables()
     
     # pipeline will pull in resource for the csv file so it's local
