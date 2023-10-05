@@ -16,6 +16,7 @@ com_key = os.getenv('IAM_COM_ACCESS_KEY')
 com_secret = os.getenv('IAM_COM_SECRET_KEY')
 gov_key = os.getenv('IAM_GOV_ACCESS_KEY')
 gov_secret = os.getenv('IAM_GOV_SECRET_KEY')
+create_tables_bool = os.getenv('IAM_CREATE_TABLES')
 com_region = "us-east-1"
 gov_region = "us-gov-west-1"
 
@@ -141,7 +142,8 @@ def main():
     st_cpu_time = time.process_time()
     st = time.time()
 
-    keys_db_models.create_tables()
+    if create_tables_bool == True:
+        keys_db_models.create_tables()
     
     # pipeline will pull in resource for the csv file so it's local
     load_reference_data("seed_thresholds.csv")
