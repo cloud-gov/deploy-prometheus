@@ -10,7 +10,7 @@ name = "pypi"
 requests = "*"
 "psycopg2-binary" = "*"
 peewee = "*"
-yaml = "*"
+PyYAML = "*"
 
 
 
