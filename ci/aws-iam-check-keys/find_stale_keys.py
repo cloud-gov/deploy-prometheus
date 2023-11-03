@@ -146,7 +146,7 @@ def search_for_keys(region_name, profile, reference_table):
     print(f'profile is {profile}')
     print(f'profile.keys() is {profile.keys()}')
 
-    profile_key = profile.keys()[0]
+    profile_key = list(profile.keys())[0]
     profile_secret = profile[profile_key]
     print(f'key prefix is {profile_key[0:12]}')
     session = boto3.Session(region_name=region_name, aws_access_key_id=profile_key, aws_secret_access_key=profile_secret)
