@@ -189,12 +189,14 @@ def search_for_keys(region_name, profile, reference_table):
 def state_file_to_dict(all_outputs):
     # Make this an env var!
     global prefix_delimiter
-    newDict = {}
+    newDicts = []
     for key in all_outputs.keys():
+        newDict = {}
         new_key_comps = key.split(prefix_delimiter)
         new_key = new_key_comps[0]+'-'+new_key_comps[3]
         newDict[new_key] = all_outputs[key]
-    return newDict
+        newDicts.add(newDict)
+    return newDicts
 
 def load_state_files(com_state_file, gov_state_file):
     """
@@ -244,17 +246,17 @@ def main():
     reference_table = load_reference_data("seed_thresholds.csv")
     
     # load state files into dicts to be searched
-    (com_state_dict, gov_state_dict) = load_state_files(com_state_file, gov_state_file)
+    (com_state_dicts, gov_state_dicts) = load_state_files(com_state_file, gov_state_file)
     
     # also, it looks like I don't need to pass as many vars to search for keys as profiles has the key and secret region can be hard coded
     # Or I could make region and output? Ask Chris if this makes any sense, i.e. would com or gov ever have more than one region each that I would be searching?
     # Check both com and gov accounts 
     # com first
-    for com_profile in com_state_dict:
+    for com_profile in com_state_dicts:
         search_for_keys(com_region, com_profile, reference_table)
     
     # now gov
-    for gov_profiles in gov_state_dict:
+    for gov_profiles in gov_state_dicts:
         search_for_keys(gov_region, gov_profiles, reference_table)
 
     et_cpu_time = time.process_time()
