@@ -17,9 +17,9 @@ run:
   args:
   - -c
   - |
-    cd prometheus-config/ci/aws-iam-check-keys
     ls terraform-prod-com-yml
     ls terraform-prod-gov-yml
+    cd prometheus-config/ci/aws-iam-check-keys
     pipenv install
     pipenv run python ./find_stale_keys.py
 
