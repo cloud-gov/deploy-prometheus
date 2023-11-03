@@ -143,13 +143,8 @@ def search_for_keys(region_name, profile, reference_table):
     The main search function that reaches out to AWS IAM to grab the credentials report and read in csv
     First let's get a session based on the user access key so we can get all of the users for a given account
     """
-    print(f'profile is {profile}')
-    print(f'profile.keys() is {profile.keys()}')
-
-    profile_key = list(profile.keys())[0]
-    profile_secret = profile[profile_key]
-    print(f'key prefix is {profile_key[0:12]}')
-    session = boto3.Session(region_name=region_name, aws_access_key_id=profile_key, aws_secret_access_key=profile_secret)
+  
+    session = boto3.Session(region_name=region_name, aws_access_key_id=profile['id'], aws_secret_access_key=profile['secret'])
     iam = session.client('iam')
     
     # Generating the report is an async operation, so we wait for it by sleeping
@@ -187,16 +182,31 @@ def search_for_keys(region_name, profile, reference_table):
     # prometheus can receive file with 0, 1 or more
 
 def state_file_to_dict(all_outputs):
+    # data structure
+    # {new_key = {key1:value, key2:value}}
     # Make this an env var!
     global prefix_delimiter
-    newDicts = []
-    for key in all_outputs.keys():
+    output_dict = {}
+    for key, value in all_outputs.items():
+        profile = {}
         newDict = {}
         new_key_comps = key.split(prefix_delimiter)
-        new_key = new_key_comps[0]+'-'+new_key_comps[3]
-        newDict[new_key] = all_outputs[key]
-        newDicts.append(newDict)
-    return newDicts
+        key_prefix = new_key_comps[0]
+        new_key = new_key_comps[3]
+        # convoluted reversal from terraform outputs - this should not stay!
+        if (new_key == 'id'):
+            new_key = 'secret' 
+        else: 
+            new_key = 'id'
+        newDict[new_key] = value
+        if key_prefix in output_dict:
+            # one exists, lets use it!
+            profile = output_dict[key_prefix]
+            profile[new_key] = value
+        else:
+            profile[new_key] = value
+            output_dict[key_prefix] = profile
+    return output_dict
 
 def load_state_files(com_state_file, gov_state_file):
     """
@@ -246,18 +256,18 @@ def main():
     reference_table = load_reference_data("seed_thresholds.csv")
     
     # load state files into dicts to be searched
-    (com_state_dicts, gov_state_dicts) = load_state_files(com_state_file, gov_state_file)
+    (com_state_dict, gov_state_dict) = load_state_files(com_state_file, gov_state_file)
     
     # also, it looks like I don't need to pass as many vars to search for keys as profiles has the key and secret region can be hard coded
     # Or I could make region and output? Ask Chris if this makes any sense, i.e. would com or gov ever have more than one region each that I would be searching?
     # Check both com and gov accounts 
     # com first
-    for com_profile in com_state_dicts:
-        search_for_keys(com_region, com_profile, reference_table)
+    for com_key in com_state_dict:
+        search_for_keys(com_region, com_state_dict[com_key], reference_table)
     
     # now gov
-    for gov_profiles in gov_state_dicts:
-        search_for_keys(gov_region, gov_profiles, reference_table)
+    for gov_key in gov_state_dict:
+        search_for_keys(gov_region, gov_state_dict[gov_key], reference_table)
 
     et_cpu_time = time.process_time()
     et = time.time()
