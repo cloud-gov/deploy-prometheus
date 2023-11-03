@@ -9,12 +9,13 @@ from keys_db_models import (
 	Event)
 import keys_db_models
 import os
+import sys
 import time
 import yaml
 
 # ENV vars/creds
-com_state_file = os.getenv('COM_STATE_FILE')
-gov_state_file = os.getenv('GOV_STATE_FILE')
+#com_state_file = os.getenv('COM_STATE_FILE')
+#gov_state_file = os.getenv('GOV_STATE_FILE')
 com_key = os.getenv('IAM_COM_ACCESS_KEY')
 com_secret = os.getenv('IAM_COM_SECRET_KEY')
 gov_key = os.getenv('IAM_GOV_ACCESS_KEY')
@@ -191,12 +192,12 @@ def state_file_to_dict(all_outputs):
         newDict[new_key] = all_outputs[key]
     return newDict
 
-def load_state_files():
+def load_state_files(com_state_dir, gov_state_dir):
     """
     Clean up yaml from state files for com and gov
     """
-    com_file = open(com_state_file)
-    gov_file = open(gov_state_file)
+    com_file = open(f'{com_state_dir}/state.yml')
+    gov_file = open(f'{gov_state_dir}/state.yml')
     com_state = yaml.safe_load(com_file)
     gov_state = yaml.safe_load(gov_file)
     all_outputs_com = com_state['terraform_outputs']
@@ -219,6 +220,12 @@ def main():
     """
     The main function that creates tables, loads the csv for the reference table and kicks off the search for stale keys
     """
+    
+    # grab the state files from the s3 resources
+    args = sys.argv[1:]
+    com_state_dir = args[0]
+    gov_state_dir = args[1]
+
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
     st = time.time()
@@ -232,7 +239,7 @@ def main():
     reference_table = load_reference_data("seed_thresholds.csv")
     
     # load state files into dicts to be searched
-    (com_state_dict, gov_state_dict) = load_state_files()
+    (com_state_dict, gov_state_dict) = load_state_files(com_state_dir, gov_state_dir)
     
     # also, it looks like I don't need to pass as many vars to search for keys as profiles has the key and secret region can be hard coded
     # Or I could make region and output? Ask Chris if this makes any sense, i.e. would com or gov ever have more than one region each that I would be searching?
