@@ -182,6 +182,7 @@ def search_for_keys(region_name, profile, reference_table):
     # prometheus can receive file with 0, 1 or more
 
 def state_file_to_dict(all_outputs):
+    # Make this an env var!
     global prefix_delimiter
     newDict = {}
     for key in all_outputs.keys():
@@ -195,7 +196,7 @@ def load_state_files():
     Clean up yaml from state files for com and gov
     """
     com_file = open(com_state_file)
-    gov_file = open(com_state_file)
+    gov_file = open(gov_state_file)
     com_state = yaml.safe_load(com_file)
     gov_state = yaml.safe_load(gov_file)
     all_outputs_com = com_state['terraform_outputs']
