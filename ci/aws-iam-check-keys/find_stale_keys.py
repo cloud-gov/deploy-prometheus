@@ -196,6 +196,9 @@ def load_state_files(com_state_file, gov_state_file):
     """
     Clean up yaml from state files for com and gov
     """
+    
+    print(f'inside load_state_files: {com_state_file}')
+
     com_file = open(com_state_file)
     gov_file = open(gov_state_file)
     com_state = yaml.safe_load(com_file)
@@ -225,6 +228,8 @@ def main():
     args = sys.argv[1:]
     com_state_file = args[0]
     gov_state_file = args[1]
+    print(f'{com_state_file}')
+    print(f'{gov_state_file}')
 
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
