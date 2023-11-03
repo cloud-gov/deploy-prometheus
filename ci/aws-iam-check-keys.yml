@@ -18,8 +18,7 @@ run:
   - -c
   - |
     pipenv install
-    pip install boto3
-    pipenv run python3 prometheus-config/ci/aws-iam-check-keys/find_stale_keys.py terraform-prod-com-yml/state.yml terraform-prod-gov-yml/state.yml
+    pipenv run prometheus-config/ci/aws-iam-check-keys/find_stale_keys.py terraform-prod-com-yml/state.yml terraform-prod-gov-yml/state.yml
 
 params:
   AWS_DEFAULT_REGION:
