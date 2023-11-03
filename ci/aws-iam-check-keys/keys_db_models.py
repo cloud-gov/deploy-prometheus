@@ -1,5 +1,3 @@
-import csv
-#from datetime import timedelta, datetime
 from datetime import date
 import os
 from peewee import *

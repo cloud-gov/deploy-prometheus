@@ -6,9 +6,9 @@ name = "pypi"
 [dev-packages]
 
 [packages]
-"boto3" = "*"
+boto3 = "*"
 requests = "*"
-"psycopg2-binary" = "*"
+psycopg2-binary = "*"
 peewee = "*"
 PyYAML = "*"
 

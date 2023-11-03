@@ -2,7 +2,6 @@ import boto3
 import csv
 from datetime import timedelta, datetime
 from dateutil.parser import parse
-import json
 from keys_db_models import (
 	IAM_Keys,
 	Event_Type,
