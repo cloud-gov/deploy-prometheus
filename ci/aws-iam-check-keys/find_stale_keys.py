@@ -263,10 +263,12 @@ def main():
     # Check both com and gov accounts 
     # com first
     for com_key in com_state_dict:
+        print(f'searching profile {com_key}')
         search_for_keys(com_region, com_state_dict[com_key], reference_table)
     
     # now gov
     for gov_key in gov_state_dict:
+        print(f'searching profile {gov_key}')
         search_for_keys(gov_region, gov_state_dict[gov_key], reference_table)
 
     et_cpu_time = time.process_time()
