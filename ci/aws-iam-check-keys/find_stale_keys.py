@@ -225,8 +225,8 @@ def main():
     
     # grab the state files from the s3 resources
     args = sys.argv[1:]
-    com_state_file = args[0]
-    gov_state_file = args[1]
+    com_state_file = "../../../"+args[0]
+    gov_state_file = "../../../"+args[1]
 
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
