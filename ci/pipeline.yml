@@ -2,15 +2,16 @@
 groups:
 - name: deployment
   jobs:
-  - set-self
+  # - set-self
   - deploy-prometheus-staging
   - deploy-prometheus-production
 - name: checks
   jobs:
-  - set-self
+  # - set-self
   - awslogs-check
   - aws-mfa-check
   - aws-rds-storage-check
+  - aws-iam-check-keys
   - cdn-broker-certs
   - domain-broker-certs
   - concourse-has-auth-check
@@ -18,14 +19,14 @@ groups:
   - prometheus-down-check-production
 
 jobs:
-- name: set-self
-  plan:
-    - get: prometheus-config
-      trigger: true
-    - set_pipeline: self
-      file: prometheus-config/ci/pipeline.yml
-      var_files:
-        - prometheus-config/ci/config.yml
+# - name: set-self
+#   plan:
+#     - get: prometheus-config
+#       trigger: true
+#     - set_pipeline: self
+#       file: prometheus-config/ci/pipeline.yml
+#       var_files:
+#         - prometheus-config/ci/config.yml
 
 - name: awslogs-check
   serial_groups: [production]
@@ -34,7 +35,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      passed: [set-self]
+      # # passed: [set-self]
   - task: awslogs
     file: prometheus-config/ci/awslogs.yml
     tags: [iaas]
@@ -50,7 +51,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      passed: [set-self]
+      # # passed: [set-self]
   - task: aws-rds-storage-check
     file: prometheus-config/ci/aws-rds-storage.yml
     params:
@@ -59,6 +60,70 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ((aws-rds-secret-access-key))
       GATEWAY_HOST: http://prometheus-production.service.cf.internal
 
+- name: aws-iam-check-keys
+  serial_groups: [production]
+  plan:
+  - in_parallel:
+    # - get: iam-keys-check-timer
+    #   trigger: true
+    - get: prometheus-config
+      # passed: [set-self]
+    - get: terraform-prod-com-yml
+      resource: terraform-prod-com-yml
+      trigger: true
+    - get: terraform-prod-gov-yml
+      resource: terraform-prod-gov-yml
+      trigger: true
+  - load_var: com-state-file
+    file: terraform-prod-com-yml/state.yml
+  - task: aws-iam-check-keys
+    file: prometheus-config/ci/aws-iam-check-keys.yml
+    tags: [iaas]
+    # input_mapping:
+    #   com-state-file: terraform-prod-com-yml
+    #   gov-state-file: terraform-prod-gov-yml
+    params:
+      COM_STATE_FILE: com-state-file
+      GOV_STATE_FILE: terraform-prod-gov-yml/state.yml
+      AWS_DEFAULT_REGION: ((aws-region))
+      #COM_STATE_FILE: ((com_state_file))
+      #GOV_STATE_FILE: ((gov_state_file))
+      IAM_GOV_ACCESS_KEY: ((iam_reporting_user_gov_access-id))
+      #((aws-iam-gov-access-key-id))
+      IAM_GOV_SECRET_KEY: ((iam_reporting_user_gov_access-secret))
+      # ((aws-iam-gov-secret-access-key))
+      IAM_COM_ACCESS_KEY: ((iam_reporting_user_com_access-id)) 
+      #((aws-iam-com-access-key-id))
+      IAM_COM_SECRET_KEY: ((iam_reporting_user_com_access-secret))
+      #((aws-iam-com-secret-access-key))
+      #IAM_COM_CREDS: ((aws-iam-com-creds))
+      #IAM_GOV_CREDS: ((aws-iam-gov-creds))
+      IAM_KEYS_DB: ((aws-iam-keys-db))
+      IAM_KEYS_USER: ((aws-iam-keys-user))
+      IAM_KEYS_PASSWORD: ((aws-iam-keys-password))
+      IAM_KEYS_HOST: ((aws-iam-keys-host))
+      IAM_KEYS_PORT: ((aws-iam-keys-port))
+      IAM_CREATE_TABLES: ((aws-iam-create-tables-bool))
+      PROFILES_PATH: ((aws-iam-profiles-path))
+  on_success:
+    put: slack
+    params:
+      text: |
+        :white_check_mark: Successfully ran IAM Check Keys in production
+        <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+      channel: ((slack-channel-success))
+      username: ((slack-username))
+      icon_url: ((slack-icon-url))
+  on_failure:
+    put: slack
+    params:
+      text: |
+        :x: FAILED to deploy IAM Check Keys on production
+        <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+      channel: ((slack-channel-success))
+      username: ((slack-username))
+      icon_url: ((slack-icon-url))
+
 - name: aws-mfa-check
   serial_groups: [production]
   plan:
@@ -66,7 +131,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      passed: [set-self]
+      # passed: [set-self]
   - task: aws-mfa
     file: prometheus-config/ci/aws-mfa.yml
     tags: [iaas]
@@ -81,7 +146,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      passed: [set-self]
+      # passed: [set-self]
   - in_parallel:
     - task: cdn-broker-certs-production
       file: prometheus-config/ci/cdn-broker-certs.yml
@@ -99,7 +164,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      passed: [set-self]
+      # passed: [set-self]
   - in_parallel:
     - task: domain-broker-certs-development
       file: prometheus-config/ci/domain-broker-certs.yml
@@ -133,7 +198,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      passed: [set-self]
+      # passed: [set-self]
   - task: concourse-has-auth
     file: prometheus-config/ci/concourse-has-auth.yml
     params:
@@ -147,7 +212,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      passed: [set-self]
+      # passed: [set-self]
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
     params:
@@ -174,7 +239,7 @@ jobs:
     - get: prometheus-check-timer
       trigger: true
     - get: prometheus-config
-      passed: [set-self]
+      # passed: [set-self]
   - task: prometheus-down
     file: prometheus-config/ci/prometheus-down.yml
     params:
@@ -200,7 +265,7 @@ jobs:
   - in_parallel:
     - get: master-bosh-root-cert
     - get: prometheus-config
-      passed: [set-self]
+      # passed: [set-self]
       trigger: true
     - get: common-staging
       trigger: true
@@ -409,6 +474,13 @@ resources:
   source:
     interval: 30m
 
+# - name: iam-keys-check-timer
+#   type: time
+#   source:
+#     days: [Monday]
+#     start: "6:00 AM"
+#     stop: "7:00 AM"
+
 - name: notify-cloud-gov
   type: email
   source:
@@ -435,6 +507,20 @@ resources:
     region_name: ((prometheus-production-private-region))
     bucket: terraform-state
     versioned_file: tooling/state.yml
+
+- name: terraform-prod-com-yml
+  type: s3-iam
+  source:
+    region_name: ((prometheus-production-private-region))
+    bucket: terraform-state
+    versioned_file: aws-admin/com/state.yml
+
+- name: terraform-prod-gov-yml
+  type: s3-iam
+  source:
+    region_name: ((prometheus-production-private-region))
+    bucket: terraform-state
+    versioned_file: aws-admin/gov/state.yml
 
 resource_types:
 - name: slack-notification
