@@ -74,30 +74,15 @@ jobs:
     - get: terraform-prod-gov-yml
       resource: terraform-prod-gov-yml
       trigger: true
-  - load_var: com-state-file
-    file: terraform-prod-com-yml/state.yml
   - task: aws-iam-check-keys
     file: prometheus-config/ci/aws-iam-check-keys.yml
     tags: [iaas]
-    # input_mapping:
-    #   com-state-file: terraform-prod-com-yml
-    #   gov-state-file: terraform-prod-gov-yml
     params:
-      COM_STATE_FILE: com-state-file
-      GOV_STATE_FILE: terraform-prod-gov-yml/state.yml
       AWS_DEFAULT_REGION: ((aws-region))
-      #COM_STATE_FILE: ((com_state_file))
-      #GOV_STATE_FILE: ((gov_state_file))
       IAM_GOV_ACCESS_KEY: ((iam_reporting_user_gov_access-id))
-      #((aws-iam-gov-access-key-id))
       IAM_GOV_SECRET_KEY: ((iam_reporting_user_gov_access-secret))
-      # ((aws-iam-gov-secret-access-key))
       IAM_COM_ACCESS_KEY: ((iam_reporting_user_com_access-id)) 
-      #((aws-iam-com-access-key-id))
       IAM_COM_SECRET_KEY: ((iam_reporting_user_com_access-secret))
-      #((aws-iam-com-secret-access-key))
-      #IAM_COM_CREDS: ((aws-iam-com-creds))
-      #IAM_GOV_CREDS: ((aws-iam-gov-creds))
       IAM_KEYS_DB: ((aws-iam-keys-db))
       IAM_KEYS_USER: ((aws-iam-keys-user))
       IAM_KEYS_PASSWORD: ((aws-iam-keys-password))

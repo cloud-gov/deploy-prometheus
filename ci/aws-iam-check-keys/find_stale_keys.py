@@ -196,10 +196,10 @@ def load_state_files(com_state_file, gov_state_file):
     """
     Clean up yaml from state files for com and gov
     """
-    # com_file = open(f'{com_state_dir}/state.yml')
-    # gov_file = open(f'{gov_state_dir}/state.yml')
-    com_state = yaml.safe_load(com_state_file)
-    gov_state = yaml.safe_load(gov_state_file)
+    com_file = open(com_state_file)
+    gov_file = open(gov_state_file)
+    com_state = yaml.safe_load(com_file)
+    gov_state = yaml.safe_load(gov_file)
     all_outputs_com = com_state['terraform_outputs']
     all_outputs_gov = gov_state['terraform_outputs']
     com_state_dict = state_file_to_dict(all_outputs_com)
