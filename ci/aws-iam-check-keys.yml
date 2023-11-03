@@ -9,6 +9,8 @@ image_resource:
 
 inputs:
 - name: prometheus-config
+- name: terraform-prod-com-yml
+- name: terraform-prod-gov-yml
 
 run:
   path: sh
