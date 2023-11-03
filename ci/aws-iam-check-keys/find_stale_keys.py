@@ -230,6 +230,9 @@ def main():
     gov_state_file = args[1]
     print(f'{com_state_file}')
     print(f'{gov_state_file}')
+    directory = os.getcwd()
+
+    print(directory)
 
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
