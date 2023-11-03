@@ -19,7 +19,7 @@ run:
   - |
     cd prometheus-config/ci/aws-iam-check-keys
     pipenv install
-    pipenv run python ./find_stale_keys.py terraform-prod-com-yml terraform-prod-gov-yml
+    pipenv run python ./find_stale_keys.py terraform-prod-com-yml/state.yml terraform-prod-gov-yml/state.yml
 
 params:
   AWS_DEFAULT_REGION:

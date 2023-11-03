@@ -192,14 +192,14 @@ def state_file_to_dict(all_outputs):
         newDict[new_key] = all_outputs[key]
     return newDict
 
-def load_state_files(com_state_dir, gov_state_dir):
+def load_state_files(com_state_file, gov_state_file):
     """
     Clean up yaml from state files for com and gov
     """
-    com_file = open(f'{com_state_dir}/state.yml')
-    gov_file = open(f'{gov_state_dir}/state.yml')
-    com_state = yaml.safe_load(com_file)
-    gov_state = yaml.safe_load(gov_file)
+    # com_file = open(f'{com_state_dir}/state.yml')
+    # gov_file = open(f'{gov_state_dir}/state.yml')
+    com_state = yaml.safe_load(com_state_file)
+    gov_state = yaml.safe_load(gov_state_file)
     all_outputs_com = com_state['terraform_outputs']
     all_outputs_gov = gov_state['terraform_outputs']
     com_state_dict = state_file_to_dict(all_outputs_com)
@@ -223,8 +223,8 @@ def main():
     
     # grab the state files from the s3 resources
     args = sys.argv[1:]
-    com_state_dir = args[0]
-    gov_state_dir = args[1]
+    com_state_file = args[0]
+    gov_state_file = args[1]
 
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
@@ -239,7 +239,7 @@ def main():
     reference_table = load_reference_data("seed_thresholds.csv")
     
     # load state files into dicts to be searched
-    (com_state_dict, gov_state_dict) = load_state_files(com_state_dir, gov_state_dir)
+    (com_state_dict, gov_state_dict) = load_state_files(com_state_file, gov_state_file)
     
     # also, it looks like I don't need to pass as many vars to search for keys as profiles has the key and secret region can be hard coded
     # Or I could make region and output? Ask Chris if this makes any sense, i.e. would com or gov ever have more than one region each that I would be searching?
