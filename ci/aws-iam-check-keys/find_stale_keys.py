@@ -195,7 +195,7 @@ def state_file_to_dict(all_outputs):
         new_key_comps = key.split(prefix_delimiter)
         new_key = new_key_comps[0]+'-'+new_key_comps[3]
         newDict[new_key] = all_outputs[key]
-        newDicts.add(newDict)
+        newDicts.append(newDict)
     return newDicts
 
 def load_state_files(com_state_file, gov_state_file):
