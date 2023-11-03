@@ -143,6 +143,9 @@ def search_for_keys(region_name, profile, reference_table):
     The main search function that reaches out to AWS IAM to grab the credentials report and read in csv
     First let's get a session based on the user access key so we can get all of the users for a given account
     """
+    print(f'profile is {profile}')
+    print(f'profile.keys() is {profile.keys()}')
+
     profile_key = profile.keys()[0]
     profile_secret = profile[profile_key]
     print(f'key prefix is {profile_key[0:12]}')
