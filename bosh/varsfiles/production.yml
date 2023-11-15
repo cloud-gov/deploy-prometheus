@@ -32,3 +32,4 @@ blackbox-targets:
 - https://pages.cloud.gov
 - https://admin.pages-staging.cloud.gov
 - https://admin.pages.cloud.gov
+- https://test-cdn.fr.cloud.gov
