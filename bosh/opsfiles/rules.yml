@@ -382,3 +382,19 @@
         summary: ClamAV scan alert for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}
         description: ClamAV alert for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}} - check the logs on the instance to establish threat and follow procedures
 
+# HTTPS uptime alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: uptime-monitor
+    rules:
+    - alert: UptimeMonitorFailed
+      expr: probe_http_status_code{job="blackbox"} != 200
+      for: 5m
+      labels:
+        service: uptime
+        severity: warning
+      annotations:
+        summary: Uptime check failed (non-200 response) for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}
+        description: Uptime check failed (non-200 response) for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}. Check the infrastructure serving {{$labels.instance}} for outages or issues.
+
