@@ -12,4 +12,5 @@ blackbox-targets:
 - https://logs.fr-stage.cloud.gov
 - https://ci.fr-stage.cloud.gov
 - https://dashboard.fr-stage.cloud.gov
+- https://test-cdn.fr-stage.cloud.gov
 opsgenie-url: https://api.opsgenie.com
