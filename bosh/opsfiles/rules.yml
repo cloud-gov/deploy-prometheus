@@ -396,5 +396,5 @@
         severity: warning
       annotations:
         summary: Uptime check failed (non-200 response) for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}
-        description: Uptime check failed (non-200 response) for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}. Check the infrastructure serving {{$labels.instance}} for outages or issues.
+        description: Uptime check failed (non-200 response) for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}. Runbook - https://github.com/cloud-gov/internal-docs/blob/main/docs/runbooks/Metrics-and-Alerting/uptime-monitoring.md#uptimemonitorfailed
 
