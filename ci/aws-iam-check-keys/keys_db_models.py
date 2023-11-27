@@ -98,6 +98,9 @@ class IAM_Keys(BaseModel):
             created_at = date.today(),
             updated_at = date.today(),
         )
+        if (created == None):
+            print("found it!")
+            
         return user
 
 

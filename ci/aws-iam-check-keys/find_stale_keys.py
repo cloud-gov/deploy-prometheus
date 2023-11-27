@@ -71,17 +71,14 @@ reference: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getti
 """
 def check_retention(warn_days, violation_days, key_date):
     """
-    Returns True when keys was last rotated more than :days: ago
+    Returns True when keys was last rotated more than :days: ago by returning a warning type or None
     """
     key_date = parse(key_date, ignoretz=True)
     if key_date + timedelta(days=int(violation_days)) <= datetime.now():
-        #return ("violation", True)
         return "violation"
     if key_date + timedelta(days=int(warn_days)) <= datetime.now():
-        #return ("warning",True)
         return "warning"
 
-    #return (None, False)
     return None
 
 def user_dict_for_user(user, reference_table):
@@ -102,7 +99,6 @@ def check_retention_for_key(access_key_last_rotated, user_row, alert, warn_days,
     
     if (access_key_last_rotated != 'N/A'):
         alert_type = check_retention(warn_days, violation_days, access_key_last_rotated)
-        # (alert_type, threshold) = check_retention(warn_days, violation_days, access_key_last_rotated)
         if (alert_type):
             warn_event, _ = Event_Type.insert_event_type(alert_type)
             iam_user = IAM_Keys.user_from_dict(user_row)
@@ -186,7 +182,7 @@ def search_for_keys(region_name, profile, reference_table):
             
     # the not found users could be another Prometheus metric
     for user in not_found:
-        print(user)
+        print(user[0:8])
     # prometheus can receive file with 0, 1 or more
 
 def state_file_to_dict(all_outputs):
