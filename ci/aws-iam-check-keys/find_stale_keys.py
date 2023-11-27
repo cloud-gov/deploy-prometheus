@@ -106,7 +106,6 @@ def check_retention_for_key(access_key_last_rotated, user_row, alert, warn_days,
             iam_user = IAM_Keys.user_from_dict(user_row)
             event = Event.new_event_type_user(warn_event,iam_user)
             #Prometheus metrics here, like event, etc
-            no_warn += 1
             if (alert == 'Y'):
                 # send an alert to the user here. Alternatively the alert could be in check_access_keys to 
                 # cut down on the number of alerts a user gets. Right now it's rare that both keys are being used.
