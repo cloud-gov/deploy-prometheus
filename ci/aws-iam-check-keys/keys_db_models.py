@@ -98,7 +98,7 @@ class IAM_Keys(BaseModel):
             created_at = date.today(),
             updated_at = date.today(),
         )
-        if (created == None):
+        if (created == False):
             print("========================== found it! =========================")
             print(user)
         else:
