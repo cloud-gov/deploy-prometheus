@@ -100,6 +100,8 @@ class IAM_Keys(BaseModel):
         )
         if (created == None):
             print("found it!")
+        else:
+            print(created)
             
         return user
 
