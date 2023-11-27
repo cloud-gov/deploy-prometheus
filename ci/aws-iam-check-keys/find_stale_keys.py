@@ -98,6 +98,8 @@ def check_retention_for_key(access_key_last_rotated, user_row, alert, warn_days,
     """
     Is the key expired or about to be? Let's warn the user and send some metrics to Prometheus
     """
+    global warn, no_warn, no_thresh
+    
     if (access_key_last_rotated != 'N/A'):
         alert_type = check_retention(warn_days, violation_days, access_key_last_rotated)
         # (alert_type, threshold) = check_retention(warn_days, violation_days, access_key_last_rotated)
@@ -111,11 +113,11 @@ def check_retention_for_key(access_key_last_rotated, user_row, alert, warn_days,
                 # cut down on the number of alerts a user gets. Right now it's rare that both keys are being used.
                 # email or ??
                 print("an alert will go out")
-                warn = warn + 1
+                warn += 1
             else:
-                no_warn = no_warn + 1
+                no_warn += 1
         else:
-            no_thresh = no_thresh + 1
+            no_thresh += 1
             
 def check_access_keys(user_row, alert, warn_days, violation_days):
     """
