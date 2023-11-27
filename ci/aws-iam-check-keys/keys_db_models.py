@@ -100,7 +100,7 @@ class IAM_Keys(BaseModel):
         )
         if (created == False):
             print("========================== found it! =========================")
-            print(user)
+            print(user["iam_user"])
         else:
             print(created)
             
