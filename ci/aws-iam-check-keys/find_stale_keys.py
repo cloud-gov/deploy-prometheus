@@ -15,16 +15,13 @@ import time
 import yaml
 
 # ENV vars/creds
-#com_state_file = os.getenv('COM_STATE_FILE')
-#gov_state_file = os.getenv('GOV_STATE_FILE')
-com_key = os.getenv('IAM_COM_ACCESS_KEY')
-com_secret = os.getenv('IAM_COM_SECRET_KEY')
-gov_key = os.getenv('IAM_GOV_ACCESS_KEY')
-gov_secret = os.getenv('IAM_GOV_SECRET_KEY')
 create_tables_bool = os.getenv('IAM_CREATE_TABLES')
-profiles_path = os.getenv('PROFILES_PATH')
 com_region = "us-east-1"
 gov_region = "us-gov-west-1"
+warn = 0
+no_warn = 0
+no_thresh = 0
+
 
 # NOTE: If anything changes with the outputs in aws-admin for gov and com
 # make sure the delimiter stays the same, or change the below var if it changes
@@ -78,11 +75,14 @@ def check_retention(warn_days, violation_days, key_date):
     """
     key_date = parse(key_date, ignoretz=True)
     if key_date + timedelta(days=int(violation_days)) <= datetime.now():
-        return ("violation", True)
+        #return ("violation", True)
+        return "violation"
     if key_date + timedelta(days=int(warn_days)) <= datetime.now():
-        return ("warning",True)
+        #return ("warning",True)
+        return "warning"
 
-    return (None, False)
+    #return (None, False)
+    return None
 
 def user_dict_for_user(user, reference_table):
     """
@@ -99,18 +99,25 @@ def check_retention_for_key(access_key_last_rotated, user_row, alert, warn_days,
     Is the key expired or about to be? Let's warn the user and send some metrics to Prometheus
     """
     if (access_key_last_rotated != 'N/A'):
-        (alert_type, expired) = check_retention(warn_days, violation_days, access_key_last_rotated)
-        if (expired):
+        alert_type = check_retention(warn_days, violation_days, access_key_last_rotated)
+        # (alert_type, threshold) = check_retention(warn_days, violation_days, access_key_last_rotated)
+        if (alert_type):
             warn_event, _ = Event_Type.insert_event_type(alert_type)
             iam_user = IAM_Keys.user_from_dict(user_row)
             event = Event.new_event_type_user(warn_event,iam_user)
             #Prometheus metrics here, like event, etc
-        if (alert == 'Y'):
-            # send an alert to the user here. Alternatively the alert could be in check_access_keys to 
-            # cut down on the number of alerts a user gets. Right now it's rare that both keys are being used.
-            # email or ??
-            print("an alert will go out")
-
+            no_warn += 1
+            if (alert == 'Y'):
+                # send an alert to the user here. Alternatively the alert could be in check_access_keys to 
+                # cut down on the number of alerts a user gets. Right now it's rare that both keys are being used.
+                # email or ??
+                print("an alert will go out")
+                warn += 1
+            else:
+                no_warn += 1
+        else:
+            no_thresh += 1
+            
 def check_access_keys(user_row, alert, warn_days, violation_days):
     """
     Check both access keys for a given user, if they both exist based on the Reference Table
@@ -164,7 +171,7 @@ def search_for_keys(region_name, profile, reference_table):
 
     """
     Initiate the reader, convert the csv contents to a list and turn each row into a dict
-    to use for the crednetials check
+    to use for the credentials check
     """
     csv_reader = csv.DictReader(content_lines, delimiter=",")
     not_found = []
@@ -281,6 +288,9 @@ def main():
     # get the execution time
     elapsed_time = et - st
     print('Execution time:', elapsed_time, 'seconds')
+    print(f'warn: {warn}')
+    print(f'no_warn: {no_warn}')
+    print(f'no_thresh: {no_thresh}')
 
 
 if __name__ == "__main__":
