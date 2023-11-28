@@ -243,7 +243,7 @@ def load_reference_data(csv_file_name):
             for r in csv.DictReader(data):
                 reference_table.append(r)
     except OSError:
-        print("OSError: file not found or is in incorrect format")
+        print(f'OSError: {csv_file_name} not found or is in incorrect format')
     return reference_table
 
 def main():
@@ -266,7 +266,8 @@ def main():
         keys_db_models.create_tables()
     
     # pipeline will pull in resource for the csv file so it's local
-    reference_table = load_reference_data("seed_thresholds.csv")
+    #reference_table = load_reference_data("seed_thresholds.csv")
+    reference_table = load_reference_data("sed_thresholds.csv")
     
     if len(reference_table) > 0:
         # load state files into dicts to be searched
@@ -285,7 +286,7 @@ def main():
             print(f'searching profile {gov_key}')
             search_for_keys(gov_region, gov_state_dict[gov_key], reference_table)
     else:
-        print("empty refernce table, check filename and format and try again")
+        print("empty refernce table, check filename, format and try again")
         
     et_cpu_time = time.process_time()
     et = time.time()
