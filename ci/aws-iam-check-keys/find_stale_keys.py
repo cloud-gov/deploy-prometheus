@@ -294,6 +294,8 @@ def main():
     print(f'warn: {warn}')
     print(f'no_warn: {no_warn}')
     print(f'no_thresh: {no_thresh}')
+    print(f'key1: {key1}')
+    print(f'key2: {key2}')
 
 
 if __name__ == "__main__":
