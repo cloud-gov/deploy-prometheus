@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import requests
 import boto3
 import csv
 from datetime import timedelta, datetime
@@ -23,7 +24,7 @@ no_warn = 0
 no_thresh = 0
 key1 = 0
 key2 = 0
-
+prometheus_alerts = ""
 
 # NOTE: If anything changes with the outputs in aws-admin for gov and com
 # make sure the delimiter stays the same, or change the below var if it changes
@@ -97,7 +98,7 @@ def check_retention_for_key(access_key_last_rotated, user_row, alert, warn_days,
     """
     Is the key expired or about to be? Let's warn the user and send some metrics to Prometheus
     """
-    global warn, no_warn, no_thresh
+    global warn, no_warn, no_thresh, prometheus_alerts
     
     if (access_key_last_rotated != 'N/A'):
         alert_type = check_retention(warn_days, violation_days, access_key_last_rotated)
@@ -112,6 +113,7 @@ def check_retention_for_key(access_key_last_rotated, user_row, alert, warn_days,
                 # email or ??
                 print("an alert will go out")
                 warn += 1
+                prometheus_alerts.append(f'User: {iam_user["iam_user"]} has an {alert_type} as the key was last rotated: {access_key_last_rotated}\n')
             else:
                 no_warn += 1
         else:
@@ -266,8 +268,7 @@ def main():
         keys_db_models.create_tables()
     
     # pipeline will pull in resource for the csv file so it's local
-    #reference_table = load_reference_data("seed_thresholds.csv")
-    reference_table = load_reference_data("sed_thresholds.csv")
+    reference_table = load_reference_data("seed_thresholds.csv")
     
     if len(reference_table) > 0:
         # load state files into dicts to be searched
@@ -303,34 +304,20 @@ def main():
     print(f'no_thresh: {no_thresh}')
     print(f'key1: {key1}')
     print(f'key2: {key2}')
+    print(f'warnings\n{prometheus_alerts}')
 
-
+  
 if __name__ == "__main__":
+    if not ("GATEWAY_HOST") in os.environ:
+        print("GATEWAY_HOST is required.")
+        sys.exit(1)
     main()
+    # prometheus_url = os.getenv("GATEWAY_HOST") + ":" + os.getenv(
+    #     "GATEWAY_PORT", "9091") + "/metrics/job/find_stale_keys"
 
-# pipeline - vars passed in for creds
-# 
-# create vars, etc
-# 
-# cf create app manifest after first push
-# 
-# Can be in s3 or Credhub, for concourse to pull in ENV vars
-# ((blah)) - us fly get pipeline - if interpolated then s3, if not, CredHub
-# prod/concourse/pipeline/
-# Look at aws-broker
-# 75% warning for all but customer, alert after that
-# if __name__ == "__main__":
-#     if not ("GATEWAY_HOST") in os.environ:
-#         print("GATEWAY_HOST is required.")
-#         sys.exit(1)
-#
-#     output = get_prometheus_metrics(db_to_storage_map())
-#     prometheus_url = os.getenv("GATEWAY_HOST") + ":" + os.getenv("GATEWAY_PORT",
-#                                                                  "9091") + "/metrics/job/aws_rds_storage_check"
-#
-#     res = requests.put(url=prometheus_url,
-#                        data=output,
-#                        headers={'Content-Type': 'application/octet-stream'})
-#     res.raise_for_status()
-#
-
+    # res = requests.put(url=prometheus_url,
+    #                    data=prometheus_alerts,
+    #                    headers={'Content-Type': 'application/octet-stream'})
+    # res.raise_for_status()
+    
+    
