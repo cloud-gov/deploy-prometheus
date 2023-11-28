@@ -113,7 +113,7 @@ def check_retention_for_key(access_key_last_rotated, user_row, alert, warn_days,
                 # email or ??
                 print("an alert will go out")
                 warn += 1
-                prometheus_alerts.append(f'User: {iam_user["iam_user"]} has an {alert_type} as the key was last rotated: {access_key_last_rotated}\n')
+                prometheus_alerts += f'User: {iam_user["iam_user"]} has an {alert_type} as the key was last rotated: {access_key_last_rotated}\n'
             else:
                 no_warn += 1
         else:
