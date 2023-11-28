@@ -235,12 +235,15 @@ def load_state_files(com_state_file, gov_state_file):
     
 def load_reference_data(csv_file_name):
     """ 
-    Load the reference table to an array of dictionaries
+    Load the reference table into an array of dictionaries
     """
     reference_table = []
-    with open(csv_file_name) as data:
-        for r in csv.DictReader(data):
-            reference_table.append(r)
+    try:
+        with open(csv_file_name) as data:
+            for r in csv.DictReader(data):
+                reference_table.append(r)
+    except OSError:
+        print("OSError: file not found or is in incorrect format")
     return reference_table
 
 def main():
@@ -265,22 +268,25 @@ def main():
     # pipeline will pull in resource for the csv file so it's local
     reference_table = load_reference_data("seed_thresholds.csv")
     
-    # load state files into dicts to be searched
-    (com_state_dict, gov_state_dict) = load_state_files(com_state_file, gov_state_file)
-    
-    # also, it looks like I don't need to pass as many vars to search for keys as profiles has the key and secret region can be hard coded
-    # Or I could make region and output? Ask Chris if this makes any sense, i.e. would com or gov ever have more than one region each that I would be searching?
-    # Check both com and gov accounts 
-    # com first
-    for com_key in com_state_dict:
-        print(f'searching profile {com_key}')
-        search_for_keys(com_region, com_state_dict[com_key], reference_table)
-    
-    # now gov
-    for gov_key in gov_state_dict:
-        print(f'searching profile {gov_key}')
-        search_for_keys(gov_region, gov_state_dict[gov_key], reference_table)
-
+    if len(reference_table) > 0:
+        # load state files into dicts to be searched
+        (com_state_dict, gov_state_dict) = load_state_files(com_state_file, gov_state_file)
+        
+        # also, it looks like I don't need to pass as many vars to search for keys as profiles has the key and secret region can be hard coded
+        # Or I could make region and output? Ask Chris if this makes any sense, i.e. would com or gov ever have more than one region each that I would be searching?
+        # Check both com and gov accounts 
+        # com first
+        for com_key in com_state_dict:
+            print(f'searching profile {com_key}')
+            search_for_keys(com_region, com_state_dict[com_key], reference_table)
+        
+        # now gov
+        for gov_key in gov_state_dict:
+            print(f'searching profile {gov_key}')
+            search_for_keys(gov_region, gov_state_dict[gov_key], reference_table)
+    else:
+        print("empty refernce table, check filename and format and try again")
+        
     et_cpu_time = time.process_time()
     et = time.time()
     
