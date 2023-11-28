@@ -21,6 +21,8 @@ gov_region = "us-gov-west-1"
 warn = 0
 no_warn = 0
 no_thresh = 0
+key1 = 0
+key2 = 0
 
 
 # NOTE: If anything changes with the outputs in aws-admin for gov and com
@@ -81,14 +83,14 @@ def check_retention(warn_days, violation_days, key_date):
 
     return None
 
-def user_dict_for_user(user, reference_table):
+def user_dict_for_user(report_user, reference_table):
     """
     Return the row in the reference table if it exists for the given user
     this helps determine if we are going to look at their keys as some accounts like break.glass etc
     are going to be ignored 
     """
     for row in reference_table:
-        if (row['is_wildcard'] == "Y" and user.startswith(row['user_string'])) or user == row['user_string']:
+        if (row['is_wildcard'] == "Y" and report_user.startswith(row['user_string'])) or report_user == row['user_string']:
             return row
         
 def check_retention_for_key(access_key_last_rotated, user_row, alert, warn_days, violation_days):
@@ -119,15 +121,18 @@ def check_access_keys(user_row, alert, warn_days, violation_days):
     """
     Check both access keys for a given user, if they both exist based on the Reference Table
     """
+    global key1, key2
     
     last_rotated_key1 = user_row['access_key_1_last_rotated']
     last_rotated_key2 = user_row['access_key_2_last_rotated']
     
     if (last_rotated_key1 != 'N/A' ):
         check_retention_for_key(last_rotated_key1, user_row, alert, warn_days, violation_days)
+        key1 += 1
             
     if (last_rotated_key2 != 'N/A' ):
         check_retention_for_key(last_rotated_key2, user_row, alert, warn_days, violation_days)
+        key2 += 1
 
 def check_user_thresholds(user_thresholds, report_row):
     """
@@ -182,7 +187,8 @@ def search_for_keys(region_name, profile, reference_table):
             
     # the not found users could be another Prometheus metric
     for user in not_found:
-        print(user[0:8])
+        #print(user[0:8])
+        None
     # prometheus can receive file with 0, 1 or more
 
 def state_file_to_dict(all_outputs):
