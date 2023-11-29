@@ -257,8 +257,8 @@ def main():
     args = sys.argv[1:]
     com_state_file = "../../../"+args[0]
     gov_state_file = "../../../"+args[1]
-    com_users_file = args[2]+"stacks/com/sso/users.yaml"
-    gov_users_file = args[2]+"stacks/com/gov/users.yaml"
+    com_users_file = args[2]
+    gov_users_file = args[3]
 
     print(f'com users file name: {com_users_file}')
     print(f'gov users file name: {gov_users_file}')
