@@ -247,7 +247,7 @@ def load_reference_data(csv_file_name):
     except OSError:
         print(f'OSError: {csv_file_name} not found or is in incorrect format')
     return reference_table
-
+    
 def main():
     """
     The main function that creates tables, loads the csv for the reference table and kicks off the search for stale keys
@@ -257,7 +257,11 @@ def main():
     args = sys.argv[1:]
     com_state_file = "../../../"+args[0]
     gov_state_file = "../../../"+args[1]
+    com_users_file = args[2]+"stacks/com/sso/users.yaml"
+    gov_users_file = args[2]+"stacks/com/gov/users.yaml"
 
+    print(f'com users file name: {com_users_file}')
+    print(f'gov users file name: {gov_users_file}')
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
     st = time.time()

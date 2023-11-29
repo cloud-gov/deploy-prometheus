@@ -1,16 +1,20 @@
 ---
 platform: linux
+
 image_resource:
   type: registry-image
   source:
-    repository: kennethreitz/pipenv
-    registry_mirror:
-      host: docker-registry-mirror.app.cloud.gov:443
+    aws_access_key_id: ((ecr_aws_key))
+    aws_secret_access_key: ((ecr_aws_secret))
+    repository: harden-concourse-task
+    aws_region: us-gov-west-1
+    tag: ((harden-concourse-task-tag))
 
 inputs:
 - name: prometheus-config
 - name: terraform-prod-com-yml
 - name: terraform-prod-gov-yml
+- name: aws-admin-config
 
 run:
   path: sh
@@ -19,7 +23,7 @@ run:
   - |
     cd prometheus-config/ci/aws-iam-check-keys
     pipenv install
-    pipenv run python3 find_stale_keys.py terraform-prod-com-yml/state.yml terraform-prod-gov-yml/state.yml
+    pipenv run python3 find_stale_keys.py terraform-prod-com-yml/state.yml terraform-prod-gov-yml/state.yml aws-admin-config/stacks/gov/sso/users.yaml aws-admin-config/stacks/com/sso/users.yaml
 
 params:
   AWS_DEFAULT_REGION:
