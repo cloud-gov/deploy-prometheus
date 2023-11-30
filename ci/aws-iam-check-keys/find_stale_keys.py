@@ -257,17 +257,24 @@ def main():
     args = sys.argv[1:]
     com_state_file = "../../../"+args[0]
     gov_state_file = "../../../"+args[1]
-    com_users_file = args[2]
-    gov_users_file = args[3]
+    com_users_filename = args[2]
+    gov_users_filename = args[3]
 
-    print(f'com users file name: {com_users_file}')
-    print(f'gov users file name: {gov_users_file}')
+    print(f'com users file name: {com_users_filename}')
+    print(f'gov users file name: {gov_users_filename}')
+    com_users_file = open(com_users_filename)
+    gov_users_file = open(gov_users_filename)
+    com_users = com_users_file.readlines()
+    gov_users = gov_users_file.readlines()
+    print(f'len of com_users is: {len(com_users)}')
+    print(f'len of gov_users is: {len(gov_users)}')
+    
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
     st = time.time()
 
     # Flag to create the db tables for the first run or for debugging
-    if create_tables_bool == "true":
+    if create_tables_bool == "True":
         print("creating tables...")
         keys_db_models.create_tables()
     
