@@ -14,7 +14,7 @@ inputs:
 - name: prometheus-config
 - name: terraform-prod-com-yml
 - name: terraform-prod-gov-yml
-- name: aws-admin-config
+- name: aws-admin
 
 run:
   path: sh
@@ -23,7 +23,7 @@ run:
   - |
     cd prometheus-config/ci/aws-iam-check-keys
     pipenv install
-    pipenv run python3 find_stale_keys.py terraform-prod-com-yml/state.yml terraform-prod-gov-yml/state.yml aws-admin-config/stacks/gov/sso/users.yaml aws-admin-config/stacks/com/sso/users.yaml
+    pipenv run python3 find_stale_keys.py terraform-prod-com-yml/state.yml terraform-prod-gov-yml/state.yml aws-admin/stacks/gov/sso/users.yaml aws-admin/stacks/com/sso/users.yaml
 
 params:
   AWS_DEFAULT_REGION:
