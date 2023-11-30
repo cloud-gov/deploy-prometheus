@@ -295,7 +295,7 @@ def main():
     gov_state_file = os.path.join("../../../",args[1])
     com_users_filename = os.path.join("../../../",args[2])
     gov_users_filename = os.path.join("../../../",args[3])
-    tf_state_filename = os.path.join("../../../",args[4])
+    tf_state_filename = os.path.join("../../../production/state.yml",args[4])
     
     (com_users, gov_users) = load_system_users(com_users_filename, gov_users_filename)
     tf_users = load_tf_users(tf_state_filename)
