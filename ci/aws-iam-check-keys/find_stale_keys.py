@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import requests
 import boto3
 import csv
@@ -220,7 +221,7 @@ def state_file_to_dict(all_outputs):
             output_dict[key_prefix] = profile
     return output_dict
 
-def load_state_files(com_state_file, gov_state_file):
+def load_profiles(com_state_file, gov_state_file):
     """
     Clean up yaml from state files for com and gov
     """
@@ -247,7 +248,42 @@ def load_reference_data(csv_file_name):
     except OSError:
         print(f'OSError: {csv_file_name} not found or is in incorrect format')
     return reference_table
+
+def load_thresholds(threshold_filename):
+    yaml_file = open(threshold_filename) 
+    threshold_yaml_ref = yaml.safe_load(yaml_file)
+    return threshold_yaml_ref["thresholds"]
+        
+def loadKnownUsers(com, gov, provision, misc):
+    """
+    This function will pull all of the various sources of user names together into one data structure
+    to be used as we search for stale keys. If the user isn't in this list, we don't look at it. 
     
+    Args:
+        com (yaml): User list from AWS Admin for commercial users
+        gov (yaml): User list from AWS Admin for gov users
+        provision (json): cg-provision which will be a state file in json
+        misc (json): A flatfile
+    """
+
+def load_system_users(com_filename, gov_filename):
+    com_file = open(com_filename)
+    gov_file = open(gov_filename)
+    com_users = yaml.safe_load(com_file)["users"]
+    gov_users = yaml.safe_load(gov_file)["users"]
+    
+    return (com_users, gov_users)
+
+def load_tf_users(tf_filename):
+    tf_users = []
+    tf_file = open(tf_filename)
+    tf_yaml = yaml.safe_load(tf_file)
+    for key in list(tf_yaml['terraform_outputs']):
+        if "username" in key:
+            if key not in tf_users:
+                tf_users.append(key)
+    return tf_users
+
 def main():
     """
     The main function that creates tables, loads the csv for the reference table and kicks off the search for stale keys
@@ -255,20 +291,16 @@ def main():
     
     # grab the state files from the s3 resources
     args = sys.argv[1:]
-    com_state_file = "../../../"+args[0]
-    gov_state_file = "../../../"+args[1]
-    com_users_filename = "../../../"+args[2]
-    gov_users_filename = "../../../"+args[3]
-
-    print(f'com users file name: {com_users_filename}')
-    print(f'gov users file name: {gov_users_filename}')
-    com_users_file = open(com_users_filename)
-    gov_users_file = open(gov_users_filename)
-    com_users = com_users_file.readlines()
-    gov_users = gov_users_file.readlines()
-    print(f'len of com_users is: {len(com_users)}')
-    print(f'len of gov_users is: {len(gov_users)}')
+    com_state_file = os.join.path("../../../",args[0])
+    gov_state_file = os.join.path("../../../",args[1])
+    com_users_filename = os.join.path("../../../",args[2])
+    gov_users_filename = os.join.path("../../../",args[3])
+    tf_state_filename = os.join.path("../../../",args[4])
     
+    (com_users, gov_users) = load_system_users(com_users_filename, gov_users_filename)
+    tf_users = load_tf_users(tf_state_filename)
+    
+    print(f'len com_users is {len(com_users)}\n len of gov_users is {len(gov_users)}\nlen of tfusers is {len(tf_users)}')
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
     st = time.time()
@@ -280,15 +312,12 @@ def main():
     
     # pipeline will pull in resource for the csv file so it's local
     reference_table = load_reference_data("seed_thresholds.csv")
+    thresholds = load_thresholds("thresholds.yml")
     
-    if len(reference_table) > 0:
+    if len(thresholds) > 0:
         # load state files into dicts to be searched
-        (com_state_dict, gov_state_dict) = load_state_files(com_state_file, gov_state_file)
+        (com_state_dict, gov_state_dict) = load_profiles(com_state_file, gov_state_file)
         
-        # also, it looks like I don't need to pass as many vars to search for keys as profiles has the key and secret region can be hard coded
-        # Or I could make region and output? Ask Chris if this makes any sense, i.e. would com or gov ever have more than one region each that I would be searching?
-        # Check both com and gov accounts 
-        # com first
         for com_key in com_state_dict:
             print(f'searching profile {com_key}')
             search_for_keys(com_region, com_state_dict[com_key], reference_table)
@@ -298,7 +327,7 @@ def main():
             print(f'searching profile {gov_key}')
             search_for_keys(gov_region, gov_state_dict[gov_key], reference_table)
     else:
-        print("empty refernce table, check filename, format and try again")
+        print("thresholds didn't load, please fix this and try again")
         
     et_cpu_time = time.process_time()
     et = time.time()
