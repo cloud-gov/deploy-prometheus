@@ -257,8 +257,8 @@ def main():
     args = sys.argv[1:]
     com_state_file = "../../../"+args[0]
     gov_state_file = "../../../"+args[1]
-    com_users_filename = args[2]
-    gov_users_filename = args[3]
+    com_users_filename = "../../../"+args[2]
+    gov_users_filename = "../../../"+args[3]
 
     print(f'com users file name: {com_users_filename}')
     print(f'gov users file name: {gov_users_filename}')
