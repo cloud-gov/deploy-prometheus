@@ -270,6 +270,7 @@ def load_reference_data(csv_file_name):
 def format_user_dicts(dict):
     new_dict = {}
     for key in list(dict):
+        print(f'processing user: {key}')
         new_dict = {"user":key, "account_type":"Operators"}
     return new_dict
 
