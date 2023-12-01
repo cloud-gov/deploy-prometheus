@@ -270,7 +270,6 @@ def load_reference_data(csv_file_name):
 def format_user_dicts(dict):
     new_dict = {}
     for key in list(dict):
-        print(f'processing user: {key}')
         new_dict = {"user":key, "account_type":"Operators"}
     return new_dict
 
@@ -318,8 +317,8 @@ def main():
     
     (com_users, gov_users) = load_system_users(com_users_filename, gov_users_filename)
     tf_users = load_tf_users(tf_state_filename)
-    
-    print(f'len com_users is {len(com_users)}\n len of gov_users is {len(gov_users)}\nlen of tfusers is {len(tf_users)}')
+
+    print(f'len com_users is {len(list(com_users))}\n len of gov_users is {len(gov_users)}\nlen of tfusers is {len(tf_users)}')
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
     st = time.time()
