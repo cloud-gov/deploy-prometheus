@@ -48,6 +48,9 @@ class IAM_Keys(BaseModel):
     cert_2_last_rotated= DateTimeField(null=True)
     created_at = DateTimeField()
     updated_at = DateTimeField(null=True)
+    # violation_days = IntegerField()
+    # warn_days = IntegerField()
+    # warn_user = BooleanField()
 
     @classmethod
     def account_for_arn(cls,arn):
@@ -98,12 +101,12 @@ class IAM_Keys(BaseModel):
             created_at = date.today(),
             updated_at = date.today(),
         )
-        if (created == False):
-            print("========================== found it! =========================")
-            print(keys_dict['user'])
-            print(user)
-        else:
-            print(created)
+        # if (created == False):
+        #     print("========================== found it! =========================")
+        #     print(keys_dict['user'])
+        #     print(user)
+        # else:
+        #     print(created)
             
         return user
 
@@ -123,6 +126,9 @@ class Event_Type(BaseModel):
 class Event(BaseModel):
     user = ForeignKeyField(IAM_Keys, backref='events')
     event_type = ForeignKeyField(Event_Type, backref='events')
+    cleared = BooleanField()
+    cleared_date = DateTimeField()
+    alert_sent = BooleanField()
     created_at = DateTimeField()
     
     @classmethod
