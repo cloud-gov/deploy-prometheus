@@ -268,17 +268,16 @@ def load_reference_data(csv_file_name):
     return reference_table
 
 def format_user_dicts(dict):
-    users = []
+    new_dict = {}
     for key in list(dict):
         new_dict = {"user":key, "account_type":"Operators"}
-        users.append(new_dict)
-    return users
+    return new_dict
 
 def load_system_users(com_filename, gov_filename):
     # Schema for gov or com users after pull out the "users" dict
     # {"user.name":{'aws_groups': ['Operators', 'OrgAdmins']}}
     # translated to:
-    # [{"user":user_name, "account_type":"Operators"}] - note Operators is hardcoded for now
+    # {"user":user_name, "account_type":"Operators"} - note Operators is hardcoded for now
     com_file = open(com_filename)
     gov_file = open(gov_filename)
     com_users_dict = list(yaml.safe_load(com_file)["users"])
@@ -291,15 +290,17 @@ def load_system_users(com_filename, gov_filename):
 def load_tf_users(tf_filename):
     # Schema for tf_users - need to verify this is correct
     # [{"user":user_name, "account_type":"Platform"}] - note Platform is hardcoded for now
-    tf_users = []
+    #tf_users = []
+    tf_dict = {}
     tf_file = open(tf_filename)
     tf_yaml = yaml.safe_load(tf_file)
-    for key in list(tf_yaml['terraform_outputs']):
+    for key in list(tf_yaml['terraform_outputs']) :
         if "username" in key:
-            if key not in tf_users:
-                tf_dict = {"user":key, "account_type":"Platform"}
-                tf_users.append(tf_dict)
-    return tf_users
+            #if key not in tf_users:
+            tf_dict["user"] = key # = {"user":key, "account_type":"Platform"}
+            tf_dict["account_type"] = "Platform"
+            #tf_users.append(tf_dict)
+    return tf_dict
 
 def main():
     """
