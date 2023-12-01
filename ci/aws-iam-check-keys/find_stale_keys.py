@@ -173,7 +173,7 @@ def search_for_keys(region_name, profile, reference_table, system_users, tf_user
     """
   
     # combine the system users (gov or com) with the platform users from the state file
-    known_users_dict = system_users | tf_users
+    known_users_dict = system_users.update(tf_users)
     session = boto3.Session(region_name=region_name, aws_access_key_id=profile['id'], aws_secret_access_key=profile['secret'])
     iam = session.client('iam')
     
