@@ -187,7 +187,7 @@ def search_for_keys(region_name, profile, reference_table, system_users, tf_user
     """
 
     # combine the system users (gov or com) with the platform users from the state file
-    known_users_dict = system_users.update(tf_users)
+    known_users_dict = system_users+tf_users
     # add in the manual_users as well, once we have them
 
     # Grab a session to AWS via the Python boto3 lib
@@ -301,9 +301,11 @@ def load_reference_data(csv_file_name):
 
 def format_user_dicts(users_list):
     new_dict = {}
+    user_list = []
     for key in users_list:
         new_dict = {"user":key, "account_type":"Operators"}
-    return new_dict
+        user_list.append(new_dict)
+    return user_list
 
 def load_system_users(com_filename, gov_filename):
     # Schema for gov or com users after pull out the "users" dict
@@ -315,15 +317,15 @@ def load_system_users(com_filename, gov_filename):
     com_users_list = list(yaml.safe_load(com_file)["users"])
     gov_users_list = list(yaml.safe_load(gov_file)["users"])
     print(f'com_users_list: {com_users_list}\ngov_users_list:{gov_users_list}\n')
-    com_users = format_user_dicts(com_users_list)
-    gov_users = format_user_dicts(gov_users_list)
+    com_users_list = format_user_dicts(com_users_list)
+    gov_users_list = format_user_dicts(gov_users_list)
 
-    return (com_users, gov_users)
+    return (com_users_list, gov_users_list)
 
 def load_tf_users(tf_filename):
     # Schema for tf_users - need to verify this is correct
     # [{"user":user_name, "account_type":"Platform"}] - note Platform is hardcoded for now
-    #tf_users = []
+    tf_users = []
     tf_dict = {}
     tf_file = open(tf_filename)
     tf_yaml = yaml.safe_load(tf_file)
@@ -332,8 +334,8 @@ def load_tf_users(tf_filename):
             #if key not in tf_users:
             tf_dict["user"] = key # = {"user":key, "account_type":"Platform"}
             tf_dict["account_type"] = "Platform"
-            #tf_users.append(tf_dict)
-    return tf_dict
+            tf_users.append(tf_dict)
+    return tf_users
 
 def main():
     """
@@ -353,12 +355,10 @@ def main():
     com_region = "us-east-1"
     gov_region = "us-gov-west-1"
 
-    (com_users, gov_users) = load_system_users(com_users_filename, gov_users_filename)
+    (com_users_list, gov_users_list) = load_system_users(com_users_filename, gov_users_filename)
     tf_users = load_tf_users(tf_state_filename)
 
-    print(f'com_users: {com_users}\ngov_users: {gov_users}\ntf_users: {tf_users}')
-
-    print(f'len com_users is {len(list(com_users))}\n len of gov_users is {len(gov_users)}\nlen of tfusers is {len(tf_users)}')
+    print(f'com_users: {com_users_list}\ngov_users: {gov_users_list}\ntf_users: {tf_users}')
 
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
@@ -379,12 +379,12 @@ def main():
 
         for com_key in com_state_dict:
             print(f'searching profile {com_key}')
-            search_for_keys(com_region, com_state_dict[com_key], reference_table, com_users, tf_users)
+            search_for_keys(com_region, com_state_dict[com_key], reference_table, com_users_list, tf_users)
 
         # now gov
         for gov_key in gov_state_dict:
             print(f'searching profile {gov_key}')
-            search_for_keys(gov_region, gov_state_dict[gov_key], reference_table, gov_users, tf_users)
+            search_for_keys(gov_region, gov_state_dict[gov_key], reference_table, gov_users_list, tf_users)
     else:
         print("thresholds didn't load, please fix this and try again")
 
