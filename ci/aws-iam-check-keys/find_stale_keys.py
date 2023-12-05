@@ -16,27 +16,11 @@ import sys
 import time
 import yaml
 
-# ENV vars/creds
-create_tables_bool = os.getenv('IAM_CREATE_TABLES')
-com_region = "us-east-1"
-gov_region = "us-gov-west-1"
-warn = 0
-no_warn = 0
-no_thresh = 0
+# Debug stuff
 key1 = 0
 key2 = 0
 prometheus_alerts = ""
 
-# NOTE: If anything changes with the outputs in aws-admin for gov and com
-# make sure the delimiter stays the same, or change the below var if it changes
-# just make sure that whatever it changes to is consistent with:
-# profile name prefix+delimiter+the rest of the string
-#
-# example:
-#
-# gov-stg-tool_access_key_id_stalekey -> prefix = gov-stg-tool
-# the rest = tool_access_key_id_stalekey
-prefix_delimiter = '_'
 
 """
 Reference Table data structure info:
@@ -87,70 +71,99 @@ def check_retention(warn_days, violation_days, key_date):
 
 def user_dict_for_user(report_user, reference_table, users_dict):
     """
-    Return the row in the reference table if it exists for the given user
-    this helps determine if we are going to look at their keys as some accounts like break.glass etc
-    are going to be ignored 
+    Return the row from the reference table for the given user type
+    to be used for validating thresholds for the key rotation date timeframes
     """
+
+    user_dict = {}
     if report_user in list(users_dict):
         user_dict = users_dict[report_user]
         for dict in reference_table:
             if dict['account_type'] == user_dict['account_type']:
-                return dict
-            
-    # for row in reference_table:
-    #     if (row['is_wildcard'] == "Y" and report_user.startswith(row['user_string'])) or report_user == row['user_string']:
-    #         return row
-        
-#def check_retention_for_key(access_key_last_rotated, user_row, alert, warn_days, violation_days):
-def check_retention_for_key(access_key_last_rotated, user_row, warn_days, violation_days):
+                user_dict = dict
+    else:
+        # track unknown users here eventually
+        print(f'User {report_user} was not found')
+
+    return user_dict
+
+def event_exists(events, access_key_num):
     """
-    Is the key expired or about to be? Let's warn the user and send some metrics to Prometheus
+    Look for an access key rotation based on key number (1 or 2) corresponding
+    to the number of access keys a user might have.
+    If the same event and key number are found, return the event
     """
-    global warn, no_warn, no_thresh, prometheus_alerts
-    
+    foundEvent = None
+    for event in events:
+        if (event['access_key_num'] == access_key_num):
+            found = event
+            break
+    return found
+
+def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, warn_days, violation_days):
+    """
+    Is the key expired or about to be? Let's warn the user and record some metrics to send to Prometheus
+    """
+    global alert, prometheus_alerts, key1, key2
+
     if (access_key_last_rotated != 'N/A'):
         alert_type = check_retention(warn_days, violation_days, access_key_last_rotated)
         iam_user = IAM_Keys.user_from_dict(user_row)
 
+        # check that we have a stale key of some kind
         if (alert_type):
-            warn_event, _ = Event_Type.insert_event_type(alert_type)
-            event = Event.new_event_type_user(warn_event,iam_user)
-            #Prometheus metrics here, like event, etc
-            #if (alert == 'Y'):
-                # send an alert to the user here. Alternatively the alert could be in check_access_keys to 
-                # cut down on the number of alerts a user gets. Right now it's rare that both keys are being used.
-                # email or ??
-            print("an alert will go out")
-            warn += 1
-            prometheus_alerts += f'User: {user_row["user"]} has an {alert_type} as the key was last rotated: {access_key_last_rotated}\n'
-            event.alert_sent = True
-            # else:
-            #     no_warn += 1
-        else:
-            no_thresh += 1
+            # verify we don't already have an alert!
+            events = iam_user.events
+            found_event = event_exists(events, access_key_num)
+            if not found_event: 
+                # since we don't have an event for this key already, create a new one
+                # and create an alert to send to prometheus and add it to the list of alerts
+                warn_event, _ = Event_Type.insert_event_type(alert_type)
+                event = Event.new_event_type_user(warn_event,iam_user, access_key_num)
+                print("an alert will go out")
+
+                # some debug code to verify keys being used
+                alert += 1
+                if access_key_num == 1:
+                    key1 += 1
+                elif access_key_num == 2:
+                    key2 += 1
+
+                # create the alert for prometheus (print out for debug purposes)
+                # since this is new the alert_sent is set to false. Once an alert is cleared it will be set to true
+                print(f'stale_key_num {len(events)} User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
+                prometheus_alerts += f'stale_key_num {len(events)} User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n'
+                event.alert_sent = False
+                event.save()
+            else:
+                # found, so let's update a count
+                found_event.found_count += 1
+                found_event.save()
+        elif alert_type == None:
             for event in iam_user['events']:
                 event.cleared = True
                 event.cleared_date = date.now()
-            
-#def check_access_keys(user_row, alert, warn_days, violation_days):
+                # I really don't like this and want to move it somewhere else but lets get it
+                # working first
+                event.alert_sent = True
+                event.save()
+                print(f'stale_key_num 0 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
+                prometheus_alerts += f'stale_key_num 0 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n'
+
 def check_access_keys(user_row, warn_days, violation_days):
     """
-    Check both access keys for a given user, if they both exist based on the Reference Table
+    Validate key staleness for both access keys, provided they exist, for a given user
     """
     global key1, key2
-    
+
     last_rotated_key1 = user_row['access_key_1_last_rotated']
     last_rotated_key2 = user_row['access_key_2_last_rotated']
-    
+
     if (last_rotated_key1 != 'N/A' ):
-        #check_retention_for_key(last_rotated_key1, user_row, alert, warn_days, violation_days)
-        check_retention_for_key(last_rotated_key1, user_row, warn_days, violation_days)
-        key1 += 1
-            
+        check_retention_for_key(last_rotated_key1, 1, user_row, warn_days, violation_days)
+
     if (last_rotated_key2 != 'N/A' ):
-        #check_retention_for_key(last_rotated_key2, user_row, alert, warn_days, violation_days)
-        check_retention_for_key(last_rotated_key2, user_row, warn_days, violation_days)
-        key2 += 1
+        check_retention_for_key(last_rotated_key2, 2, user_row, warn_days, violation_days)
 
 def check_user_thresholds(user_thresholds, report_row):
     """
@@ -158,7 +171,7 @@ def check_user_thresholds(user_thresholds, report_row):
     """
     warn_days = user_thresholds['warn']
     violation_days = user_thresholds['violation']
-    
+
     if user_thresholds['warn'] == "" or user_thresholds['violation'] == "":
         warn_days = "60"
         violation_days = "90"
@@ -171,12 +184,16 @@ def search_for_keys(region_name, profile, reference_table, system_users, tf_user
     The main search function that reaches out to AWS IAM to grab the credentials report and read in csv
     First let's get a session based on the user access key so we can get all of the users for a given account
     """
-  
+
     # combine the system users (gov or com) with the platform users from the state file
     known_users_dict = system_users.update(tf_users)
+    # add in the manual_users as well, once we have them
+
+    # Grab a session to AWS via the Python boto3 lib
     session = boto3.Session(region_name=region_name, aws_access_key_id=profile['id'], aws_secret_access_key=profile['secret'])
     iam = session.client('iam')
-    
+
+    # Generate credential report for the given profile
     # Generating the report is an async operation, so we wait for it by sleeping
     # If Python has an async await type of construct it would be good to use that here
     w_time = 0
@@ -188,7 +205,7 @@ def search_for_keys(region_name, profile, reference_table, system_users, tf_user
     report = iam.get_credential_report()
     content = report["Content"].decode("utf-8")
     content_lines = content.split("\n")
-    
+
     # file in .gitignore that I want to use for accounts to use here
     # also update onboard docs to say come here and add what is added here as well
 
@@ -205,18 +222,31 @@ def search_for_keys(region_name, profile, reference_table, system_users, tf_user
             not_found.append(user_name)
         else:
             check_user_thresholds(user_dict, row)
-            
-    # the not found users could be another Prometheus metric
-    for user in not_found:
+
+    # the not found users could be another Prometheus metric, and could be covered here
+    # or as it is in user_dict_for_user() function
+    #for user in not_found:
         #print(user[0:8])
-        None
+    #    None
     # prometheus can receive file with 0, 1 or more
 
 def state_file_to_dict(all_outputs):
+    # Convert the production state file to a dict 
     # data structure
     # {new_key = {key1:value, key2:value}}
     # Make this an env var!
-    global prefix_delimiter
+
+    # NOTE: If anything changes with the outputs in aws-admin for gov and com
+    # make sure the delimiter stays the same, or change the below var if it changes
+    # just make sure that whatever it changes to is consistent with:
+    # profile name prefix+delimiter+the rest of the string
+    #
+    # example:
+    #
+    # gov-stg-tool_access_key_id_stalekey -> prefix = gov-stg-tool
+    # the rest = tool_access_key_id_stalekey
+    prefix_delimiter = os.getenv('PREFIX_DELIMITER')
+
     output_dict = {}
     for key, value in all_outputs.items():
         profile = {}
@@ -243,7 +273,7 @@ def load_profiles(com_state_file, gov_state_file):
     """
     Clean up yaml from state files for com and gov
     """
-    
+
     com_file = open(com_state_file)
     gov_file = open(gov_state_file)
     com_state = yaml.safe_load(com_file)
@@ -253,9 +283,9 @@ def load_profiles(com_state_file, gov_state_file):
     com_state_dict = state_file_to_dict(all_outputs_com)
     gov_state_dict = state_file_to_dict(all_outputs_gov)
     return(com_state_dict, gov_state_dict)
-    
+
 def load_reference_data(csv_file_name):
-    """ 
+    """
     Load the reference table into an array of dictionaries
     """
     reference_table = []
@@ -306,7 +336,7 @@ def main():
     """
     The main function that creates tables, loads the csv for the reference table and kicks off the search for stale keys
     """
-    
+
     # grab the state files, user files and outputs from cg-provision from the s3 resources
     args = sys.argv[1:]
     com_state_file = os.path.join("../../../",args[0])
@@ -314,7 +344,12 @@ def main():
     com_users_filename = os.path.join("../../../",args[2])
     gov_users_filename = os.path.join("../../../",args[3])
     tf_state_filename = os.path.join("../../../",args[4]+"/state.yml")
-    
+    # manual_users = os.path.join("../../../",args[5])
+
+    # AWS regions
+    com_region = "us-east-1"
+    gov_region = "us-gov-west-1"
+
     (com_users, gov_users) = load_system_users(com_users_filename, gov_users_filename)
     tf_users = load_tf_users(tf_state_filename)
 
@@ -323,32 +358,33 @@ def main():
     st_cpu_time = time.process_time()
     st = time.time()
 
+    create_tables_bool = os.getenv('IAM_CREATE_TABLES')
     # Flag to create the db tables for the first run or for debugging
     if create_tables_bool == "True":
         print("creating tables...")
         keys_db_models.create_tables()
-    
+
     # pipeline will pull in resource for the csv file so it's local
     reference_table = load_reference_data("seed_thresholds.csv")
-    
+
     if len(reference_table) > 0:
         # load state files into dicts to be searched
         (com_state_dict, gov_state_dict) = load_profiles(com_state_file, gov_state_file)
-        
+
         for com_key in com_state_dict:
             print(f'searching profile {com_key}')
             search_for_keys(com_region, com_state_dict[com_key], reference_table, com_users, tf_users)
-        
+
         # now gov
         for gov_key in gov_state_dict:
             print(f'searching profile {gov_key}')
             search_for_keys(gov_region, gov_state_dict[gov_key], reference_table, gov_users, tf_users)
     else:
         print("thresholds didn't load, please fix this and try again")
-        
+
     et_cpu_time = time.process_time()
     et = time.time()
-    
+
     # get execution time
     res = et_cpu_time - st_cpu_time
     print('CPU Execution time:', res, 'seconds')
@@ -356,18 +392,19 @@ def main():
     # get the execution time
     elapsed_time = et - st
     print('Execution time:', elapsed_time, 'seconds')
-    print(f'warn: {warn}')
-    print(f'no_warn: {no_warn}')
-    print(f'no_thresh: {no_thresh}')
     print(f'key1: {key1}')
     print(f'key2: {key2}')
     print(f'warnings\n{prometheus_alerts}')
 
-  
+
 if __name__ == "__main__":
     if not ("GATEWAY_HOST") in os.environ:
         print("GATEWAY_HOST is required.")
         sys.exit(1)
+    #cleared should get zeroed out in database for events after sent to prometheus
+    # until they are cleared, they increment for number of alerts. the alert sent is True
+    # when they are zeroed out
+
     main()
     # prometheus_url = os.getenv("GATEWAY_HOST") + ":" + os.getenv(
     #     "GATEWAY_PORT", "9091") + "/metrics/job/find_stale_keys"
@@ -376,5 +413,5 @@ if __name__ == "__main__":
     #                    data=prometheus_alerts,
     #                    headers={'Content-Type': 'application/octet-stream'})
     # res.raise_for_status()
-    
-    
+
+

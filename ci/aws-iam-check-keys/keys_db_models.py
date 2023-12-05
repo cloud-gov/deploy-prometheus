@@ -107,7 +107,7 @@ class IAM_Keys(BaseModel):
         #     print(user)
         # else:
         #     print(created)
-            
+
         return user
 
 
@@ -115,27 +115,29 @@ class IAM_Keys(BaseModel):
 class Event_Type(BaseModel):
     event_type_name = CharField(unique=True)
     created_at = DateTimeField()
-    
+
     @classmethod
     def insert_event_type(cls,name):
         event_type, created = Event_Type.get_or_create(event_type_name =name, created_at = date.today())
         return event_type, created
-        
+
 
 # The events as they happen based on IAM creds not being rotated in a timely manner
 class Event(BaseModel):
     user = ForeignKeyField(IAM_Keys, backref='events')
     event_type = ForeignKeyField(Event_Type, backref='events')
+    access_key_num = IntegerField()
     cleared = BooleanField()
     cleared_date = DateTimeField()
     alert_sent = BooleanField()
     created_at = DateTimeField()
-    
+    access_key_num = IntegerField()
+    found_count = IntegerField()
+
     @classmethod
-    def new_event_type_user(cls, event_type, user):
-        event = Event.create(user=user, event_type=event_type, created_at=date.today())
+    def new_event_type_user(cls, event_type, user, access_key_num):
+        event = Event.create(user=user, access_key_num=access_key_num, event_type=event_type, created_at=date.today())
         return event
-        
 
 
 def drop_all_tables():
