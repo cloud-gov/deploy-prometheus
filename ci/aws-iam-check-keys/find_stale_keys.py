@@ -299,9 +299,9 @@ def load_reference_data(csv_file_name):
         print(f'OSError: {csv_file_name} not found or is in incorrect format')
     return reference_table
 
-def format_user_dicts(dict):
+def format_user_dicts(users_list):
     new_dict = {}
-    for key in list(dict):
+    for key in users_list:
         new_dict = {"user":key, "account_type":"Operators"}
     return new_dict
 
@@ -312,11 +312,11 @@ def load_system_users(com_filename, gov_filename):
     # {"user":user_name, "account_type":"Operators"} - note Operators is hardcoded for now
     com_file = open(com_filename)
     gov_file = open(gov_filename)
-    com_users_dict = list(yaml.safe_load(com_file)["users"])
-    gov_users_dict = list(yaml.safe_load(gov_file)["users"])
-    print(f'com_users_dict: {com_users_dict}\ngov_users_dict:{gov_users_dict}\n')
-    com_users = format_user_dicts(com_users_dict)
-    gov_users = format_user_dicts(gov_users_dict)
+    com_users_list = list(yaml.safe_load(com_file)["users"])
+    gov_users_list = list(yaml.safe_load(gov_file)["users"])
+    print(f'com_users_list: {com_users_list}\ngov_users_list:{gov_users_list}\n')
+    com_users = format_user_dicts(com_users_list)
+    gov_users = format_user_dicts(gov_users_list)
 
     return (com_users, gov_users)
 
