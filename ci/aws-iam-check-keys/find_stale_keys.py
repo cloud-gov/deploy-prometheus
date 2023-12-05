@@ -221,7 +221,7 @@ def search_for_keys(region_name, profile, reference_table, system_users, tf_user
         user_name = row["user"]
         print(f'system_users: {system_users}\nuser_name: {user_name}\n reference_table: {reference_table}\nknown_users_dict:{known_users_dict}')
         user_dict = user_dict_for_user(user_name, reference_table, known_users_dict)
-        if user_dict == None:
+        if len(user_dict) <= 0:
             not_found.append(user_name)
         else:
             check_user_thresholds(user_dict, row)
