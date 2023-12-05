@@ -76,7 +76,6 @@ def user_dict_for_user(report_user, reference_table, users_dict):
     """
 
     user_dict = {}
-    print(f'users_dict is {users_dict}')
     if report_user in list(users_dict):
         user_dict = users_dict[report_user]
         for dict in reference_table:
@@ -86,6 +85,7 @@ def user_dict_for_user(report_user, reference_table, users_dict):
         # track unknown users here eventually
         print(f'User {report_user} was not found')
 
+    print(f'report_user: {report_user} user_dict is {user_dict}')
     return user_dict
 
 def event_exists(events, access_key_num):
