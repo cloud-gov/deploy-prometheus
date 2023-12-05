@@ -76,6 +76,7 @@ def user_dict_for_user(report_user, reference_table, users_dict):
     """
 
     user_dict = {}
+    print(f'users_dict is {users_dict}')
     if report_user in list(users_dict):
         user_dict = users_dict[report_user]
         for dict in reference_table:
@@ -353,7 +354,10 @@ def main():
     (com_users, gov_users) = load_system_users(com_users_filename, gov_users_filename)
     tf_users = load_tf_users(tf_state_filename)
 
+    print(f'com_users: {com_users}\ngov_users: {gov_users}\ntf_users: {tf_users}')
+
     print(f'len com_users is {len(list(com_users))}\n len of gov_users is {len(gov_users)}\nlen of tfusers is {len(tf_users)}')
+
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
     st = time.time()
