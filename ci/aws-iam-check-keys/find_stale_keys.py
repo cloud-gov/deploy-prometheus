@@ -218,7 +218,7 @@ def search_for_keys(region_name, profile, reference_table, system_users, tf_user
     not_found = []
     for row in csv_reader:
         user_name = row["user"]
-        print(f'user_name: {user_name}\n reference_table: {reference_table}\nknown_users_dict:{known_users_dict}')
+        print(f'system_users: {system_users}\nuser_name: {user_name}\n reference_table: {reference_table}\nknown_users_dict:{known_users_dict}')
         user_dict = user_dict_for_user(user_name, reference_table, known_users_dict)
         if user_dict == None:
             not_found.append(user_name)
@@ -314,6 +314,7 @@ def load_system_users(com_filename, gov_filename):
     gov_file = open(gov_filename)
     com_users_dict = list(yaml.safe_load(com_file)["users"])
     gov_users_dict = list(yaml.safe_load(gov_file)["users"])
+    print(f'com_users_dict: {com_users_dict}\ngov_users_dict:{gov_users_dict}\n')
     com_users = format_user_dicts(com_users_dict)
     gov_users = format_user_dicts(gov_users_dict)
 
