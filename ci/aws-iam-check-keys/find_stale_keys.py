@@ -170,6 +170,7 @@ def check_user_thresholds(user_thresholds, report_row):
     """
     Grab the thresholds from the reference table and pass them on with the row from the credentials report to be used for checking the keys
     """
+    print(f'thresholds: {user_thresholds}')
     warn_days = user_thresholds['warn']
     violation_days = user_thresholds['violation']
 
