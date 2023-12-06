@@ -369,7 +369,7 @@ def load_other_users(other_users_filename):
 
 def load_thresholds(filename):
     thresholds_file = open(filename)
-    thresholds_yaml = yaml.safe_load_all(thresholds_file)
+    thresholds_yaml = yaml.safe_load(thresholds_file)
     return thresholds_yaml
 
 def main():
