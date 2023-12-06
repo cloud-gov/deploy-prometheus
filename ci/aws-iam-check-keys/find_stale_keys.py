@@ -115,7 +115,7 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
     """
     Is the key expired or about to be? Let's warn the user and record some metrics to send to Prometheus
     """
-    global alert, prometheus_alerts, key1, key2
+    global prometheus_alerts, key1, key2
 
     if (access_key_last_rotated != 'N/A'):
         alert_type = check_retention(warn_days, violation_days, access_key_last_rotated)
