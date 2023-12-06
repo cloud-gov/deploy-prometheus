@@ -312,9 +312,11 @@ def format_user_dicts(users_list, thresholds):
     new_dict = {}
     user_list = []
     for key in users_list:
-        found_threshold = [dict for dict in thresholds if dict['account_type'] == "Operators"]
-        found_threshold["user"] = key
-        user_list.append(found_threshold)
+        found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Operators"]
+        if len(found_thresholds) > 0:
+            found_threshold = found_thresholds[0]
+            found_threshold["user"] = key
+            user_list.append(found_threshold)
     return user_list
 
 def load_system_users(com_filename, gov_filename, thresholds):
@@ -346,8 +348,10 @@ def load_tf_users(tf_filename, thresholds):
         if "username" in key:
             #if key not in tf_users:
             # , "is_wildcard": False, "alert": True, "warn": 75, "violation": 90 }
-            found_threshold = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
-            found_threshold["user"] = key
+            found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
+            if len(found_thresholds) > 0:
+                found_threshold = found_thresholds[0]
+                found_threshold["user"] = key
             tf_users.append(found_threshold)
     return tf_users
 
