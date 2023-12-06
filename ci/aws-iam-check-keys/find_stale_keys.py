@@ -76,8 +76,8 @@ def find_known_user(report_user, all_users_dict):
     """
 
     user_dict = {}
-    #print(f'all_users_dict are: {all_users_dict}\nreport user is: {report_user}')
-    print(f'report user is: {report_user}')
+    print(f'all_users_dict are: {all_users_dict}\nreport user is: {report_user}')
+    #print(f'report user is: {report_user}')
     for an_user_dict in all_users_dict:
         if an_user_dict['name'] == report_user:
             user_dict = an_user_dict
@@ -345,14 +345,14 @@ def load_tf_users(tf_filename, thresholds):
     tf_file = open(tf_filename)
     tf_yaml = yaml.safe_load(tf_file)
     for key in list(tf_yaml['terraform_outputs']):
-        print(f'tf key is: {key}')
+        #print(f'tf key is: {key}')
         if "username" in key:
             #if key not in tf_users:
             # , "is_wildcard": False, "alert": True, "warn": 75, "violation": 90 }
-            print(f"thresholds: {thresholds}")
             found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
             if len(found_thresholds) > 0:
                 found_threshold = found_thresholds[0]
+                print(f"key: {key} threshold: {found_threshold}")
                 found_threshold["user"] = key
             tf_users.append(found_threshold)
     return tf_users
