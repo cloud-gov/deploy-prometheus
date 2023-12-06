@@ -76,8 +76,6 @@ def find_known_user(report_user, all_users_dict):
     """
 
     user_dict = {}
-    print(f'all_users_dict are: {all_users_dict}\nreport user is: {report_user}')
-    #print(f'report user is: {report_user}')
     for an_user_dict in all_users_dict:
         if an_user_dict['user'] == report_user:
             user_dict = an_user_dict
@@ -85,17 +83,6 @@ def find_known_user(report_user, all_users_dict):
     if user_dict == {}:
         print(f'User {report_user} not found')
 
-    # if report_user in list(users_dict):
-    #     user_dict = all_users_dict[report_user]
-    #     for dict in reference_table:
-    #         print(f'ref table dict: {dict}')
-    #         if dict['account_type'] == user_dict['account_type']:
-    #             user_dict = dict
-    # else:
-    #     # track unknown users here eventually
-    #     print(f'User {report_user} was not found')
-
-    # print(f'report_user: {report_user} user_dict is {user_dict}')
     return user_dict
 
 def event_exists(events, access_key_num):
@@ -142,8 +129,8 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
 
                 # create the alert for prometheus (print out for debug purposes)
                 # since this is new the alert_sent is set to false. Once an alert is cleared it will be set to true
-                print(f'stale_key_num {len(events)} User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
-                prometheus_alerts += f'stale_key_num {len(events)} User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n'
+                print(f'stale_key_num 1 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
+                prometheus_alerts += f'stale_key_num 1 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n'
                 event.alert_sent = False
                 event.save()
             else:
@@ -158,8 +145,8 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
                 # working first
                 event.alert_sent = True
                 event.save()
-                print(f'stale_key_num 0 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
-                prometheus_alerts += f'stale_key_num 0 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n'
+                print(f'stale_key_num 1 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
+                prometheus_alerts += f'stale_key_num 1 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n'
 
 def check_access_keys(user_row, warn_days, violation_days):
     """
@@ -180,15 +167,12 @@ def check_user_thresholds(user_thresholds, report_row):
     """
     Grab the thresholds from the reference table and pass them on with the row from the credentials report to be used for checking the keys
     """
-    #print(f'thresholds: {user_thresholds}')
     warn_days = user_thresholds['warn']
     violation_days = user_thresholds['violation']
 
     if warn_days == 0 or violation_days == 0:
         warn_days = os.getenv("WARN_DAYS")
         violation_days = os.getenv("VIOLATION_DAYS")
-    # alert = user_thresholds['alert']
-    # check_access_keys(report_row, alert, warn_days, violation_days)
     check_access_keys(report_row, warn_days, violation_days)
 
 def search_for_keys(region_name, profile, all_users):
@@ -225,7 +209,6 @@ def search_for_keys(region_name, profile, all_users):
     not_found = []
     for row in csv_reader:
         user_name = row["user"]
-        #print(f'system_users: {system_users}\nuser_name: {user_name}\n reference_table: {reference_table}\nall_users_dict:{allusers_dict}')
         user_dict = find_known_user(user_name, all_users)
         #print(f'user_dict: {user_dict}')
         if len(user_dict) <= 0:
@@ -283,7 +266,6 @@ def load_profiles(com_state_file, gov_state_file):
     """
     Clean up yaml from state files for com and gov
     """
-
     com_file = open(com_state_file)
     gov_file = open(gov_state_file)
     com_state = yaml.safe_load(com_file)
@@ -294,24 +276,26 @@ def load_profiles(com_state_file, gov_state_file):
     gov_state_dict = state_file_to_dict(all_outputs_gov)
     return(com_state_dict, gov_state_dict)
 
-def load_reference_data(csv_file_name):
-    """
-    Load the reference table into an array of dictionaries
-    """
-    reference_table = []
-    try:
-        with open(csv_file_name) as data:
-            for r in csv.DictReader(data):
-                reference_table.append(r)
-    except OSError:
-        print(f'OSError: {csv_file_name} not found or is in incorrect format')
-    return reference_table
+# def load_reference_data(csv_file_name):
+#     """
+#     Load the reference table into an array of dictionaries
+#     """
+#     reference_table = []
+#     try:
+#         with open(csv_file_name) as data:
+#             for r in csv.DictReader(data):
+#                 reference_table.append(r)
+#     except OSError:
+#         print(f'OSError: {csv_file_name} not found or is in incorrect format')
+#     return reference_table
 
 def format_user_dicts(users_list, thresholds):
+    """
+    Augment the users list to have the threshold information.
+    """
     new_dict = {}
     user_list = []
     for key in users_list:
-        #print(f'thresholds: {thresholds}')
         found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Operators"]
         if len(found_thresholds) > 0:
             found_threshold = found_thresholds[0]
@@ -328,7 +312,6 @@ def load_system_users(com_filename, gov_filename, thresholds):
     gov_file = open(gov_filename)
     com_users_list = list(yaml.safe_load(com_file)["users"])
     gov_users_list = list(yaml.safe_load(gov_file)["users"])
-    #print(f'com_users_list: {com_users_list}\ngov_users_list:{gov_users_list}\n')
     com_users_list = format_user_dicts(com_users_list, thresholds)
     gov_users_list = format_user_dicts(gov_users_list, thresholds)
 
@@ -344,14 +327,10 @@ def load_tf_users(tf_filename, thresholds):
     tf_file = open(tf_filename)
     tf_yaml = yaml.safe_load(tf_file)
     for key in list(tf_yaml['terraform_outputs']):
-        #print(f'tf key is: {key}')
         if "username" in key:
-            #if key not in tf_users:
-            # , "is_wildcard": False, "alert": True, "warn": 75, "violation": 90 }
             found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
             if len(found_thresholds) > 0:
                 found_threshold = found_thresholds[0]
-                #print(f"key: {key} threshold: {found_threshold}")
                 found_threshold["user"] = key
             tf_users.append(found_threshold)
     return tf_users
@@ -360,13 +339,15 @@ def load_other_users(other_users_filename):
     # Schema for other_users is
     # {user: user_name, account_type:account_type, is_wildcard: True|False, alert: True|False, warn: warn, violation: violation}
     # Note that all values are hardcoded except the user name
-
     other_users_file = open(other_users_filename)
     other_users_yaml = yaml.safe_load(other_users_file)
 
     return other_users_yaml
 
 def load_thresholds(filename):
+    """
+    This is the file that holds all of the threshold information to be added to the user list dictionaries.
+    """
     thresholds_file = open(filename)
     thresholds_yaml = yaml.safe_load(thresholds_file)
     return thresholds_yaml
@@ -394,8 +375,6 @@ def main():
     (com_users_list, gov_users_list) = load_system_users(com_users_filename, gov_users_filename, thresholds)
     tf_users = load_tf_users(tf_state_filename, thresholds)
     other_users = load_other_users(other_users_filename)
-
-    #print(f'com_users: {com_users_list}\ngov_users: {gov_users_list}\ntf_users: {tf_users}')
 
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
