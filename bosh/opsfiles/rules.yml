@@ -382,6 +382,21 @@
         summary: ClamAV scan alert for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}
         description: ClamAV alert for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}} - check the logs on the instance to establish threat and follow procedures
 
+# Snort Alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: snort
+    rules:
+    - alert: Snort Alert
+      expr: snort_alert_detected > 0
+      labels:
+        service: snort
+        severity: warning
+      annotations:
+        summary: Snort rule alert for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}
+        description: Snort alert for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}} - check the auth.log on the instance to establish threat and follow procedures
+
 # HTTPS uptime alerts
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
