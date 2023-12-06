@@ -132,13 +132,19 @@ class Event(BaseModel):
     alert_sent = BooleanField()
     created_at = DateTimeField()
     access_key_num = IntegerField()
-    found_count = IntegerField()
+
 
     @classmethod
     def new_event_type_user(cls, event_type, user, access_key_num):
         event = Event.create(user=user, access_key_num=access_key_num, event_type=event_type, created_at=date.today())
         return event
 
+    @classmethod
+    def has_warn_event_type(cls):
+        has_warned = False
+        if event_type.event_type_name == "warn":
+            is_warned = True
+        return is_warned
 
 def drop_all_tables():
     if not db.is_connection_usable:

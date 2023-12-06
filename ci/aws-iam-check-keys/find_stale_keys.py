@@ -69,23 +69,31 @@ def check_retention(warn_days, violation_days, key_date):
 
     return None
 
-def user_dict_for_user(report_user, reference_table, users_dict):
+def find_known_user(report_user, all_users_dict):
     """
-    Return the row from the reference table for the given user type
-    to be used for validating thresholds for the key rotation date timeframes
+    Return the row from the users list matching the report user if it exists, this will
+    be used for validating thresholds for the key rotation date timeframes
     """
 
     user_dict = {}
-    print(f'users_dict are: {users_dict}\nreport user is: {report_user}')
-    if report_user in list(users_dict):
-        user_dict = users_dict[report_user]
-        for dict in reference_table:
-            print(f'ref table dict: {dict}')
-            if dict['account_type'] == user_dict['account_type']:
-                user_dict = dict
-    else:
-        # track unknown users here eventually
-        print(f'User {report_user} was not found')
+    #print(f'all_users_dict are: {all_users_dict}\nreport user is: {report_user}')
+    print(f'report user is: {report_user}')
+    for an_user_dict in all_users_dict:
+        if an_user_dict['name'] == report_user:
+            user_dict = an_user_dict
+            break
+    if user_dict == {}:
+        print(f'User {report_user} not found')
+
+    # if report_user in list(users_dict):
+    #     user_dict = all_users_dict[report_user]
+    #     for dict in reference_table:
+    #         print(f'ref table dict: {dict}')
+    #         if dict['account_type'] == user_dict['account_type']:
+    #             user_dict = dict
+    # else:
+    #     # track unknown users here eventually
+    #     print(f'User {report_user} was not found')
 
     # print(f'report_user: {report_user} user_dict is {user_dict}')
     return user_dict
@@ -120,13 +128,13 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
             events = iam_user.events
             found_event = event_exists(events, access_key_num)
             print(f'found_event: {found_event}')
+            event_type, _ = Event_Type.insert_event_type(alert_type)
+
             if not found_event: 
                 # since we don't have an event for this key already, create a new one
                 # and create an alert to send to prometheus and add it to the list of alerts
-                warn_event, _ = Event_Type.insert_event_type(alert_type)
-                event = Event.new_event_type_user(warn_event,iam_user, access_key_num)
-
                 # some debug code to verify keys being used
+                event = Event.new_event_type_user(event_type,iam_user, access_key_num)
                 alert += 1
                 if access_key_num == 1:
                     key1 += 1
@@ -140,8 +148,8 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
                 event.alert_sent = False
                 event.save()
             else:
-                # found, so let's update a count
-                found_event.found_count += 1
+                # found, so let's update the type
+                found_event.set_event_type(event_type)
                 found_event.save()
         elif alert_type == None:
             for event in iam_user['events']:
@@ -177,22 +185,18 @@ def check_user_thresholds(user_thresholds, report_row):
     warn_days = user_thresholds['warn']
     violation_days = user_thresholds['violation']
 
-    if user_thresholds['warn'] == "" or user_thresholds['violation'] == "":
-        warn_days = "60"
-        violation_days = "90"
+    if warn_days == 0 or violation_days == 0:
+        warn_days = os.getenv("WARN_DAYS")
+        violation_days = os.getenv("VIOLATION_DAYS")
     # alert = user_thresholds['alert']
     # check_access_keys(report_row, alert, warn_days, violation_days)
     check_access_keys(report_row, warn_days, violation_days)
 
-def search_for_keys(region_name, profile, reference_table, system_users, tf_users):
+def search_for_keys(region_name, profile, all_users):
     """
     The main search function that reaches out to AWS IAM to grab the credentials report and read in csv
     First let's get a session based on the user access key so we can get all of the users for a given account
     """
-
-    # combine the system users (gov or com) with the platform users from the state file
-    known_users_dict = system_users+tf_users
-    # add in the manual_users as well, once we have them
 
     # Grab a session to AWS via the Python boto3 lib
     session = boto3.Session(region_name=region_name, aws_access_key_id=profile['id'], aws_secret_access_key=profile['secret'])
@@ -222,8 +226,8 @@ def search_for_keys(region_name, profile, reference_table, system_users, tf_user
     not_found = []
     for row in csv_reader:
         user_name = row["user"]
-        #print(f'system_users: {system_users}\nuser_name: {user_name}\n reference_table: {reference_table}\nknown_users_dict:{known_users_dict}')
-        user_dict = user_dict_for_user(user_name, reference_table, known_users_dict)
+        #print(f'system_users: {system_users}\nuser_name: {user_name}\n reference_table: {reference_table}\nall_users_dict:{allusers_dict}')
+        user_dict = find_known_user(user_name, all_users)
         print(f'user_dict: {user_dict}')
         if len(user_dict) <= 0:
             not_found.append(user_name)
@@ -304,15 +308,16 @@ def load_reference_data(csv_file_name):
         print(f'OSError: {csv_file_name} not found or is in incorrect format')
     return reference_table
 
-def format_user_dicts(users_list):
+def format_user_dicts(users_list, thresholds):
     new_dict = {}
     user_list = []
     for key in users_list:
-        new_dict = {"user":key, "account_type":"Operators"}
-        user_list.append(new_dict)
+        found_threshold = [dict for dict in thresholds if dict['account_type'] == "Operators"]
+        found_threshold["user"] = key
+        user_list.append(found_threshold)
     return user_list
 
-def load_system_users(com_filename, gov_filename):
+def load_system_users(com_filename, gov_filename, thresholds):
     # Schema for gov or com users after pull out the "users" dict
     # {"user.name":{'aws_groups': ['Operators', 'OrgAdmins']}}
     # translated to:
@@ -322,25 +327,40 @@ def load_system_users(com_filename, gov_filename):
     com_users_list = list(yaml.safe_load(com_file)["users"])
     gov_users_list = list(yaml.safe_load(gov_file)["users"])
     #print(f'com_users_list: {com_users_list}\ngov_users_list:{gov_users_list}\n')
-    com_users_list = format_user_dicts(com_users_list)
-    gov_users_list = format_user_dicts(gov_users_list)
+    com_users_list = format_user_dicts(com_users_list, thresholds)
+    gov_users_list = format_user_dicts(gov_users_list, thresholds)
 
     return (com_users_list, gov_users_list)
 
-def load_tf_users(tf_filename):
+def load_tf_users(tf_filename, thresholds):
     # Schema for tf_users - need to verify this is correct
-    # [{"user":user_name, "account_type":"Platform"}] - note Platform is hardcoded for now
+    # {user:user_name, account_type:"Platform", is_wildcard: False, alert: True, warn: 165, violation: 180}  
+    # Note that all values are hardcoded except the user name
+
     tf_users = []
     tf_dict = {}
     tf_file = open(tf_filename)
     tf_yaml = yaml.safe_load(tf_file)
-    for key in list(tf_yaml['terraform_outputs']) :
+    for key in list(tf_yaml['terraform_outputs']):
+        print(f'tf key is: {key}')
         if "username" in key:
             #if key not in tf_users:
-            tf_dict["user"] = key # = {"user":key, "account_type":"Platform"}
-            tf_dict["account_type"] = "Platform"
-            tf_users.append(tf_dict)
+            # , "is_wildcard": False, "alert": True, "warn": 75, "violation": 90 }
+            found_threshold = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
+            found_threshold["user"] = key
+            tf_users.append(found_threshold)
     return tf_users
+
+def load_other_users(other_users_filename):
+    # Schema for other_users is
+    # {user: user_name, account_type:account_type, is_wildcard: True|False, alert: True|False, warn: warn, violation: violation}
+    # Note that all values are hardcoded except the user name
+
+    other_users = []
+    other_users_file = open(other_users_filename)
+    other_users_yaml = yaml.safe_load(other_users_file)
+
+    return other_users_yaml
 
 def main():
     """
@@ -354,14 +374,17 @@ def main():
     com_users_filename = os.path.join("../../../",args[2])
     gov_users_filename = os.path.join("../../../",args[3])
     tf_state_filename = os.path.join("../../../",args[4]+"/state.yml")
-    # manual_users = os.path.join("../../../",args[5])
+    other_users_filename = os.path.join("../../../",args[5])
+    thresholds_filename = os.path.join("../../thresholds.yml")
 
     # AWS regions
     com_region = "us-east-1"
     gov_region = "us-gov-west-1"
 
-    (com_users_list, gov_users_list) = load_system_users(com_users_filename, gov_users_filename)
-    tf_users = load_tf_users(tf_state_filename)
+    thresholds = load_thresholds(thresholds_filename)
+    (com_users_list, gov_users_list) = load_system_users(com_users_filename, gov_users_filename, thresholds)
+    tf_users = load_tf_users(tf_state_filename, thresholds)
+    other_users = load_other_users(other_users_filename)
 
     #print(f'com_users: {com_users_list}\ngov_users: {gov_users_list}\ntf_users: {tf_users}')
 
@@ -376,22 +399,23 @@ def main():
         keys_db_models.create_tables()
 
     # pipeline will pull in resource for the csv file so it's local
-    reference_table = load_reference_data("seed_thresholds.csv")
+    #reference_table = load_reference_data("seed_thresholds.csv")
 
-    if len(reference_table) > 0:
-        # load state files into dicts to be searched
-        (com_state_dict, gov_state_dict) = load_profiles(com_state_file, gov_state_file)
+    #if len(reference_table) > 0:
+    # load state files into dicts to be searched
+    (com_state_dict, gov_state_dict) = load_profiles(com_state_file, gov_state_file)
 
-        for com_key in com_state_dict:
-            print(f'searching profile {com_key}')
-            search_for_keys(com_region, com_state_dict[com_key], reference_table, com_users_list, tf_users)
+    for com_key in com_state_dict:
+        print(f'searching profile {com_key}')
+        all_com_users = com_users_list + tf_users + other_users
+        search_for_keys(com_region, com_state_dict[com_key], all_com_users)
 
-        # now gov
-        for gov_key in gov_state_dict:
-            print(f'searching profile {gov_key}')
-            search_for_keys(gov_region, gov_state_dict[gov_key], reference_table, gov_users_list, tf_users)
-    else:
-        print("thresholds didn't load, please fix this and try again")
+    for gov_key in gov_state_dict:
+        print(f'searching profile {gov_key}')
+        all_gov_users = gov_users_list + tf_users + other_users
+        search_for_keys(gov_region, gov_state_dict[gov_key], all_gov_users)
+    #else:
+    #    print("thresholds didn't load, please fix this and try again")
 
     et_cpu_time = time.process_time()
     et = time.time()
