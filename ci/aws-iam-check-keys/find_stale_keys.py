@@ -180,7 +180,7 @@ def check_user_thresholds(user_thresholds, report_row):
     """
     Grab the thresholds from the reference table and pass them on with the row from the credentials report to be used for checking the keys
     """
-    print(f'thresholds: {user_thresholds}')
+    #print(f'thresholds: {user_thresholds}')
     warn_days = user_thresholds['warn']
     violation_days = user_thresholds['violation']
 
@@ -227,7 +227,7 @@ def search_for_keys(region_name, profile, all_users):
         user_name = row["user"]
         #print(f'system_users: {system_users}\nuser_name: {user_name}\n reference_table: {reference_table}\nall_users_dict:{allusers_dict}')
         user_dict = find_known_user(user_name, all_users)
-        print(f'user_dict: {user_dict}')
+        #print(f'user_dict: {user_dict}')
         if len(user_dict) <= 0:
             not_found.append(user_name)
         else:
@@ -311,7 +311,7 @@ def format_user_dicts(users_list, thresholds):
     new_dict = {}
     user_list = []
     for key in users_list:
-        print(f'thresholds: {thresholds}')
+        #print(f'thresholds: {thresholds}')
         found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Operators"]
         if len(found_thresholds) > 0:
             found_threshold = found_thresholds[0]
@@ -351,7 +351,7 @@ def load_tf_users(tf_filename, thresholds):
             found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
             if len(found_thresholds) > 0:
                 found_threshold = found_thresholds[0]
-                print(f"key: {key} threshold: {found_threshold}")
+                #print(f"key: {key} threshold: {found_threshold}")
                 found_threshold["user"] = key
             tf_users.append(found_threshold)
     return tf_users
