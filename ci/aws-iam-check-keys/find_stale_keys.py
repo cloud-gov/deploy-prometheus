@@ -348,6 +348,7 @@ def load_tf_users(tf_filename, thresholds):
         if "username" in key:
             #if key not in tf_users:
             # , "is_wildcard": False, "alert": True, "warn": 75, "violation": 90 }
+            print("thresholds: {thresholds}")
             found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
             if len(found_thresholds) > 0:
                 found_threshold = found_thresholds[0]
