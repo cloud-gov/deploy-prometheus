@@ -128,7 +128,7 @@ class Event(BaseModel):
     event_type = ForeignKeyField(Event_Type, backref='events')
     access_key_num = IntegerField()
     cleared = BooleanField()
-    cleared_date = DateTimeField()
+    cleared_date = DateTimeField(null=True)
     alert_sent = BooleanField()
     created_at = DateTimeField()
     access_key_num = IntegerField()
@@ -136,7 +136,7 @@ class Event(BaseModel):
 
     @classmethod
     def new_event_type_user(cls, event_type, user, access_key_num):
-        event = Event.create(user=user, access_key_num=access_key_num, event_type=event_type, created_at=date.today())
+        event = Event.create(user=user, event_type=event_type, cleared=False, alert_sent=False, created_at=date.today(), access_key_num=access_key_num)
         return event
 
     @classmethod
@@ -145,6 +145,11 @@ class Event(BaseModel):
         if event_type.event_type_name == "warn":
             is_warned = True
         return is_warned
+
+    @classmethod
+    def set_event_type(cls, new_event_type_name):
+       new_event_type = Event_Type.get(event_type_name == new_event_type_name)
+       event_type = new_event_type
 
 def drop_all_tables():
     if not db.is_connection_usable:
@@ -159,6 +164,7 @@ def create_tables():
     with db:
         drop_all_tables()
         db.create_tables([IAM_Keys, Event_Type, Event])
+    # Set up event types here!
 
 
 def connect():
