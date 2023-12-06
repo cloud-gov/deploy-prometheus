@@ -77,7 +77,7 @@ def find_known_user(report_user, all_users_dict):
 
     user_dict = {}
     for an_user_dict in all_users_dict:
-        if an_user_dict['user'] == report_user:
+        if an_user_dict["is_wildcard"] and report_user in an_user_dict['user'] or ran_user_dict['user'] == report_user:
             user_dict = an_user_dict
             break
     if user_dict == {}:
@@ -98,7 +98,7 @@ def event_exists(events, access_key_num):
             break
     return foundEvent
 
-def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, warn_days, violation_days):
+def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, warn_days, violation_days, alert):
     """
     Is the key expired or about to be? Let's warn the user and record some metrics to send to Prometheus
     """
@@ -145,10 +145,11 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
                 # working first
                 event.alert_sent = True
                 event.save()
-                print(f'stale_key_num 1 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
-                prometheus_alerts += f'stale_key_num 1 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n'
+                if alert:
+                    print(f'stale_key_num 1 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
+                    prometheus_alerts += f'stale_key_num 1 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n'
 
-def check_access_keys(user_row, warn_days, violation_days):
+def check_access_keys(user_row, warn_days, violation_days, alert):
     """
     Validate key staleness for both access keys, provided they exist, for a given user
     """
@@ -158,10 +159,10 @@ def check_access_keys(user_row, warn_days, violation_days):
     last_rotated_key2 = user_row['access_key_2_last_rotated']
 
     if (last_rotated_key1 != 'N/A' ):
-        check_retention_for_key(last_rotated_key1, 1, user_row, warn_days, violation_days)
+        check_retention_for_key(last_rotated_key1, 1, user_row, warn_days, violation_days, alert)
 
     if (last_rotated_key2 != 'N/A' ):
-        check_retention_for_key(last_rotated_key2, 2, user_row, warn_days, violation_days)
+        check_retention_for_key(last_rotated_key2, 2, user_row, warn_days, violation_days, alert)
 
 def check_user_thresholds(user_thresholds, report_row):
     """
@@ -169,11 +170,12 @@ def check_user_thresholds(user_thresholds, report_row):
     """
     warn_days = user_thresholds['warn']
     violation_days = user_thresholds['violation']
+    alert = user_thresholds['alert']
 
     if warn_days == 0 or violation_days == 0:
         warn_days = os.getenv("WARN_DAYS")
         violation_days = os.getenv("VIOLATION_DAYS")
-    check_access_keys(report_row, warn_days, violation_days)
+    check_access_keys(report_row, warn_days, violation_days, alert)
 
 def search_for_keys(region_name, profile, all_users):
     """
@@ -275,19 +277,6 @@ def load_profiles(com_state_file, gov_state_file):
     com_state_dict = state_file_to_dict(all_outputs_com)
     gov_state_dict = state_file_to_dict(all_outputs_gov)
     return(com_state_dict, gov_state_dict)
-
-# def load_reference_data(csv_file_name):
-#     """
-#     Load the reference table into an array of dictionaries
-#     """
-#     reference_table = []
-#     try:
-#         with open(csv_file_name) as data:
-#             for r in csv.DictReader(data):
-#                 reference_table.append(r)
-#     except OSError:
-#         print(f'OSError: {csv_file_name} not found or is in incorrect format')
-#     return reference_table
 
 def format_user_dicts(users_list, thresholds):
     """
