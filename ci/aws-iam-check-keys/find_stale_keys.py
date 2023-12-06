@@ -79,7 +79,7 @@ def find_known_user(report_user, all_users_dict):
     print(f'all_users_dict are: {all_users_dict}\nreport user is: {report_user}')
     #print(f'report user is: {report_user}')
     for an_user_dict in all_users_dict:
-        if an_user_dict['name'] == report_user:
+        if an_user_dict['user'] == report_user:
             user_dict = an_user_dict
             break
     if user_dict == {}:
