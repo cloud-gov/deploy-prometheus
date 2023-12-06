@@ -76,9 +76,11 @@ def user_dict_for_user(report_user, reference_table, users_dict):
     """
 
     user_dict = {}
+    print(f'users_dict are: {users_dict}\nreport user is: {report_user}')
     if report_user in list(users_dict):
         user_dict = users_dict[report_user]
         for dict in reference_table:
+            print(f'ref table dict: {dict}')
             if dict['account_type'] == user_dict['account_type']:
                 user_dict = dict
     else:
@@ -222,6 +224,7 @@ def search_for_keys(region_name, profile, reference_table, system_users, tf_user
         user_name = row["user"]
         #print(f'system_users: {system_users}\nuser_name: {user_name}\n reference_table: {reference_table}\nknown_users_dict:{known_users_dict}')
         user_dict = user_dict_for_user(user_name, reference_table, known_users_dict)
+        print(f'user_dict: {user_dict}')
         if len(user_dict) <= 0:
             not_found.append(user_name)
         else:
