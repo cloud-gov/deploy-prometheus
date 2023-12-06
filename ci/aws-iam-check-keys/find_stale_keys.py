@@ -111,11 +111,13 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
         alert_type = check_retention(warn_days, violation_days, access_key_last_rotated)
         iam_user = IAM_Keys.user_from_dict(user_row)
 
+        print(f'alert_type: {alert_type}')
         # check that we have a stale key of some kind
         if (alert_type):
             # verify we don't already have an alert!
             events = iam_user.events
             found_event = event_exists(events, access_key_num)
+            print(f'found_event: {found_event}')
             if not found_event: 
                 # since we don't have an event for this key already, create a new one
                 # and create an alert to send to prometheus and add it to the list of alerts
