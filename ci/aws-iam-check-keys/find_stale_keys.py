@@ -107,9 +107,9 @@ def event_exists(events, access_key_num):
     foundEvent = None
     for event in events:
         if (event['access_key_num'] == access_key_num):
-            found = event
+            foundEvent = event
             break
-    return found
+    return foundEvent
 
 def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, warn_days, violation_days):
     """
