@@ -356,11 +356,15 @@ def load_other_users(other_users_filename):
     # {user: user_name, account_type:account_type, is_wildcard: True|False, alert: True|False, warn: warn, violation: violation}
     # Note that all values are hardcoded except the user name
 
-    other_users = []
     other_users_file = open(other_users_filename)
     other_users_yaml = yaml.safe_load(other_users_file)
 
     return other_users_yaml
+
+def load_thresholds(filename):
+    thresholds_file = open(filename)
+    thresholds_yaml = yaml.safe_load_all(thresholds_file)
+    return thresholds_yaml
 
 def main():
     """
