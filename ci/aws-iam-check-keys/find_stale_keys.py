@@ -135,7 +135,6 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
                 # and create an alert to send to prometheus and add it to the list of alerts
                 # some debug code to verify keys being used
                 event = Event.new_event_type_user(event_type,iam_user, access_key_num)
-                alert += 1
                 if access_key_num == 1:
                     key1 += 1
                 elif access_key_num == 2:
