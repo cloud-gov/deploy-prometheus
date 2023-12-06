@@ -151,7 +151,7 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
                 found_event.set_event_type(event_type)
                 found_event.save()
         elif alert_type == None:
-            for event in iam_user['events']:
+            for event in iam_user.events:
                 event.cleared = True
                 event.cleared_date = date.now()
                 # I really don't like this and want to move it somewhere else but lets get it
