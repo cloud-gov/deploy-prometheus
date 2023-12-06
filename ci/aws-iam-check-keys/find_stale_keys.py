@@ -85,7 +85,7 @@ def user_dict_for_user(report_user, reference_table, users_dict):
         # track unknown users here eventually
         print(f'User {report_user} was not found')
 
-    print(f'report_user: {report_user} user_dict is {user_dict}')
+    # print(f'report_user: {report_user} user_dict is {user_dict}')
     return user_dict
 
 def event_exists(events, access_key_num):
@@ -121,7 +121,6 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
                 # and create an alert to send to prometheus and add it to the list of alerts
                 warn_event, _ = Event_Type.insert_event_type(alert_type)
                 event = Event.new_event_type_user(warn_event,iam_user, access_key_num)
-                print("an alert will go out")
 
                 # some debug code to verify keys being used
                 alert += 1
@@ -219,7 +218,7 @@ def search_for_keys(region_name, profile, reference_table, system_users, tf_user
     not_found = []
     for row in csv_reader:
         user_name = row["user"]
-        print(f'system_users: {system_users}\nuser_name: {user_name}\n reference_table: {reference_table}\nknown_users_dict:{known_users_dict}')
+        #print(f'system_users: {system_users}\nuser_name: {user_name}\n reference_table: {reference_table}\nknown_users_dict:{known_users_dict}')
         user_dict = user_dict_for_user(user_name, reference_table, known_users_dict)
         if len(user_dict) <= 0:
             not_found.append(user_name)
@@ -317,7 +316,7 @@ def load_system_users(com_filename, gov_filename):
     gov_file = open(gov_filename)
     com_users_list = list(yaml.safe_load(com_file)["users"])
     gov_users_list = list(yaml.safe_load(gov_file)["users"])
-    print(f'com_users_list: {com_users_list}\ngov_users_list:{gov_users_list}\n')
+    #print(f'com_users_list: {com_users_list}\ngov_users_list:{gov_users_list}\n')
     com_users_list = format_user_dicts(com_users_list)
     gov_users_list = format_user_dicts(gov_users_list)
 
@@ -359,7 +358,7 @@ def main():
     (com_users_list, gov_users_list) = load_system_users(com_users_filename, gov_users_filename)
     tf_users = load_tf_users(tf_state_filename)
 
-    print(f'com_users: {com_users_list}\ngov_users: {gov_users_list}\ntf_users: {tf_users}')
+    #print(f'com_users: {com_users_list}\ngov_users: {gov_users_list}\ntf_users: {tf_users}')
 
     # timing metrics for testing, not sure if they'll be useful later
     st_cpu_time = time.process_time()
