@@ -379,7 +379,7 @@ def main():
     gov_users_filename = os.path.join("../../../",args[3])
     tf_state_filename = os.path.join("../../../",args[4]+"/state.yml")
     other_users_filename = os.path.join("../../../",args[5])
-    thresholds_filename = os.path.join("../../thresholds.yml")
+    thresholds_filename = os.path.join("../../../prometheus-config/ci/aws-iam-check-keys/thresholds.yml")
 
     # AWS regions
     com_region = "us-east-1"
