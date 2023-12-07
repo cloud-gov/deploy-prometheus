@@ -76,7 +76,7 @@ def find_known_user(report_user, all_users_dict):
 
     user_dict = {}
     for an_user_dict in all_users_dict:
-        if (an_user_dict["is_wildcard"] == True and report_user in an_user_dict['user']) or an_user_dict['user'] == report_user:
+        if (an_user_dict["is_wildcard"] == True and an_user_dict['user'] in report_user) or an_user_dict['user'] == report_user:
             user_dict = an_user_dict
             break
     if user_dict == {}:
@@ -376,27 +376,16 @@ def main():
         print("creating tables...")
         keys_db_models.create_tables()
 
-    # pipeline will pull in resource for the csv file so it's local
-    #reference_table = load_reference_data("seed_thresholds.csv")
-
-    #if len(reference_table) > 0:
-    # load state files into dicts to be searched
     (com_state_dict, gov_state_dict) = load_profiles(com_state_file, gov_state_file)
 
     for com_key in com_state_dict:
         print(f'searching profile {com_key}')
         all_com_users = com_users_list + tf_users + other_users
         search_for_keys(com_region, com_state_dict[com_key], all_com_users)
-    i = 1
     for gov_key in gov_state_dict:
         print(f'searching profile {gov_key}')
         all_gov_users = gov_users_list + tf_users + other_users
-        if i == 1:
-            print(all_gov_users)
-            i += 1
         search_for_keys(gov_region, gov_state_dict[gov_key], all_gov_users)
-    #else:
-    #    print("thresholds didn't load, please fix this and try again")
 
     et_cpu_time = time.process_time()
     et = time.time()
