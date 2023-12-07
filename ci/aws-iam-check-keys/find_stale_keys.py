@@ -323,10 +323,10 @@ def load_tf_users(tf_filename, thresholds):
     for key in list(tf_yaml['terraform_outputs']):
         if "username" in key:
             found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
-            if not found_thresholds:
+            if found_thresholds:
                 found_threshold = found_thresholds[0]
                 found_threshold["user"] = key
-            tf_users.append(found_threshold)
+                tf_users.append(found_threshold)
     return tf_users
 
 def load_other_users(other_users_filename):
