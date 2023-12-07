@@ -403,9 +403,11 @@ def main():
 
 
 if __name__ == "__main__":
+    
     if not ("GATEWAY_HOST") in os.environ:
         print("GATEWAY_HOST is required.")
         sys.exit(1)
+    main()
     prometheus_url = os.getenv("GATEWAY_HOST") + ":" + os.getenv(
         "GATEWAY_PORT", "9091") + "/metrics/job/find_stale_keys"
 
@@ -418,6 +420,5 @@ if __name__ == "__main__":
     # until they are cleared, they increment for number of alerts. the alert sent is True
     # when they are zeroed out
 
-    main()
 
 
