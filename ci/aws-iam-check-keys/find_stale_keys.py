@@ -92,7 +92,7 @@ def event_exists(events, access_key_num):
     """
     foundEvent = None
     for event in events:
-        if (event['access_key_num'] == access_key_num):
+        if (event.access_key_num == access_key_num):
             foundEvent = event
             break
     return foundEvent
