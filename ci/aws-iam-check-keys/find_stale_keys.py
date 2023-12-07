@@ -76,10 +76,10 @@ def find_known_user(report_user, all_users_dict):
 
     user_dict = {}
     for an_user_dict in all_users_dict:
-        if (an_user_dict["is_wildcard"] == True and an_user_dict['user'] in report_user) or an_user_dict['user'] == report_user:
+        if an_user_dict['user'] in report_user:
             user_dict = an_user_dict
             break
-    if user_dict == {}:
+    if not user_dict:
         print(f'User {report_user} not found')
 
     return user_dict
@@ -128,8 +128,10 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
 
                 # create the alert for prometheus (print out for debug purposes)
                 # since this is new the alert_sent is set to false. Once an alert is cleared it will be set to true
+                time_stamp = time.time()
+                # stale_key_num {user="cg-broker-***", alert_type="violation", key="1", last_rotated="2022-12-21T163027+0000"} 1
                 print(f'stale_key_num 1 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
-                prometheus_alerts += f'stale_key_num 1 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n'
+                prometheus_alerts += f'stale_key_num {{ User={user_row["user"]}, alert_type={alert_type}, key={access_key_num}, last_rotated={access_key_last_rotated}}} 1\n'
                 event.alert_sent = False
                 event.save()
             else:
@@ -138,6 +140,8 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
                 new_event_type = Event_Type.get(Event_Type.event_type_name == event_type)
                 found_event.event_type = new_event_type
                 found_event.save()
+                prometheus_alerts += f'stale_key_num {{ User={user_row["user"]}, alert_type={alert_type}, key={access_key_num}, last_rotated={access_key_last_rotated}}} 0\n'
+
         elif alert_type == None:
             for event in iam_user.events:
                 event.cleared = True
@@ -148,7 +152,7 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
                 event.save()
                 if alert:
                     print(f'stale_key_num 1 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
-                    prometheus_alerts += f'stale_key_num 1 User: {user_row["user"]} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n'
+                    prometheus_alerts += f'stale_key_num {{ User={user_row["user"]}, alert_type={alert_type}, key={access_key_num}, last_rotated={access_key_last_rotated}}} 1\n'
 
 def check_access_keys(user_row, warn_days, violation_days, alert):
     """
@@ -214,7 +218,7 @@ def search_for_keys(region_name, profile, all_users):
         user_name = row["user"]
         user_dict = find_known_user(user_name, all_users)
         #print(f'user_dict: {user_dict}')
-        if len(user_dict) <= 0:
+        if not user_dict:
             not_found.append(user_name)
         else:
             check_user_thresholds(user_dict, row)
@@ -287,7 +291,7 @@ def format_user_dicts(users_list, thresholds):
     user_list = []
     for key in users_list:
         found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Operators"]
-        if len(found_thresholds) > 0:
+        if found_thresholds:
             found_threshold = found_thresholds[0]
             found_threshold["user"] = key
             user_list.append(found_threshold)
@@ -319,7 +323,7 @@ def load_tf_users(tf_filename, thresholds):
     for key in list(tf_yaml['terraform_outputs']):
         if "username" in key:
             found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
-            if len(found_thresholds) > 0:
+            if not found_thresholds:
                 found_threshold = found_thresholds[0]
                 found_threshold["user"] = key
             tf_users.append(found_threshold)
