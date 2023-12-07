@@ -411,7 +411,7 @@ if __name__ == "__main__":
         print("GATEWAY_HOST is required.")
         sys.exit(1)
     main()
-    prometheus_url = os.getenv("GATEWAY_HOST") + ":" + os.getenv("GATEWAY_PORT", "9091") + "/metrics/job/find_stale_keys"
+    prometheus_url = "http://"+os.getenv("GATEWAY_HOST") + ":" + os.getenv("GATEWAY_PORT", "9091") + "/metrics/job/find_stale_keys"
 
     res = requests.put(url=prometheus_url,
                        data=prometheus_alerts)
