@@ -403,17 +403,15 @@ def main():
 
 
 if __name__ == "__main__":
-    
     if not ("GATEWAY_HOST") in os.environ:
         print("GATEWAY_HOST is required.")
         sys.exit(1)
     main()
-    prometheus_url = os.getenv("GATEWAY_HOST") + ":" + os.getenv(
-        "GATEWAY_PORT", "9091") + "/metrics/job/find_stale_keys"
+    prometheus_url = os.getenv("GATEWAY_HOST") + ":" + os.getenv("GATEWAY_PORT", "9091") + "/metrics/job/find_stale_keys"
 
     res = requests.put(url=prometheus_url,
-                       data=prometheus_alerts,
-                       headers={'Content-Type': 'application/octet-stream'})
+                       data=prometheus_alerts)
+                       #headers={'Content-Type': 'application/octet-stream'})
     res.raise_for_status()
 
     #cleared should get zeroed out in database for events after sent to prometheus
