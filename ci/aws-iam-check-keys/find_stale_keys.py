@@ -66,7 +66,6 @@ def check_retention(warn_days, violation_days, key_date):
         return "violation"
     if key_date + timedelta(days=int(warn_days)) <= datetime.now():
         return "warning"
-
     return None
 
 def find_known_user(report_user, all_users_dict):
@@ -136,6 +135,8 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
             else:
                 # found, so let's update the type
                 found_event.set_event_type(event_type)
+                new_event_type = Event_Type.get(Event_Type.event_type_name == event_type)
+                found_event.event_type = new_event_type
                 found_event.save()
         elif alert_type == None:
             for event in iam_user.events:
