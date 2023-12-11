@@ -43,7 +43,7 @@
     name: aws-iam-check-keys
     rules:
     - alert: AWSIAMCheckKeys
-      expr: stale_key_num > 1
+      expr: stale_key_num > 0
       labels:
         service: aws-iam
         severity: warning
