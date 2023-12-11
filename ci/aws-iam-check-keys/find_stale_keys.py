@@ -415,7 +415,7 @@ if __name__ == "__main__":
     prometheus_url = "http://"+os.getenv("GATEWAY_HOST") + ":" + os.getenv("GATEWAY_PORT", "9091") + "/metrics/job/find_stale_keys"
 
     res = requests.put(url=prometheus_url,
-                       data=prometheus_alerts,
+                       data=prometheus_alerts.sort(),
                        headers={'Content-Type': 'application/octet-stream'})
     res.raise_for_status()
 
