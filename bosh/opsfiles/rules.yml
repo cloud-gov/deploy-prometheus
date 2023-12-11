@@ -36,6 +36,21 @@
         summary: AWS RDS {{$labels.instance}} has used 88% or greater disk space
         description: Email the organization administrator for {{$labels.instance}} to inquire about provisioning a larger database.
 
+# AWS IAM Stale Key alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: aws-iam-check-keys
+    rules:
+    - alert: AWSIAMCheckKeys
+      expr: stale_key_num > 1
+      labels:
+        service: aws-iam
+        severity: warning
+      annotations:
+        summary: AWS IAM user {{$labels.user}} has stale IAM Key(s)
+        description: Look up the procedures for rotating the access keys
+
 # CloudWatch logs alerts
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
