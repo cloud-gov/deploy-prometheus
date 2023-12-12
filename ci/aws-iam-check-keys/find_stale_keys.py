@@ -131,17 +131,19 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
                 # since this is new the alert_sent is set to false. Once an alert is cleared it will be set to true
                 time_stamp = time.time()
                 # stale_key_num {user="cg-broker-***", alert_type="violation", key="1", last_rotated="2022-12-21T163027+0000"} 1
-                print(f'stale_key_num 1 User: {user_row["user"]}-{scrubbed_arn} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
-                prometheus_alerts += f'stale_key_num {{user=\"{user_row["user"]}-{scrubbed_arn}\", alert_type=\"{alert_type}\", key=\"{access_key_num}\", last_rotated=\"{access_key_last_rotated}\"}} 1\n'
-                event.alert_sent = False
-                event.save()
+                if alert:
+                    print(f'stale_key_num 1 User: {user_row["user"]}-{scrubbed_arn} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
+                    prometheus_alerts += f'stale_key_num {{user=\"{user_row["user"]}-{scrubbed_arn}\", alert_type=\"{alert_type}\", key=\"{access_key_num}\", last_rotated=\"{access_key_last_rotated}\"}} 1\n'
+                    event.alert_sent = False
+                    event.save()
             else:
                 # found, so let's update the type
                 found_event.set_event_type(event_type)
                 new_event_type = Event_Type.get(Event_Type.event_type_name == event_type)
                 found_event.event_type = new_event_type
                 found_event.save()
-                prometheus_alerts += f'stale_key_num {{user=\"{user_row["user"]}-{scrubbed_arn}\", alert_type=\"{alert_type}\", key=\"{access_key_num}\", last_rotated=\"{access_key_last_rotated}\"}} 0\n'
+                if alert:
+                    prometheus_alerts += f'stale_key_num {{user=\"{user_row["user"]}-{scrubbed_arn}\", alert_type=\"{alert_type}\", key=\"{access_key_num}\", last_rotated=\"{access_key_last_rotated}\"}} 0\n'
 
         elif alert_type == None:
             for event in iam_user.events:
