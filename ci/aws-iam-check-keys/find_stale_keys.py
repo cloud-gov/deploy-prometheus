@@ -288,7 +288,7 @@ def load_profiles(com_state_file, gov_state_file):
     gov_state_dict = state_file_to_dict(all_outputs_gov)
     return(com_state_dict, gov_state_dict)
 
-def format_user_dicts(users_list, thresholds):
+def format_user_dicts(users_list, thresholds, account_type):
     """
     Augment the users list to have the threshold information.
     """
@@ -296,24 +296,12 @@ def format_user_dicts(users_list, thresholds):
     user_list = []
     for key in users_list:
         print(f'key: {key} in users_list:{users_list}')
-        found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Operator"]
+        found_thresholds = [dict for dict in thresholds if dict['account_type'] == account_type]
         if found_thresholds:
             found_threshold = copy(found_thresholds[0])
             found_threshold["user"] = key
             user_list.append(found_threshold)
     return user_list
-
-# def load_system_users(com_filename, gov_filename, thresholds):
-#     # Schema for gov or com users after pull out the "users" dict
-#     # {"user.name":{'aws_groups': ['Operators', 'OrgAdmins']}}
-#     # translated to:
-#     # {"user":user_name, "account_type":"Operators"} - note Operators is hardcoded for now
-#     com_file = open(com_filename)
-#     gov_file = open(gov_filename)
-#     com_users_list = list(yaml.safe_load(com_file)["users"])
-#     gov_users_list = list(yaml.safe_load(gov_file)["users"])
-#     com_users_list = format_user_dicts(com_users_list, thresholds)
-#     gov_users_list = format_user_dicts(gov_users_list, thresholds)
 
 #     return (com_users_list, gov_users_list)
 def load_system_users(filename, thresholds):
@@ -323,7 +311,7 @@ def load_system_users(filename, thresholds):
     # {"user":user_name, "account_type":"Operators"} - note Operators is hardcoded for now
     file = open(filename)
     users_list = list(yaml.safe_load(file)["users"])
-    users_list = format_user_dicts(users_list, thresholds)
+    users_list = format_user_dicts(users_list, thresholds, "Operator")
     return users_list
 
 
@@ -333,16 +321,9 @@ def load_tf_users(tf_filename, thresholds):
     # Note that all values are hardcoded except the user name
 
     tf_users = []
-    tf_dict = {}
     tf_file = open(tf_filename)
     tf_yaml = yaml.safe_load(tf_file)
-    for key in list(tf_yaml['terraform_outputs']):
-        if "username" in key:
-            found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
-            if found_thresholds:
-                found_threshold = found_thresholds[0]
-                found_threshold["user"] = key
-                tf_users.append(found_threshold)
+    tf_users = format_user_dicts(list(tf_yaml['terraform_outputs'],thresholds, "Platform"))
     return tf_users
 
 def load_other_users(other_users_filename):
