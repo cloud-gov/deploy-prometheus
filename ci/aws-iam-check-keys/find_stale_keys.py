@@ -326,7 +326,7 @@ def load_tf_users(tf_filename, thresholds):
         if "username" in key:
             found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
             if found_thresholds:
-                found_threshold = found_thresholds[0]
+                found_threshold = copy(found_thresholds[0])
                 found_threshold["user"] = key
                 tf_users.append(found_threshold)
     return tf_users
