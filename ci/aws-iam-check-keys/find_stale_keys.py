@@ -149,7 +149,7 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
         elif alert_type == None:
             for event in iam_user.events:
                 event.cleared = True
-                event.cleared_date = date.now()
+                event.cleared_date = datetime.now()
                 # I really don't like this and want to move it somewhere else but lets get it
                 # working first
                 event.alert_sent = True
