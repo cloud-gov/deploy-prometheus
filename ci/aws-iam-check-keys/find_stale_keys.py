@@ -323,7 +323,7 @@ def load_tf_users(tf_filename, thresholds):
     tf_users = []
     tf_file = open(tf_filename)
     tf_yaml = yaml.safe_load(tf_file)
-    tf_users = format_user_dicts(list(tf_yaml['terraform_outputs'],thresholds, "Platform"))
+    tf_users = format_user_dicts(list(tf_yaml['terraform_outputs']),thresholds, "Platform")
     return tf_users
 
 def load_other_users(other_users_filename):
