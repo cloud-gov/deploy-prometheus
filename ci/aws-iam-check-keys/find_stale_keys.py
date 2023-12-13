@@ -3,6 +3,7 @@
 import json
 import requests
 import boto3
+from copy import copy
 import csv
 from datetime import date, timedelta, datetime
 from dateutil.parser import parse
@@ -81,7 +82,6 @@ def find_known_user(report_user, all_users_dict):
             break
     if not user_dict:
         print(f'User {report_user} not found')
-
     return user_dict
 
 def event_exists(events, access_key_num):
@@ -294,26 +294,37 @@ def format_user_dicts(users_list, thresholds):
     new_dict = {}
     user_list = []
     for key in users_list:
+        print(f'key: {key} in users_list:{users_list}')
         found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Operator"]
         if found_thresholds:
-            found_threshold = found_thresholds[0]
+            found_threshold = copy(found_thresholds[0])
             found_threshold["user"] = key
             user_list.append(found_threshold)
     return user_list
 
-def load_system_users(com_filename, gov_filename, thresholds):
+# def load_system_users(com_filename, gov_filename, thresholds):
+#     # Schema for gov or com users after pull out the "users" dict
+#     # {"user.name":{'aws_groups': ['Operators', 'OrgAdmins']}}
+#     # translated to:
+#     # {"user":user_name, "account_type":"Operators"} - note Operators is hardcoded for now
+#     com_file = open(com_filename)
+#     gov_file = open(gov_filename)
+#     com_users_list = list(yaml.safe_load(com_file)["users"])
+#     gov_users_list = list(yaml.safe_load(gov_file)["users"])
+#     com_users_list = format_user_dicts(com_users_list, thresholds)
+#     gov_users_list = format_user_dicts(gov_users_list, thresholds)
+
+#     return (com_users_list, gov_users_list)
+def load_system_users(filename, thresholds):
     # Schema for gov or com users after pull out the "users" dict
     # {"user.name":{'aws_groups': ['Operators', 'OrgAdmins']}}
     # translated to:
     # {"user":user_name, "account_type":"Operators"} - note Operators is hardcoded for now
-    com_file = open(com_filename)
-    gov_file = open(gov_filename)
-    com_users_list = list(yaml.safe_load(com_file)["users"])
-    gov_users_list = list(yaml.safe_load(gov_file)["users"])
-    com_users_list = format_user_dicts(com_users_list, thresholds)
-    gov_users_list = format_user_dicts(gov_users_list, thresholds)
+    file = open(filename)
+    users_list = list(yaml.safe_load(file)["users"])
+    users_list = format_user_dicts(users_list, thresholds)
+    return users_list
 
-    return (com_users_list, gov_users_list)
 
 def load_tf_users(tf_filename, thresholds):
     # Schema for tf_users - need to verify this is correct
@@ -370,7 +381,8 @@ def main():
     gov_region = "us-gov-west-1"
 
     thresholds = load_thresholds(thresholds_filename)
-    (com_users_list, gov_users_list) = load_system_users(com_users_filename, gov_users_filename, thresholds)
+    com_users_list = load_system_users(com_users_filename, thresholds)
+    gov_users_list = load_system_users(gov_users_filename, thresholds)
     tf_users = load_tf_users(tf_state_filename, thresholds)
     other_users = load_other_users(other_users_filename)
 
