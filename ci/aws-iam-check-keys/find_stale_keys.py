@@ -319,15 +319,15 @@ def load_tf_users(tf_filename, thresholds):
     # Note that all values are hardcoded except the user name
 
     tf_users = []
-    tf_dict = {}
     tf_file = open(tf_filename)
     tf_yaml = yaml.safe_load(tf_file)
-    for key in list(tf_yaml['terraform_outputs']):
+    outputs = tf_yaml['terraform_outputs']
+    for key in list(outputs):
         if "username" in key:
             found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
             if found_thresholds:
                 found_threshold = copy(found_thresholds[0])
-                found_threshold["user"] = key
+                found_threshold["user"] = outputs[key]
                 tf_users.append(found_threshold)
     return tf_users
 
