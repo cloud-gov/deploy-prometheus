@@ -295,7 +295,6 @@ def format_user_dicts(users_list, thresholds, account_type):
     new_dict = {}
     user_list = []
     for key in users_list:
-        print(f'key: {key} in users_list:{users_list}')
         found_thresholds = [dict for dict in thresholds if dict['account_type'] == account_type]
         if found_thresholds:
             found_threshold = copy(found_thresholds[0])
@@ -303,7 +302,6 @@ def format_user_dicts(users_list, thresholds, account_type):
             user_list.append(found_threshold)
     return user_list
 
-#     return (com_users_list, gov_users_list)
 def load_system_users(filename, thresholds):
     # Schema for gov or com users after pull out the "users" dict
     # {"user.name":{'aws_groups': ['Operators', 'OrgAdmins']}}
@@ -321,9 +319,16 @@ def load_tf_users(tf_filename, thresholds):
     # Note that all values are hardcoded except the user name
 
     tf_users = []
+    tf_dict = {}
     tf_file = open(tf_filename)
     tf_yaml = yaml.safe_load(tf_file)
-    tf_users = format_user_dicts(list(tf_yaml['terraform_outputs']),thresholds, "Platform")
+    for key in list(tf_yaml['terraform_outputs']):
+        if "username" in key:
+            found_thresholds = [dict for dict in thresholds if dict['account_type'] == "Platform"] 
+            if found_thresholds:
+                found_threshold = found_thresholds[0]
+                found_threshold["user"] = key
+                tf_users.append(found_threshold)
     return tf_users
 
 def load_other_users(other_users_filename):
