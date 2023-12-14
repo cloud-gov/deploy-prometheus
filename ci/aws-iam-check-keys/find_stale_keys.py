@@ -83,7 +83,6 @@ def find_known_user(report_user, all_users_dict):
             user_dict = an_user_dict
             break
     if not user_dict:
-        print(f'User {report_user} not found')
         not_found.append(report_user)
     return user_dict
 
