@@ -71,17 +71,21 @@ def event_exists(events, access_key_num):
 def add_event_to_db(user, alert_type, access_key_num):
     event_type = Event_Type.insert_event_type(alert_type)
     event = Event.new_event_type_user(event_type, user, access_key_num)
+    print(f'user: {user.iam_user} event_type: {event_type.event_type_name} key: {access_key_num}\n')
     event.cleared = False
     event.alert_sent = False
+    event.save()
 
 
 def update_event(event, alert_type):
     if alert_type:
         event_type = Event_Type.insert_event_type(alert_type)
+        print(f'user: {event.user.iam_user} event_type: {event_type.event_type_name}\n')
         event.event_type = event_type
         event.cleared = False
         event.save()
     else:
+        print(f'user: {event.user.iam_user} no event type\n')
         event.cleared = True
         event.cleared_date = datetime.now()
         event.save()
