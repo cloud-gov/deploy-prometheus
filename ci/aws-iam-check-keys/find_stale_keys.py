@@ -21,6 +21,7 @@ import yaml
 key1 = 0
 key2 = 0
 prometheus_alerts = ""
+not_found = []
 
 
 """
@@ -74,6 +75,7 @@ def find_known_user(report_user, all_users_dict):
     Return the row from the users list matching the report user if it exists, this will
     be used for validating thresholds for the key rotation date timeframes
     """
+    global not_found
 
     user_dict = {}
     for an_user_dict in all_users_dict:
@@ -82,6 +84,7 @@ def find_known_user(report_user, all_users_dict):
             break
     if not user_dict:
         print(f'User {report_user} not found')
+        not_found.append(report_user)
     return user_dict
 
 def event_exists(events, access_key_num):
@@ -108,14 +111,12 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
         iam_user = IAM_Keys.user_from_dict(user_row)
         scrubbed_arn = user_row["arn"].split(':')[4][-4:]
 
-        print(f'alert_type: {alert_type}')
         # check that we have a stale key of some kind
 
         if (alert_type):
             # verify we don't already have an alert!
             events = iam_user.events
             found_event = event_exists(events, access_key_num)
-            print(f'found_event: {found_event}')
             event_type, _ = Event_Type.insert_event_type(alert_type)
 
             if not found_event: 
@@ -222,18 +223,11 @@ def search_for_keys(region_name, profile, all_users):
     for row in csv_reader:
         user_name = row["user"]
         user_dict = find_known_user(user_name, all_users)
-        #print(f'user_dict: {user_dict}')
         if not user_dict:
             not_found.append(user_name)
         else:
             check_user_thresholds(user_dict, row)
 
-    # the not found users could be another Prometheus metric, and could be covered here
-    # or as it is in user_dict_for_user() function
-    #for user in not_found:
-        #print(user[0:8])
-    #    None
-    # prometheus can receive file with 0, 1 or more
 
 def state_file_to_dict(all_outputs):
     # Convert the production state file to a dict 
@@ -386,11 +380,9 @@ def main():
     (com_state_dict, gov_state_dict) = load_profiles(com_state_file, gov_state_file)
 
     for com_key in com_state_dict:
-        print(f'searching profile {com_key}')
         all_com_users = com_users_list + tf_users + other_users
         search_for_keys(com_region, com_state_dict[com_key], all_com_users)
     for gov_key in gov_state_dict:
-        print(f'searching profile {gov_key}')
         all_gov_users = gov_users_list + tf_users + other_users
         search_for_keys(gov_region, gov_state_dict[gov_key], all_gov_users)
 
@@ -404,8 +396,8 @@ def main():
     # get the execution time
     elapsed_time = et - st
     print('Execution time:', elapsed_time, 'seconds')
-    print(f'key1: {key1}')
-    print(f'key2: {key2}')
+    # print(f'not found: \n{not_found}')
+    # _ = [print(x[]) for x in not_found]
     print(f'warnings\n{prometheus_alerts}')
 
 
