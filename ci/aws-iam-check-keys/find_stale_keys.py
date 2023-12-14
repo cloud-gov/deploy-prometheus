@@ -157,7 +157,7 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row, w
                 event.save()
                 if alert:
                     print(f'stale_key_num 1 User: {user_row["user"]}-{scrubbed_arn} has an alert of type {alert_type} as the key number {access_key_num} was last rotated: {access_key_last_rotated}\n')
-                    prometheus_alerts += f'stale_key_num {{\"user={user_row["user"]}-{scrubbed_arn}\", alert_type=\"{alert_type}\", key=\"{access_key_num}\", last_rotated=\"{access_key_last_rotated}\"}} 1\n'
+                    prometheus_alerts += f'stale_key_num {{\"user={user_row["user"]}-{scrubbed_arn}\", alert_type=\"{alert_type}\", key=\"{access_key_num}\", last_rotated=\"{access_key_last_rotated}\"}} 0\n'
 
 def check_access_keys(user_row, warn_days, violation_days, alert):
     """
