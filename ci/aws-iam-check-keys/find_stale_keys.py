@@ -105,6 +105,7 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
             if found_event:
                 update_event(found_event, alert_type)
             elif alert:
+                print(f'about to add: user: {iam_user.iam_user}, alert_type:{alert_type} key:{access_key_num}\n')
                 add_event_to_db(iam_user, alert_type, access_key_num)
 
 
