@@ -69,7 +69,7 @@ def event_exists(events, access_key_num):
 
 
 def add_event_to_db(user, alert_type, access_key_num):
-    print(f'user: {user.iam_user} event_type: {alert_type} key: {access_key_num}\n')
+    print(f'user: {user.iam_user} event_type: {alert_type} key: {access_key_num} type:{type(access_key_num)}\n')
     event_type = Event_Type.insert_event_type(alert_type)
     event = Event.new_event_type_user(event_type, user, access_key_num)
     print(f'user: {user.iam_user} event_type: {event_type.event_type_name} key: {access_key_num} type:{type(access_key_num)}\n')
