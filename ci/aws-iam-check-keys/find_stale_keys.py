@@ -15,10 +15,6 @@ import os
 import sys
 import time
 import yaml
-import logging
-logger = logging.getLogger('peewee')
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
 
 # Debug stuff
 key1 = 0
@@ -74,7 +70,7 @@ def event_exists(events, access_key_num):
 
 def add_event_to_db(user, alert_type, access_key_num):
     print(f'user: {user.iam_user} event_type: {alert_type} key: {access_key_num} type:{type(access_key_num)}\n')
-    event_type = Event_Type.insert_event_type(alert_type)
+    event_type, _ = Event_Type.insert_event_type(alert_type)
     event = Event.new_event_type_user(event_type, user, access_key_num)
     print(f'user: {user.iam_user} event_type: {event_type.event_type_name} key: {access_key_num} type:{type(access_key_num)}\n')
     event.cleared = False
