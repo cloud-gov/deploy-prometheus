@@ -159,7 +159,6 @@ class Event(BaseModel):
     cleared_date = DateTimeField(null=True)
     alert_sent = BooleanField()
     created_at = DateTimeField()
-    access_key_num = IntegerField()
 
     @classmethod
     def new_event_type_user(cls, event_type, user, access_key_num):

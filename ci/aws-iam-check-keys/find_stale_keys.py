@@ -23,7 +23,7 @@ prometheus_alerts = ""
 not_found = []
 
 
-def check_retention(warn_days, violation_days, key_date):
+def check_retention( warn_days, violation_days, key_date):
     """
     Returns True when keys was last rotated more than :days: ago by returning a
     warning type or None
@@ -72,7 +72,7 @@ def add_event_to_db(user, alert_type, access_key_num):
     print(f'user: {user.iam_user} event_type: {alert_type} key: {access_key_num}\n')
     event_type = Event_Type.insert_event_type(alert_type)
     event = Event.new_event_type_user(event_type, user, access_key_num)
-    print(f'user: {user.iam_user} event_type: {event_type.event_type_name} key: {access_key_num}\n')
+    print(f'user: {user.iam_user} event_type: {event_type.event_type_name} key: {access_key_num} type:{type(access_key_num)}\n')
     event.cleared = False
     event.alert_sent = False
     event.save()
@@ -124,8 +124,9 @@ def send_alerts(cleared, events):
         last_rotated=\"{access_key_last_rotated}\"}} {cleared_int}\n'
         event.cleared = False if cleared_int else True
         print(f'alert: {alert}\n')
-        prometheus_url = "http://"+os.getenv("GATEWAY_HOST") + ":" +\
-            os.getenv("GATEWAY_PORT", "9091") + "/metrics/job/find_stale_keys"
+        # prometheus_url = "http://"+os.getenv("GATEWAY_HOST") + ":" +\
+        #     os.getenv("GATEWAY_PORT", "9091") + "/metrics/job/find_stale_keys"
+        prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         res = requests.put(url=prometheus_url,
                            data=alert,
                            headers={'Content-Type': 'application/octet-stream'}
