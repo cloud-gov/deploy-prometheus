@@ -121,9 +121,9 @@ def send_alerts(cleared, events):
         last_rotated=\"{access_key_last_rotated}\"}} {cleared_int}\n'
         event.cleared = False if cleared_int else True
         print(f'alert: {alert}\n')
-        # prometheus_url = "http://"+os.getenv("GATEWAY_HOST") + ":" +\
-        #     os.getenv("GATEWAY_PORT", "9091") + "/metrics/job/find_stale_keys"
-        prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
+        prometheus_url = "http://"+os.getenv("GATEWAY_HOST") + ":" +\
+            os.getenv("GATEWAY_PORT", "9091") + "/metrics/job/find_stale_keys"
+        #prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         print(f'url is: {prometheus_url}')
         res = requests.put(url=prometheus_url,
                            data=alert,
