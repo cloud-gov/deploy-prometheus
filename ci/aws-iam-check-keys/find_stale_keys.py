@@ -15,10 +15,6 @@ import os
 import sys
 import time
 import yaml
-import logging
-logger = logging.getLogger('peewee')
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
 
 # Debug stuff
 key1 = 0
