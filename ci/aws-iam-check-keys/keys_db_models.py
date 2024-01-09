@@ -174,12 +174,12 @@ class Event(BaseModel):
 
     @classmethod
     def all_cleared_events(cls):
-        events = Event.get(Event.cleared is True)
+        events = Event.select().where(Event.cleared == True)
         return events
 
     @classmethod
     def all_uncleared_events(cls):
-        events = Event.get(Event.cleared is False)
+        events = Event.select().where(Event.cleared == False)
         return events
 
 
