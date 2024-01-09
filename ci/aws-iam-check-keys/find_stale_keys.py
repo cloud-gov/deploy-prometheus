@@ -109,6 +109,7 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
 
 
 def send_alerts(cleared, events):
+    formatted_events = []
     for event in events:
         user = event.user
         alert_type = event.event_type.event_type_name
@@ -116,7 +117,7 @@ def send_alerts(cleared, events):
         scrubbed_arn = user.arn.split(':')[4][-4:]
         cleared_int = 0 if cleared else 1
         access_key_last_rotated = user.access_key_1_last_rotated if access_key_num == 1 else user.access_key_2_last_rotated
-        alert = f'stale_key_num {{user=\"{user.iam_user}-{scrubbed_arn}\",\
+        alert = f'stale_key_num{{user=\"{user.iam_user}-{scrubbed_arn}\",\
         alert_type=\"{alert_type}\", key=\"{access_key_num}\",\
         last_rotated=\"{access_key_last_rotated}\"}} {cleared_int}\n'
         event.cleared = False if cleared_int else True
