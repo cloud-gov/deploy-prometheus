@@ -124,8 +124,8 @@ def send_alerts(cleared, events):
         event.cleared = False if cleared_int else True
         # print(f'alert: {alert}\n')
         # alerts.append(alert)
-        print(f'alert: {alert}\n')
         if "4750" not in scrubbed_arn:
+            print(f'alert: {alert}\n')
             prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
             res = requests.put(url=prometheus_url,
                                 data=alert,
