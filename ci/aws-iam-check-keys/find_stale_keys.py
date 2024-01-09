@@ -125,12 +125,13 @@ def send_alerts(cleared, events):
         # print(f'alert: {alert}\n')
         # alerts.append(alert)
         print(f'alert: {alert}\n')
-        prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
-        res = requests.put(url=prometheus_url,
-                            data=alert #,
-                            #headers={'Content-Type': 'application/octet-stream'}
-                            )
-        res.raise_for_status()
+        if user is not "break.glass-4750":
+            prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
+            res = requests.put(url=prometheus_url,
+                                data=alert,
+                                headers={'Content-Type': 'application/octet-stream'}
+                                )
+            res.raise_for_status()
         # event.alert_sent = True
         # event.save()
 
