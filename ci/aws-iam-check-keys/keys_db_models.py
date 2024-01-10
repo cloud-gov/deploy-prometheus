@@ -162,7 +162,6 @@ class Event(BaseModel):
 
     @classmethod
     def new_event_type_user(cls, event_type, user, access_key_num):
-        print(f'In data model: user: {user} event_type: {event_type} key: {access_key_num} type:{type(access_key_num)}\n')
         event = Event.create(user=user, event_type=event_type, cleared=False,
                              alert_sent=False, created_at=date.today(),
                              access_key_num=access_key_num)
