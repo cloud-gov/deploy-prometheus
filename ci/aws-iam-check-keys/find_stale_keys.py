@@ -27,7 +27,6 @@ key1 = 0
 key2 = 0
 prometheus_alerts = ""
 not_found = []
-db = None
 
 def check_retention( warn_days, violation_days, key_date):
     """
@@ -114,8 +113,7 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
                 add_event_to_db(iam_user, alert_type, access_key_num)
 
 
-def send_alerts(cleared, events):
-    global db
+def send_alerts(cleared, events, db):
     with db.atomic() as transaction:
         for event in events:
             alerts = ""
@@ -142,9 +140,8 @@ def send_alerts(cleared, events):
                             data=alerts,
                             headers={'Content-Type': 'application/octet-stream'}
                             )
-        print(f'res is: {res}')
         print(res.raise_for_status())
-        print(f'json response: {res.json()}')
+        print(f'json: {res.json()}')
         if res.status_code == 200:
             transaction.commit()
         else:
@@ -152,11 +149,11 @@ def send_alerts(cleared, events):
             transaction.rollback()
 
 
-def send_all_alerts():
+def send_all_alerts(db):
     cleared_events = Event.all_cleared_events()
-    send_alerts(True, cleared_events)
+    send_alerts(True, cleared_events, db)
     uncleared_events = Event.all_uncleared_events()
-    send_alerts(False, uncleared_events)
+    send_alerts(False, uncleared_events, db)
 
 def check_access_keys(user_row, warn_days, violation_days, alert):
     """
@@ -368,7 +365,6 @@ def main():
     The main function that creates tables, loads the csv for the reference
     table and kicks off the search for stale keys
     """
-
     # grab the state files, user files and outputs from cg-provision from the
     # s3 resources
     args = sys.argv[1:]
@@ -425,7 +421,7 @@ def main():
     # print(f'not found: \n{not_found}')
     # _ = [print(x[]) for x in not_found]
     # print(f'warnings\n{prometheus_alerts}')
-    send_all_alerts()
+    send_all_alerts(db)
 
 
 if __name__ == "__main__":
