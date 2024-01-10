@@ -115,18 +115,19 @@ def send_alerts(cleared, events):
         alert_type = event.event_type.event_type_name
         access_key_num = event.access_key_num
         scrubbed_arn = user.arn.split(':')[4][-4:]
-        cleared_int = 1 if cleared else 0
+        cleared_int = 0 if cleared else 1
         access_key_last_rotated = user.access_key_1_last_rotated if access_key_num == 1 else user.access_key_2_last_rotated
         
         alert = f'stale_key_num{{user=\"{user.iam_user}-{scrubbed_arn}\",\
         alert_type=\"{alert_type}\", key=\"{access_key_num}\",\
         last_rotated=\"{access_key_last_rotated}\"}} {cleared_int}\n'
         
-        event.cleared = True if cleared_int else False
+        event.cleared = True if cleared else False
         # print(f'alert: {alert}\n')
         # alerts.append(alert)
         print(f'alert: {alert}\n')
         prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
+        print(f'url is: {prometheus_url}')
         res = requests.put(url=prometheus_url,
                             data=alert,
                             headers={'Content-Type': 'application/octet-stream'}
