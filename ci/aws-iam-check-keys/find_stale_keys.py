@@ -15,6 +15,12 @@ import os
 import sys
 import time
 import yaml
+import logging
+
+from http.client import  HTTPConnection
+HTTPConnection.debuglevel = 1
+log = logging.getLogger('urllib3')
+log.setLevel(logging.DEBUG)
 
 # Debug stuff
 key1 = 0
