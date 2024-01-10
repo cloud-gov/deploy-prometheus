@@ -133,8 +133,10 @@ def send_alerts(cleared, events):
                             )
         print(f'res is: {res}')
         res.raise_for_status()
-        # event.alert_sent = True
-        # event.save()
+        if res.status_code == 200:
+            print(f'res.status_code is 200, reason: {res.reason}')
+            # event.alert_sent = True
+            # event.save()
 
 
 def send_all_alerts():
