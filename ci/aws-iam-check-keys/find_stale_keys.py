@@ -141,7 +141,6 @@ def send_alerts(cleared, events, db):
                             headers={'Content-Type': 'application/octet-stream'}
                             )
         print(res.raise_for_status())
-        print(f'json: {res.json()}')
         if res.status_code == 200:
             transaction.commit()
         else:
