@@ -114,9 +114,9 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
 
 
 def send_alerts(cleared, events, db):
+    alerts = ""
     with db.atomic() as transaction:
         for event in events:
-            alerts = ""
             # set up the attributes to be sent to prometheus
             user = event.user
             alert_type = event.event_type.event_type_name
@@ -145,7 +145,7 @@ def send_alerts(cleared, events, db):
         if res.status_code == 200:
             transaction.commit()
         else:
-            print(f'alert! Metrics failed to record! See Logs status_code: {res.status_code} reason: {res.reason}')
+            print(f'Warning! Metrics failed to record! See Logs status_code: {res.status_code} reason: {res.reason}')
             transaction.rollback()
 
 
