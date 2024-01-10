@@ -115,7 +115,7 @@ def send_alerts(cleared, events):
         alert_type = event.event_type.event_type_name
         access_key_num = event.access_key_num
         scrubbed_arn = user.arn.split(':')[4][-4:]
-        cleared_int = 0 if cleared else 1
+        cleared_int = 1 if cleared else 0
         access_key_last_rotated = user.access_key_1_last_rotated if access_key_num == 1 else user.access_key_2_last_rotated
         
         alert = f'stale_key_num{{user=\"{user.iam_user}-{scrubbed_arn}\",\
