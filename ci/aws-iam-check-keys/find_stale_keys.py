@@ -110,28 +110,28 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
 
 def send_alerts(cleared, events):
     for event in events:
+        alert = ""
         user = event.user
         alert_type = event.event_type.event_type_name
         access_key_num = event.access_key_num
         scrubbed_arn = user.arn.split(':')[4][-4:]
-        cleared_int = 0 if cleared else 1
+        cleared_int = 1 if cleared else 0
         access_key_last_rotated = user.access_key_1_last_rotated if access_key_num == 1 else user.access_key_2_last_rotated
         
         alert = f'stale_key_num{{user=\"{user.iam_user}-{scrubbed_arn}\",\
         alert_type=\"{alert_type}\", key=\"{access_key_num}\",\
         last_rotated=\"{access_key_last_rotated}\"}} {cleared_int}\n'
         
-        event.cleared = False if cleared_int else True
+        event.cleared = True if cleared_int else False
         # print(f'alert: {alert}\n')
         # alerts.append(alert)
-        if "4750" not in scrubbed_arn:
-            print(f'alert: {alert}\n')
-            prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
-            res = requests.put(url=prometheus_url,
-                                data=alert,
-                                headers={'Content-Type': 'application/octet-stream'}
-                                )
-            res.raise_for_status()
+        print(f'alert: {alert}\n')
+        prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
+        res = requests.put(url=prometheus_url,
+                            data=alert,
+                            headers={'Content-Type': 'application/octet-stream'}
+                            )
+        res.raise_for_status()
         # event.alert_sent = True
         # event.save()
 
