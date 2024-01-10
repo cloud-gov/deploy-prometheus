@@ -27,7 +27,7 @@ key1 = 0
 key2 = 0
 prometheus_alerts = ""
 not_found = []
-
+db = None
 
 def check_retention( warn_days, violation_days, key_date):
     """
@@ -115,34 +115,41 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
 
 
 def send_alerts(cleared, events):
-    for event in events:
-        alert = ""
-        user = event.user
-        alert_type = event.event_type.event_type_name
-        access_key_num = event.access_key_num
-        scrubbed_arn = user.arn.split(':')[4][-4:]
-        cleared_int = 0 if cleared else 1
-        access_key_last_rotated = user.access_key_1_last_rotated if access_key_num == 1 else user.access_key_2_last_rotated
-        
-        alert = f'stale_key_num{{user=\"{user.iam_user}-{scrubbed_arn}\",\
-        alert_type=\"{alert_type}\", key=\"{access_key_num}\",\
-        last_rotated=\"{access_key_last_rotated}\"}} {cleared_int}\n'
-        
-        event.cleared = True if cleared else False
-        # print(f'alert: {alert}\n')
-        # alerts.append(alert)
-        print(f'alert: {alert}\n')
+    global db
+    with db.atomic() as transaction:
+        for event in events:
+            alerts = ""
+            # set up the attributes to be sent to prometheus
+            user = event.user
+            alert_type = event.event_type.event_type_name
+            access_key_num = event.access_key_num
+            scrubbed_arn = user.arn.split(':')[4][-4:]
+            cleared_int = 0 if cleared else 1
+            access_key_last_rotated = user.access_key_1_last_rotated if access_key_num == 1 else user.access_key_2_last_rotated
+            
+            # append the alert to the string of alerts to be sent to prometheus via the pushgateway
+            alerts += f'stale_key_num{{user=\"{user.iam_user}-{scrubbed_arn}\",\
+            alert_type=\"{alert_type}\", key=\"{access_key_num}\",\
+            last_rotated=\"{access_key_last_rotated}\"}} {cleared_int}\n'
+            
+            # Set the cleared and alert_sent attributes in the database, subject to the metric making it through the gateway
+            event.cleared = True if cleared else False
+            event.alert_sent = True
+            event.save()
+        print(f'alerts: {alerts}\n')
         prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         res = requests.put(url=prometheus_url,
-                            data=alert,
+                            data=alerts,
                             headers={'Content-Type': 'application/octet-stream'}
                             )
         print(f'res is: {res}')
-        res.raise_for_status()
+        print(res.raise_for_status())
+        print(f'json response: {res.json()}')
         if res.status_code == 200:
-            print(f'res.status_code is 200, text: {res.text}')
-            # event.alert_sent = True
-            # event.save()
+            transaction.commit()
+        else:
+            print(f'alert! Metrics failed to record! See Logs status_code: {res.status_code} reason: {res.reason}')
+            transaction.rollback()
 
 
 def send_all_alerts():
@@ -150,95 +157,6 @@ def send_all_alerts():
     send_alerts(True, cleared_events)
     uncleared_events = Event.all_uncleared_events()
     send_alerts(False, uncleared_events)
-
-
-def check_retention_for_key_bak(access_key_last_rotated, access_key_num, user_row,
-                            warn_days, violation_days, alert):
-    """
-    Is the key expired or about to be? Let's warn the user and record
-    some metrics to send to Prometheus
-    """
-    global prometheus_alerts, key1, key2
-
-    if (access_key_last_rotated != 'N/A'):
-        alert_type = check_retention(warn_days, violation_days,
-                                     access_key_last_rotated)
-        iam_user = IAM_Keys.user_from_dict(user_row)
-        scrubbed_arn = user_row["arn"].split(':')[4][-4:]
-
-        # check that we have a stale key of some kind
-        if (alert_type):
-            # verify we don't already have an alert!
-            events = iam_user.events
-            found_event = event_exists(events, access_key_num)
-            event_type, _ = Event_Type.insert_event_type(alert_type)
-
-            if not found_event:
-                # since we don't have an event for this key already, create
-                # a new one and create an alert to send to prometheus and
-                # add it to the list of alerts some debug code to verify
-                # keys being used
-                event = Event.new_event_type_user(event_type,
-                                                  iam_user, access_key_num)
-                if access_key_num == 1:
-                    key1 += 1
-                elif access_key_num == 2:
-                    key2 += 1
-
-                # create alert for prometheus (print out for debug purposes)
-                # since this is new the alert_sent is set to false. Once an
-                # alert is cleared it will be set to true stale_key_num
-                # {user="cg-broker-***", alert_type="violation", key="1",
-                #     last_rotated="2022-12-21T163027+0000"} 1
-
-                if alert:
-                    print(f'stale_key_num 1 User: {user_row["user"]}-\
-                      {scrubbed_arn} has an alert of type {alert_type} as the\
-                      key number {access_key_num} was last rotated:\
-                      {access_key_last_rotated}\n')
-
-                    prometheus_alerts += f'stale_key_num {{user=\"\
-                    {user_row["user"]}-{scrubbed_arn}\", \
-                    alert_type=\"{alert_type}\", key=\"{access_key_num}\", \
-                    last_rotated=\"{access_key_last_rotated}\"}} 1\n'
-                    event.alert_sent = True
-                    event.cleared = False
-                    event.save()
-
-            else:
-                # found, so let's update the type
-                found_event.set_event_type(event_type)
-                new_event_type = Event_Type.get(Event_Type.event_type_name ==
-                                                event_type)
-                found_event.event_type = new_event_type
-                found_event.alert_sent = True
-                found_event.cleared = False
-                found_event.save()
-                if alert:
-                    prometheus_alerts += f'stale_key_num {{user=\"\
-                    {user_row["user"]}-{scrubbed_arn}\", \
-                    alert_type=\"{alert_type}\", key=\"{access_key_num}\", \
-                    last_rotated=\"{access_key_last_rotated}\"}} 1\n'
-
-        elif alert_type is None:
-            for event in iam_user.events:
-                event.cleared = True
-                event.cleared_date = datetime.now()
-                # I really don't like this and want to move it somewhere else \
-                # but lets get it working first
-                event.alert_sent = True
-                event.save()
-                if alert:
-                    print(f'stale_key_num 1 User: {user_row["user"]}-\
-                    {scrubbed_arn} has an alert of type {alert_type} as the \
-                    key number {access_key_num} was last rotated: \
-                    {access_key_last_rotated} 0\n')
-
-                    prometheus_alerts += f'stale_key_num {{user=\"\
-                    {user_row["user"]}-{scrubbed_arn}\", \
-                    alert_type=\"{alert_type}\", key=\"{access_key_num}\", \
-                    last_rotated=\"{access_key_last_rotated}\"}} 0\n'
-
 
 def check_access_keys(user_row, warn_days, violation_days, alert):
     """
@@ -482,7 +400,7 @@ def main():
     # Flag to create the db tables for the first run or for debugging
     if create_tables_bool == "True":
         print("creating tables...")
-        keys_db_models.create_tables()
+        db = keys_db_models.create_tables()
 
     (com_state_dict, gov_state_dict) = load_profiles(com_state_file,
                                                      gov_state_file)

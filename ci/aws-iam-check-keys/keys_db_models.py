@@ -197,6 +197,7 @@ def create_tables():
         drop_all_tables()
         db.create_tables([IAM_Keys, Event_Type, Event])
     # Set up event types here!
+    return db
 
 
 def connect():
