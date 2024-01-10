@@ -127,8 +127,8 @@ def send_alerts(cleared, events, db):
             access_key_last_rotated = user.access_key_1_last_rotated if access_key_num == 1 else user.access_key_2_last_rotated
             
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
-            alerts += "stale_key_num{user=\""+user_string+"\", alert_type=\""+alert_type+"\", key=\""+access_key_num+"\",last_rotated=\""+\
-                access_key_last_rotated+"\"}"+cleared_int+"\n"
+            alerts += "stale_key_num{user=\""+user_string+"\", alert_type=\""+alert_type+"\", key=\""+str(access_key_num)+"\",last_rotated=\""+\
+                str(access_key_last_rotated)+"\"}"+str(cleared_int)+"\n"
             
             # Set the cleared and alert_sent attributes in the database, subject to the metric making it through the gateway
             event.cleared = True if cleared else False
