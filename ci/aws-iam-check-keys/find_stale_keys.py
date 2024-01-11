@@ -16,12 +16,6 @@ import sys
 import time
 import yaml
 
-# Debug stuff
-key1 = 0
-key2 = 0
-prometheus_alerts = ""
-not_found = []
-
 def check_retention( warn_days, violation_days, key_date):
     """
     Returns True when keys was last rotated more than :days: ago by returning a
@@ -41,7 +35,7 @@ def find_known_user(report_user, all_users_dict):
     Note that if is_wildcard is true, the search will be a fuzzy search otherwise the 
     search will be looking for an exact match.
     """
-    global not_found
+    not_found = []
     user_dict = {}
     for an_user_dict in all_users_dict:
         if an_user_dict['is_wildcard']:
@@ -54,7 +48,7 @@ def find_known_user(report_user, all_users_dict):
                 break
     if not user_dict:
         not_found.append(report_user)
-    return user_dict
+    return user_dict, not_found
 
 
 def event_exists(events, access_key_num):
@@ -73,7 +67,7 @@ def event_exists(events, access_key_num):
 
 
 def add_event_to_db(user, alert_type, access_key_num):
-    print(f'user: {user.iam_user} event_type: {alert_type} key: {access_key_num}\n')
+    print(f'add user: {user.iam_user} event_type: {alert_type} key: {access_key_num}\n')
     event_type, _ = Event_Type.insert_event_type(alert_type)
     event = Event.new_event_type_user(event_type, user, access_key_num)
     event.cleared = False
@@ -84,12 +78,12 @@ def add_event_to_db(user, alert_type, access_key_num):
 def update_event(event, alert_type):
     if alert_type:
         event_type = Event_Type.insert_event_type(alert_type)
-        print(f'user: {event.user.iam_user} event_type: {event_type.event_type_name}\n')
+        print(f'update user: {event.user.iam_user} event_type: {event_type.event_type_name}\n')
         event.event_type = event_type
         event.cleared = False
         event.save()
     else:
-        print(f'user: {event.user.iam_user} no event type\n')
+        print(f'update user: {event.user.iam_user} no event type\n')
         event.cleared = True
         event.cleared_date = datetime.now()
         event.save()
@@ -108,7 +102,6 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
             if found_event:
                 update_event(found_event, alert_type)
             elif alert:
-                print(f'about to add: user: {iam_user.iam_user}, alert_type:{alert_type} key:{access_key_num}\n')
                 add_event_to_db(iam_user, alert_type, access_key_num)
 
 
@@ -157,8 +150,6 @@ def check_access_keys(user_row, warn_days, violation_days, alert):
     Validate key staleness for both access keys, provided they exist, for a
     given user
     """
-    global key1, key2
-
     last_rotated_key1 = user_row['access_key_1_last_rotated']
     last_rotated_key2 = user_row['access_key_2_last_rotated']
 
@@ -220,7 +211,10 @@ def search_for_keys(region_name, profile, all_users):
     not_found = []
     for row in csv_reader:
         user_name = row["user"]
-        user_dict = find_known_user(user_name, all_users)
+        
+        # Note: second return value in tuple below is ignored for now
+        # When we want to do something with unknown users we can hook it up here
+        user_dict, _ = find_known_user(user_name, all_users)
         if not user_dict:
             not_found.append(user_name)
         else:
@@ -362,20 +356,7 @@ def main():
     """
     # grab the state files, user files and outputs from cg-provision from the
     # s3 resources
-    args = sys.argv[1:]
-    # ['terraform-prod-com-yml/state.yml', 'terraform-prod-gov-yml/state.yml', 'aws-admin/stacks/gov/sso/users.yaml', 
-    # 'aws-admin/stacks/com/sso/users.yaml', 'terraform-yaml-production', 'other-iam-users-yml']
-
     base_dir = "../../.."
-    # com_state_file = os.path.join(base_dir, args[0])
-    # gov_state_file = os.path.join(base_dir, args[1])
-    # com_users_filename = os.path.join(base_dir, args[2])
-    # gov_users_filename = os.path.join(base_dir, args[3])
-    # tf_state_filename = os.path.join(base_dir, args[4]+"/state.yml")
-    # other_users_filename = os.path.join(base_dir, args[5] +
-    #                                     "/other_iam_users.yml")
-    # thresholds_filename = os.path.join(base_dir,
-    #     "prometheus-config/ci/aws-iam-check-keys/thresholds.yml")
     
     com_state_file = os.path.join(base_dir, "terraform-prod-com-yml/state.yml")
     gov_state_file = os.path.join(base_dir, "terraform-prod-gov-yml/state.yml")
