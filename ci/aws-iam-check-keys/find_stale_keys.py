@@ -355,11 +355,6 @@ def load_thresholds(filename):
     thresholds_yaml = yaml.safe_load(thresholds_file)
     return thresholds_yaml
 
-def test_args(args_file):
-    file = open(args_file)
-    lines = file.readlines()
-    print(str(len(lines)))
-    
 def main():
     """
     The main function that creates tables, loads the csv for the reference
@@ -368,6 +363,7 @@ def main():
     # grab the state files, user files and outputs from cg-provision from the
     # s3 resources
     args = sys.argv[1:]
+    print(f'args are: {args}')
     com_state_file = os.path.join("../../../", args[0])
     gov_state_file = os.path.join("../../../", args[1])
     com_users_filename = os.path.join("../../../", args[2])
@@ -377,9 +373,6 @@ def main():
                                         "/other_iam_users.yml")
     thresholds_filename = os.path.join(
         "../../../prometheus-config/ci/aws-iam-check-keys/thresholds.yml")
-
-    test_args_file = "aws-admin/stacks/gov/sso/users.yaml"
-    test_args(test_args_file)
     
     # AWS regions
     com_region = "us-east-1"
