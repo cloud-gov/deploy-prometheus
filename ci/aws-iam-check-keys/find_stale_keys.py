@@ -38,11 +38,12 @@ def find_known_user(report_user, all_users_dict):
     """
     Return the row from the users list matching the report user if it exists,
     this will be used for validating thresholds for the key rotation date timeframes
+    Note that if is_wildcard is true, the search will be a fuzzy search otherwise the 
+    search will be looking for an exact match.
     """
     global not_found
     user_dict = {}
     for an_user_dict in all_users_dict:
-        print(f'is_wildcard: {an_user_dict["is_wildcard"]}')
         if an_user_dict['is_wildcard']:
             if an_user_dict['user'] in report_user:
                 user_dict = an_user_dict
