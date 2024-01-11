@@ -126,8 +126,6 @@ def send_alerts(cleared, events, db):
             access_key_last_rotated = user.access_key_1_last_rotated if access_key_num == 1 else user.access_key_2_last_rotated
             
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
-            # alerts += "stale_key_num{user=\""+user_string+"\", alert_type=\""+alert_type+"\", key=\""+str(access_key_num)+"\",last_rotated=\""+\
-            #     str(access_key_last_rotated)+"\"} "+str(cleared_int)+"\n"
             alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
             
             # Set the cleared and alert_sent attributes in the database, subject to the metric making it through the gateway
@@ -321,7 +319,6 @@ def load_tf_users(tf_filename, thresholds):
     #   violation: 180
     # }
     # Note that all values are hardcoded except the user name
-
     tf_users = []
     tf_file = open(tf_filename)
     tf_yaml = yaml.safe_load(tf_file)
@@ -358,7 +355,11 @@ def load_thresholds(filename):
     thresholds_yaml = yaml.safe_load(thresholds_file)
     return thresholds_yaml
 
-
+def test_args(args_file):
+    file = open(args_file)
+    lines = file.readlines()
+    print(str(len(lines)))
+    
 def main():
     """
     The main function that creates tables, loads the csv for the reference
@@ -377,6 +378,9 @@ def main():
     thresholds_filename = os.path.join(
         "../../../prometheus-config/ci/aws-iam-check-keys/thresholds.yml")
 
+    test_args_file = "aws-admin/stacks/gov/sso/users.yaml"
+    test_args(test_args_file)
+    
     # AWS regions
     com_region = "us-east-1"
     gov_region = "us-gov-west-1"
