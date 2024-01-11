@@ -34,19 +34,23 @@ def check_retention( warn_days, violation_days, key_date):
         return "warning"
     return None
 
-
 def find_known_user(report_user, all_users_dict):
     """
     Return the row from the users list matching the report user if it exists,
     this will be used for validating thresholds for the key rotation date timeframes
     """
     global not_found
-
     user_dict = {}
     for an_user_dict in all_users_dict:
-        if an_user_dict['user'] in report_user:
-            user_dict = an_user_dict
-            break
+        print(f'is_wildcard: {an_user_dict["is_wildcard"]}')
+        if an_user_dict['is_wildcard']:
+            if an_user_dict['user'] in report_user:
+                user_dict = an_user_dict
+                break
+        else:
+            if an_user_dict['user'] == report_user:
+                user_dict = an_user_dict
+                break
     if not user_dict:
         not_found.append(report_user)
     return user_dict
