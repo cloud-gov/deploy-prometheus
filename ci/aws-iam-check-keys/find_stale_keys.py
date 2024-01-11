@@ -115,8 +115,7 @@ def send_alerts(cleared, events, db):
             access_key_num = event.access_key_num
             scrubbed_arn = user.arn.split(':')[4][-4:]
             user_string = user.iam_user+"-"+scrubbed_arn
-            cleared_int = 0 
-            #if cleared else 1
+            cleared_int = 0 if cleared else 1
             access_key_last_rotated = user.access_key_1_last_rotated if access_key_num == 1 else user.access_key_2_last_rotated
             
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
