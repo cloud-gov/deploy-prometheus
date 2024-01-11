@@ -363,16 +363,18 @@ def main():
     # grab the state files, user files and outputs from cg-provision from the
     # s3 resources
     args = sys.argv[1:]
-    print(f'args are: {args}')
-    com_state_file = os.path.join("../../../", args[0])
-    gov_state_file = os.path.join("../../../", args[1])
-    com_users_filename = os.path.join("../../../", args[2])
-    gov_users_filename = os.path.join("../../../", args[3])
-    tf_state_filename = os.path.join("../../../", args[4]+"/state.yml")
-    other_users_filename = os.path.join("../../../", args[5] +
+    # ['terraform-prod-com-yml/state.yml', 'terraform-prod-gov-yml/state.yml', 'aws-admin/stacks/gov/sso/users.yaml', 'aws-admin/stacks/com/sso/users.yaml', 'terraform-yaml-production', 'other-iam-users-yml']
+
+    base_dir = "../../.."
+    com_state_file = os.path.join(base_dir, args[0])
+    gov_state_file = os.path.join(base_dir, args[1])
+    com_users_filename = os.path.join(base_dir, args[2])
+    gov_users_filename = os.path.join(base_dir, args[3])
+    tf_state_filename = os.path.join(base_dir, args[4]+"/state.yml")
+    other_users_filename = os.path.join(base_dir, args[5] +
                                         "/other_iam_users.yml")
-    thresholds_filename = os.path.join(
-        "../../../prometheus-config/ci/aws-iam-check-keys/thresholds.yml")
+    thresholds_filename = os.path.join(base_dir,
+        "prometheus-config/ci/aws-iam-check-keys/thresholds.yml")
     
     # AWS regions
     com_region = "us-east-1"
