@@ -180,25 +180,38 @@ class Event(BaseModel):
 
 def drop_all_tables():
     if not db.is_connection_usable:
-        db.connect()
+        db.connect(reuse_if_open=True)
     with db:
         db.drop_tables([IAM_Keys, Event_Type, Event])
 
 
-def create_tables():
+def create_tables_debug():
     """
     Convenience for creating the tables, can be dropped in favor of sql scripts
     if preferred
     NOTE: This is destructive! The tables all get dropped before it's created!
 
     """
-    db.connect()  # can check if this is True to go on
+    db.connect(reuse_if_open=True)  # can check if this is True to go on
     with db:
         drop_all_tables()
         db.create_tables([IAM_Keys, Event_Type, Event])
-    # Set up event types here!
+
     return db
 
+def create_tables():
+    db.connect(reuse_if_open=True)
+    tables_created = False
+    for table in db.get_tables():
+        if db.table_exists(table):
+            tables_created = True
+        else:
+            tables_created = False
+            
+    if not tables_created:
+        db.create_tables([IAM_Keys, Event_Type, Event])
+    
+    return db
 
 def connect():
     db.connect()

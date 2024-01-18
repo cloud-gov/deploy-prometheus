@@ -67,7 +67,6 @@ def event_exists(events, access_key_num):
 
 
 def add_event_to_db(user, alert_type, access_key_num):
-    print(f'add user: {user.iam_user} event_type: {alert_type} key: {access_key_num}\n')
     event_type, _ = Event_Type.insert_event_type(alert_type)
     event = Event.new_event_type_user(event_type, user, access_key_num)
     event.cleared = False
@@ -78,12 +77,10 @@ def add_event_to_db(user, alert_type, access_key_num):
 def update_event(event, alert_type):
     if alert_type:
         event_type = Event_Type.insert_event_type(alert_type)
-        print(f'update user: {event.user.iam_user} event_type: {event_type.event_type_name}\n')
         event.event_type = event_type
         event.cleared = False
         event.save()
     else:
-        print(f'update user: {event.user.iam_user} no event type\n')
         event.cleared = True
         event.cleared_date = datetime.now()
         event.save()
@@ -125,7 +122,6 @@ def send_alerts(cleared, events, db):
             event.cleared = True if cleared else False
             event.alert_sent = True
             event.save()
-        print(f'alerts: {alerts}\n')
         prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         res = requests.put(url=prometheus_url,
                             data=alerts,
@@ -227,7 +223,7 @@ def state_file_to_dict(all_outputs):
     # {new_key = {key1:value, key2:value}}
 
     # NOTE: If anything changes with the outputs in aws-admin for gov and com
-    # make sure the delimiter stays the same, or change the below var if it
+    # make sure the delimiter stays the same, or change the below var, set in config.yml, if it
     # changes just make sure that whatever it changes to is consistent with:
     # profile name prefix+delimiter+the rest of the string
     #
@@ -381,9 +377,12 @@ def main():
     st = time.time()
 
     create_tables_bool = os.getenv('IAM_CREATE_TABLES')
-    # Flag to create the db tables for the first run or for debugging
+    # Flag for debugging in dev or staging
     if create_tables_bool == "True":
-        print("creating tables...")
+        print("DEBUG: creating tables...")
+        db = keys_db_models.create_tables_debug()
+    else:
+        print("connecting to database, and creating tables if this is the first run")
         db = keys_db_models.create_tables()
 
     (com_state_dict, gov_state_dict) = load_profiles(com_state_file,
