@@ -16,10 +16,10 @@ import sys
 import time
 import yaml
 
-def check_retention( warn_days, violation_days, key_date):
+def check_retention(warn_days, violation_days, key_date):
     """
-    Returns True when keys was last rotated more than :days: ago by returning a
-    warning type or None
+    Returns violation when keys were last rotated more than :violation_days: ago and 
+    warning when keys were last rotated :warn_days: ago if it is neither None is returned
     """
     key_date = parse(key_date, ignoretz=True)
     if key_date + timedelta(days=int(violation_days)) <= datetime.now():
@@ -30,8 +30,10 @@ def check_retention( warn_days, violation_days, key_date):
 
 def find_known_user(report_user, all_users_dict):
     """
-    Return the row from the users list matching the report user if it exists,
-    this will be used for validating thresholds for the key rotation date timeframes
+    Return the row from the users dictionary matching the report user if it exists and
+    not_found list if the user isn't found. This will be used for validating thresholds 
+    for the key rotation date timeframes as well as help track users not foundf
+    
     Note that if is_wildcard is true, the search will be a fuzzy search otherwise the 
     search will be looking for an exact match.
     """
@@ -56,7 +58,7 @@ def event_exists(events, access_key_num):
     Look for an access key rotation based on key number (1 or 2) corresponding
     to the number of access keys a user might have.
     If the same event and key number are found, return the event
-    An event has an event_type of warn or violation
+    An event has an event_type of warning or violation
     """
     foundEvent = None
     for event in events:
@@ -122,6 +124,8 @@ def send_alerts(cleared, events, db):
             event.cleared = True if cleared else False
             event.alert_sent = True
             event.save()
+        
+        // Send alerts to prometheus to update alerts
         prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         res = requests.put(url=prometheus_url,
                             data=alerts,
@@ -160,7 +164,7 @@ def check_access_keys(user_row, warn_days, violation_days, alert):
 
 def check_user_thresholds(user_thresholds, report_row):
     """
-    Grab the thresholds from the reference table and pass them on with the row
+    Grab the thresholds from the user_thresholds and pass them on with the row
     from the credentials report to be used for checking the keys
     """
     warn_days = user_thresholds['warn']
@@ -177,10 +181,10 @@ def search_for_keys(region_name, profile, all_users):
     """
     The main search function that reaches out to AWS IAM to grab the
     credentials report and read in csv.
-    First let's get a session based on the user access key so we can get all of
-    the users for a given account """
-
-    # Grab a session to AWS via the Python boto3 lib
+    """
+    
+    # First let's get a session based on the user access key so we can get all of
+    # the users for a given account via the Python boto3 lib
     session = boto3.Session(region_name=region_name,
                             aws_access_key_id=profile['id'],
                             aws_secret_access_key=profile['secret'])
@@ -199,10 +203,8 @@ def search_for_keys(region_name, profile, all_users):
     content = report["Content"].decode("utf-8")
     content_lines = content.split("\n")
 
-    """
-    Initiate the reader, convert the csv contents to a list and turn each row
-    into a dict to use for the credentials check
-    """
+    # Initiate the reader, convert the csv contents to a list and turn each row
+    # into a dictionary to use for the credentials check
     csv_reader = csv.DictReader(content_lines, delimiter=",")
     not_found = []
     for row in csv_reader:
@@ -353,7 +355,6 @@ def main():
     # grab the state files, user files and outputs from cg-provision from the
     # s3 resources
     base_dir = "../../.."
-    
     com_state_file = os.path.join(base_dir, "terraform-prod-com-yml/state.yml")
     gov_state_file = os.path.join(base_dir, "terraform-prod-gov-yml/state.yml")
     com_users_filename = os.path.join(base_dir, "aws-admin/stacks/gov/sso/users.yaml")

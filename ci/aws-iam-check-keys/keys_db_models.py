@@ -3,14 +3,6 @@ import os
 from peewee import *
 
 """
-Reference Table data structure info:
-reference_table['user'] = r['user_string']
-reference_table['is_wildcard'] = r['is_wildcard']
-reference_table['account_type'] = r['account_type']
-reference_table['alert'] = r['alert']
-reference_table['warning'] = r['warn']
-reference_table['violation'] = r['violation']
-
 Credential Report columns:
 user
 arn
