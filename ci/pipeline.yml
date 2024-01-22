@@ -11,6 +11,7 @@ groups:
   - awslogs-check
   - aws-mfa-check
   - aws-rds-storage-check
+  - aws-iam-check-keys
   - cdn-broker-certs
   - domain-broker-certs
   - concourse-has-auth-check
@@ -58,6 +59,61 @@ jobs:
       AWS_ACCESS_KEY_ID: ((aws-rds-access-key-id))
       AWS_SECRET_ACCESS_KEY: ((aws-rds-secret-access-key))
       GATEWAY_HOST: http://prometheus-production.service.cf.internal
+
+- name: aws-iam-check-keys
+  serial_groups: [production]
+  plan:
+  - in_parallel:
+    - get: iam-keys-check-timer
+      trigger: true
+    - get: prometheus-config
+      passed: [set-self]
+    - get: aws-admin
+      trigger: true
+    - get: terraform-yaml-production
+      trigger: true
+    - get: terraform-prod-com-yml
+      resource: terraform-prod-com-yml
+      trigger: true
+    - get: terraform-prod-gov-yml
+      resource: terraform-prod-gov-yml
+      trigger: true
+    - get: other-iam-users-yml
+      resource: other-iam-users-yml
+      trigger: true
+  - task: aws-iam-check-keys
+    file: prometheus-config/ci/aws-iam-check-keys.yml
+    tags: [iaas]
+    params:
+      AWS_DEFAULT_REGION: ((aws-region))
+      IAM_KEYS_DB: ((aws-iam-keys-db))
+      IAM_KEYS_USER: ((aws-iam-keys-user))
+      IAM_KEYS_PASSWORD: ((aws-iam-keys-password))
+      IAM_KEYS_HOST: ((aws-iam-keys-host))
+      IAM_KEYS_PORT: ((aws-iam-keys-port))
+      IAM_CREATE_TABLES: ((aws-iam-create-tables-bool))
+      GATEWAY_HOST: prometheus-staging.service.cf.internal
+      PREFIX_DELIMITER: ((aws-iam-prefix-delimiter))
+      WARN_DAYS: ((aws-iam-warn-days))
+      VIOLATION_DAYS: ((aws-iam-violation-days))
+  on_success:
+    put: slack
+    params:
+      text: |
+        :white_check_mark: Successfully ran IAM Check Keys in production
+        <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+      channel: ((slack-channel-success))
+      username: ((slack-username))
+      icon_url: ((slack-icon-url))
+  on_failure:
+    put: slack
+    params:
+      text: |
+        :x: FAILED to deploy IAM Check Keys on production
+        <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+      channel: ((slack-channel-success))
+      username: ((slack-username))
+      icon_url: ((slack-icon-url))
 
 - name: aws-mfa-check
   serial_groups: [production]
@@ -409,6 +465,28 @@ resources:
   source:
     interval: 30m
 
+- name: aws-admin
+  source:
+    branch: main
+    commit_verification_keys: ((cloud-gov-pgp-keys))
+    private_key: ((cg-ci-bot-sshkey.private_key))
+    uri: git@github.com:cloud-gov/aws-admin.git
+  type: git
+
+- name: terraform-yaml-production
+  type: s3-iam
+  source:
+    bucket: ((tf-state-bucket))
+    versioned_file: ((tf-state-file-production))
+    region_name: ((aws-region))
+
+- name: iam-keys-check-timer
+  type: time
+  source:
+    days: [Tuesday]
+    start: "9:00 AM"
+    stop: "10:00 AM"
+
 - name: notify-cloud-gov
   type: email
   source:
@@ -436,6 +514,27 @@ resources:
     bucket: terraform-state
     versioned_file: tooling/state.yml
 
+- name: terraform-prod-com-yml
+  type: s3-iam
+  source:
+    region_name: ((prometheus-production-private-region))
+    bucket: terraform-state
+    versioned_file: aws-admin/com/state.yml
+
+- name: terraform-prod-gov-yml
+  type: s3-iam
+  source:
+    region_name: ((prometheus-production-private-region))
+    bucket: terraform-state
+    versioned_file: aws-admin/gov/state.yml
+
+- name: other-iam-users-yml
+  type: s3-iam
+  source:
+    region_name: ((prometheus-production-private-region))
+    bucket: cloud-gov-varz
+    versioned_file: other_iam_users.yml
+
 resource_types:
 - name: slack-notification
   type: docker-image
@@ -461,3 +560,4 @@ resource_types:
   type: registry-image
   source:
     repository: concourse/github-release-resource
+
