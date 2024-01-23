@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from psycopg import IntegrityError
 import requests
 import boto3
 from copy import copy
@@ -125,7 +126,7 @@ def send_alerts(cleared, events, db):
             event.alert_sent = True
             event.save()
         
-        // Send alerts to prometheus to update alerts
+        # Send alerts to prometheus to update alerts
         prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         res = requests.put(url=prometheus_url,
                             data=alerts,
@@ -140,10 +141,13 @@ def send_alerts(cleared, events, db):
 
 
 def send_all_alerts(db):
-    cleared_events = Event.all_cleared_events()
-    send_alerts(True, cleared_events, db)
-    uncleared_events = Event.all_uncleared_events()
-    send_alerts(False, uncleared_events, db)
+    try:
+        cleared_events = Event.all_cleared_events()
+        send_alerts(True, cleared_events, db)
+        uncleared_events = Event.all_uncleared_events()
+        send_alerts(False, uncleared_events, db)
+    except:
+        print("an exception occured while adding alerts to the database")
 
 def check_access_keys(user_row, warn_days, violation_days, alert):
     """
