@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from psycopg import IntegrityError
 import requests
 import boto3
 from copy import copy
