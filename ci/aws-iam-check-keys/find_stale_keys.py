@@ -78,7 +78,7 @@ def add_event_to_db(user, alert_type, access_key_num):
 
 def update_event(event, alert_type):
     if alert_type:
-        event_type = Event_Type.insert_event_type(alert_type)
+        event_type,_ = Event_Type.insert_event_type(alert_type)
         event.event_type = event_type
         event.cleared = False
         event.save()
