@@ -78,7 +78,7 @@ def add_event_to_db(user, alert_type, access_key_num):
 
 def update_event(event, alert_type):
     if alert_type:
-        event_type = Event_Type.insert_event_type(alert_type)
+        event_type,_ = Event_Type.insert_event_type(alert_type)
         event.event_type = event_type
         event.cleared = False
         event.save()
@@ -125,7 +125,7 @@ def send_alerts(cleared, events, db):
             event.alert_sent = True
             event.save()
         
-        // Send alerts to prometheus to update alerts
+        # Send alerts to prometheus to update alerts
         prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         res = requests.put(url=prometheus_url,
                             data=alerts,
@@ -140,10 +140,13 @@ def send_alerts(cleared, events, db):
 
 
 def send_all_alerts(db):
-    cleared_events = Event.all_cleared_events()
-    send_alerts(True, cleared_events, db)
-    uncleared_events = Event.all_uncleared_events()
-    send_alerts(False, uncleared_events, db)
+    try:
+        cleared_events = Event.all_cleared_events()
+        send_alerts(True, cleared_events, db)
+        uncleared_events = Event.all_uncleared_events()
+        send_alerts(False, uncleared_events, db)
+    except:
+        print("an exception occured while adding alerts to the database")
 
 def check_access_keys(user_row, warn_days, violation_days, alert):
     """
