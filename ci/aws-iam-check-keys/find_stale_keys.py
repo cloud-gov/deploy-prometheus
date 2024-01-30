@@ -245,12 +245,6 @@ def state_file_to_dict(all_outputs):
         new_key_comps = key.split(prefix_delimiter)
         key_prefix = new_key_comps[0]
         new_key = new_key_comps[3]
-        # convoluted reversal from terraform outputs - this should not stay!
-        # find out why this is reversed!
-        if (new_key == 'id'):
-            new_key = 'secret'
-        else:
-            new_key = 'id'
         newDict[new_key] = value
         if key_prefix in output_dict:
             # one exists, lets use it!
