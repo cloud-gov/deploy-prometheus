@@ -102,7 +102,8 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
                 update_event(found_event, alert_type)
             elif alert:
                 add_event_to_db(iam_user, alert_type, access_key_num)
-
+    else:
+        IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
 
 def send_alerts(cleared, events, db):
     alerts = ""
@@ -146,8 +147,8 @@ def send_all_alerts(db):
         uncleared_events = Event.all_uncleared_events()
         send_alerts(False, uncleared_events, db)
     except:
-        print("an exception occured while adding alerts to the database")
-
+        print("an exception occured while adding alerts to the database")    
+    
 def check_access_keys(user_row, warn_days, violation_days, alert):
     """
     Validate key staleness for both access keys, provided they exist, for a
@@ -156,12 +157,10 @@ def check_access_keys(user_row, warn_days, violation_days, alert):
     last_rotated_key1 = user_row['access_key_1_last_rotated']
     last_rotated_key2 = user_row['access_key_2_last_rotated']
 
-    if (last_rotated_key1 != 'N/A'):
-        check_retention_for_key(last_rotated_key1, 1, user_row, warn_days,
+    check_retention_for_key(last_rotated_key1, 1, user_row, warn_days,
                                 violation_days, alert)
 
-    if (last_rotated_key2 != 'N/A'):
-        check_retention_for_key(last_rotated_key2, 2, user_row, warn_days,
+    check_retention_for_key(last_rotated_key2, 2, user_row, warn_days,
                                 violation_days, alert)
 
 

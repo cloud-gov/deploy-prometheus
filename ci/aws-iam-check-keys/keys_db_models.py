@@ -98,37 +98,86 @@ class IAM_Keys(BaseModel):
     def user_from_dict(cls, keys_dict):
         keys_dict = cls.clean_dict(keys_dict)
 
-        user, created = IAM_Keys.get_or_create(
-            iam_user=keys_dict['user'],
-            aws_account=cls.account_for_arn(keys_dict['arn']),
-            arn=keys_dict['arn'],
-            user_creation_time=keys_dict['user_creation_time'],
-            password_enabled=keys_dict['password_enabled'],
-            password_last_used=keys_dict['password_last_used'],
-            password_last_changed=keys_dict['password_last_changed'],
-            password_next_rotation=keys_dict['password_next_rotation'],
-            mfa_active=keys_dict['mfa_active'],
-            access_key_1_active=keys_dict['access_key_1_active'],
-            access_key_1_last_rotated=keys_dict['access_key_1_last_rotated'],
-            access_key_1_last_used_date=keys_dict['access_key_1_last_used_date'],
-            access_key_1_last_used_region=keys_dict['access_key_1_last_used_region'],
-            access_key_1_last_used_service=keys_dict['access_key_1_last_used_service'],
-            access_key_2_active=keys_dict['access_key_2_active'],
-            access_key_2_last_rotated=keys_dict['access_key_2_last_rotated'],
-            access_key_2_last_used_date=keys_dict['access_key_2_last_used_date'],
-            access_key_2_last_used_region=keys_dict['access_key_2_last_used_region'],
-            access_key_2_last_used_service=keys_dict['access_key_2_last_used_service'],
-            cert_1_active=keys_dict['cert_1_active'],
-            cert_1_last_rotated=keys_dict['cert_1_last_rotated'],
-            cert_2_active=keys_dict['cert_2_active'],
-            cert_2_last_rotated=keys_dict['cert_2_last_rotated'],
-            created_at=date.today(),
-            updated_at=date.today(),
-
-        )
+        try:
+            user = IAM_Keys.get(
+            (IAM_Keys.arn == cls.account_for_arn(keys_dict['arn']) &
+            (IAM_Keys.iam_user == keys_dict['user'])))
+        except IAM_Keys.DoesNotExist:
+            user = IAM_Keys.create(
+                iam_user=keys_dict['user'],
+                aws_account=cls.account_for_arn(keys_dict['arn']),
+                arn=keys_dict['arn'],
+                user_creation_time=keys_dict['user_creation_time'],
+                password_enabled=keys_dict['password_enabled'],
+                password_last_used=keys_dict['password_last_used'],
+                password_last_changed=keys_dict['password_last_changed'],
+                password_next_rotation=keys_dict['password_next_rotation'],
+                mfa_active=keys_dict['mfa_active'],
+                access_key_1_active=keys_dict['access_key_1_active'],
+                access_key_1_last_rotated=keys_dict['access_key_1_last_rotated'],
+                access_key_1_last_used_date=keys_dict['access_key_1_last_used_date'],
+                access_key_1_last_used_region=keys_dict['access_key_1_last_used_region'],
+                access_key_1_last_used_service=keys_dict['access_key_1_last_used_service'],
+                access_key_2_active=keys_dict['access_key_2_active'],
+                access_key_2_last_rotated=keys_dict['access_key_2_last_rotated'],
+                access_key_2_last_used_date=keys_dict['access_key_2_last_used_date'],
+                access_key_2_last_used_region=keys_dict['access_key_2_last_used_region'],
+                access_key_2_last_used_service=keys_dict['access_key_2_last_used_service'],
+                cert_1_active=keys_dict['cert_1_active'],
+                cert_1_last_rotated=keys_dict['cert_1_last_rotated'],
+                cert_2_active=keys_dict['cert_2_active'],
+                cert_2_last_rotated=keys_dict['cert_2_last_rotated'],
+                created_at=date.today(),
+                updated_at=date.today(),
+            )
         return user
+    
+    @classmethod
+    def check_key_in_db_and_update(cls, user_row, key_num):
+        if key_num == 1:
+            try:
+                user = IAM_Keys.get(
+                (IAM_Keys.arn == cls.account_for_arn(user_row['arn']) &
+                (IAM_Keys.iam_user == user_row['user']) &
+                (IAM_Keys.access_key_1_active == True)))
+                user['updated_at'] = date()
+                user['password_enabled']=user_row['password_enabled'],
+                user['password_last_used']=user_row['password_last_used'],
+                user['password_last_changed']=user_row['password_last_changed'],
+                user['password_next_rotation']=user_row['password_next_rotation'],
+                user['mfa_active']=user_row['mfa_active'],
+                user['access_key_1_last_rotated']=user_row['access_key_1_last_rotated']
+                user['access_key_1_last_used_date']=user_row['access_key_1_last_used_date'],
+                user['access_key_1_last_used_region']=user_row['access_key_1_last_used_region'],
+                user['access_key_1_last_used_service']=user_row['access_key_1_last_used_service']
+                events = Event.events_for_user(user)
+                for event in events:
+                    event['cleared'] = True
+            except IAM_Keys.DoesNotExist:
+                print("user unknown")
+        elif key_num == 2:
+            try:
+                user = IAM_Keys.get(
+                (IAM_Keys.arn == cls.account_for_arn(user_row['arn']) &
+                (IAM_Keys.iam_user == user_row['user']) &
+                (IAM_Keys.access_key_2_active == True)))
+                user['updated_at'] = date()
+                user['password_enabled']=user_row['password_enabled'],
+                user['password_last_used']=user_row['password_last_used'],
+                user['password_last_changed']=user_row['password_last_changed'],
+                user['password_next_rotation']=user_row['password_next_rotation'],
+                user['mfa_active']=user_row['mfa_active'],
+                user['access_key_2_last_rotated']=user_row['access_key_2_last_rotated']
+                user['access_key_2_last_used_date']=user_row['access_key_2_last_used_date'],
+                user['access_key_2_last_used_region']=user_row['access_key_2_last_used_region'],
+                user['access_key_2_last_used_service']=user_row['access_key_2_last_used_service']
+                events = Event.events_for_user(user)
+                for event in events:
+                    event['cleared'] = True
+            except IAM_Keys.DoesNotExist:
+                print("user unknown")
 
-
+        
 # Event Type stores the various event types such as warning and violation
 class Event_Type(BaseModel):
     event_type_name = CharField(unique=True)
@@ -167,6 +216,11 @@ class Event(BaseModel):
     @classmethod
     def all_uncleared_events(cls):
         events = Event.select().where(Event.cleared == False)
+        return events
+    
+    @classmethod
+    def events_for_user(cls, user):
+        events = Event.select().where(Event.user == user)
         return events
 
 

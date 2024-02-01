@@ -69,18 +69,18 @@ jobs:
     - get: prometheus-config
       passed: [set-self]
     - get: aws-admin
-      trigger: true
+      trigger: false
     - get: terraform-yaml-production
-      trigger: true
+      trigger: false
     - get: terraform-prod-com-yml
       resource: terraform-prod-com-yml
-      trigger: true
+      trigger: false
     - get: terraform-prod-gov-yml
       resource: terraform-prod-gov-yml
-      trigger: true
+      trigger: false
     - get: other-iam-users-yml
       resource: other-iam-users-yml
-      trigger: true
+      trigger: false
   - task: aws-iam-check-keys
     file: prometheus-config/ci/aws-iam-check-keys.yml
     tags: [iaas]
@@ -92,7 +92,7 @@ jobs:
       IAM_KEYS_HOST: ((aws-iam-keys-host))
       IAM_KEYS_PORT: ((aws-iam-keys-port))
       IAM_CREATE_TABLES: ((aws-iam-create-tables-bool))
-      GATEWAY_HOST: prometheus-production.service.cf.internal
+      GATEWAY_HOST: prometheus-staging.service.cf.internal
       PREFIX_DELIMITER: ((aws-iam-prefix-delimiter))
       WARN_DAYS: ((aws-iam-warn-days))
       VIOLATION_DAYS: ((aws-iam-violation-days))
