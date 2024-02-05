@@ -97,7 +97,7 @@ class IAM_Keys(BaseModel):
     @classmethod
     def user_from_dict(cls, keys_dict):
         keys_dict = cls.clean_dict(keys_dict)
-
+        user = None
         try:
             print(f'made it here with dict: {keys_dict}')
             user = IAM_Keys.get(
