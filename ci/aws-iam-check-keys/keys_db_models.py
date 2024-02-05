@@ -178,7 +178,7 @@ class IAM_Keys(BaseModel):
                 events = Event.events_for_user(user)
                 for event in events:
                     event.cleared = True
-                print(f'user: {user.iam_user} has key 2 last rotated: {user.access_key_1_last_rotated}')
+                print(f'user: {user.iam_user} has key 2 last rotated: {user.access_key_2_last_rotated}')
             except IAM_Keys.DoesNotExist:
                 print(f'user not found! {user_row["user"]}')
 
