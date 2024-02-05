@@ -101,8 +101,8 @@ class IAM_Keys(BaseModel):
         try:
             print(f'made it here with dict: {keys_dict}')
             user = IAM_Keys.get(
-            (IAM_Keys.arn == cls.account_for_arn(keys_dict['arn']) &
-            (IAM_Keys.iam_user == keys_dict['user'])))
+            IAM_Keys.arn == keys_dict['arn'],
+            IAM_Keys.iam_user == keys_dict['user'])
         except IAM_Keys.DoesNotExist:
             user = IAM_Keys.create(
                 iam_user=keys_dict['user'],
@@ -138,9 +138,9 @@ class IAM_Keys(BaseModel):
         if key_num == 1:
             try:
                 user = IAM_Keys.get(
-                (IAM_Keys.arn == cls.account_for_arn(user_row['arn']) &
-                (IAM_Keys.iam_user == user_row['user']) &
-                (IAM_Keys.access_key_1_active == True)))
+                IAM_Keys.arn == user_row['arn'],
+                IAM_Keys.iam_user == user_row['user'],
+                IAM_Keys.access_key_1_active == True )
                 user['updated_at'] = date()
                 user['password_enabled']=user_row['password_enabled'],
                 user['password_last_used']=user_row['password_last_used'],
@@ -159,9 +159,9 @@ class IAM_Keys(BaseModel):
         elif key_num == 2:
             try:
                 user = IAM_Keys.get(
-                (IAM_Keys.arn == cls.account_for_arn(user_row['arn']) &
-                (IAM_Keys.iam_user == user_row['user']) &
-                (IAM_Keys.access_key_2_active == True)))
+                IAM_Keys.arn == user_row['arn'],
+                IAM_Keys.iam_user == user_row['user'],
+                IAM_Keys.access_key_2_active == True)
                 user['updated_at'] = date()
                 user['password_enabled']=user_row['password_enabled'],
                 user['password_last_used']=user_row['password_last_used'],
