@@ -155,7 +155,7 @@ class IAM_Keys(BaseModel):
                 for event in events:
                     event.cleared = True
             except IAM_Keys.DoesNotExist:
-                print(f'========== user not found! {user_row["user"]} {user_row['arn']} {user_row['access_key_1_active']} ==========')
+                print(f'========== user not found! {user_row["user"]} {user_row["arn"]} {user_row["access_key_1_active"]} ==========')
         elif key_num == 2:
             try:
                 user = IAM_Keys.get(
