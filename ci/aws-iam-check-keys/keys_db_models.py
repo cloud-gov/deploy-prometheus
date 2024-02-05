@@ -103,7 +103,9 @@ class IAM_Keys(BaseModel):
             user = IAM_Keys.get(
             IAM_Keys.arn == keys_dict['arn'],
             IAM_Keys.iam_user == keys_dict['user'])
+            print(f'user {user} found!')
         except IAM_Keys.DoesNotExist:
+            print(f'creating user: {keys_dict["user"]}')
             user = IAM_Keys.create(
                 iam_user=keys_dict['user'],
                 aws_account=cls.account_for_arn(keys_dict['arn']),

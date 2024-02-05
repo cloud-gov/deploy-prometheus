@@ -388,11 +388,9 @@ def main():
                                                      gov_state_file)
 
     for com_key in com_state_dict:
-        print(f"c key: {com_key}")
         all_com_users = com_users_list + tf_users + other_users
         search_for_keys(com_region, com_state_dict[com_key], all_com_users)
     for gov_key in gov_state_dict:
-        print(f"g key: {gov_key}")
         all_gov_users = gov_users_list + tf_users + other_users
         search_for_keys(gov_region, gov_state_dict[gov_key], all_gov_users)
 
