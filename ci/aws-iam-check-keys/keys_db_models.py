@@ -133,6 +133,7 @@ class IAM_Keys(BaseModel):
                 created_at=date.today(),
                 updated_at=date.today(),
             )
+            user.save()
         return user
     
     @classmethod
@@ -201,6 +202,7 @@ class Event_Type(BaseModel):
         if event_type == None:
         #except Event_Type.DoesNotExist:
             event_type, _ = Event_Type.create(event_type_name=name, created_at=date.today())
+            event_type.save()
         return event_type
 
 
@@ -220,6 +222,7 @@ class Event(BaseModel):
         event = Event.create(user=user, event_type=event_type, cleared=False,
                              alert_sent=False, created_at=date.today(),
                              access_key_num=access_key_num)
+        event.save()
         return event
 
     @classmethod
