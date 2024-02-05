@@ -186,9 +186,13 @@ class Event_Type(BaseModel):
 
     @classmethod
     def insert_event_type(cls, name):
-        event_type, created = Event_Type.get_or_create(event_type_name=name,
-                                                       created_at=date.today())
-        return event_type, created
+        try:
+            print(f'made it here with name: {name}')
+            event_type = Event_Type.get(event_type_name=name)
+        except IAM_Keys.DoesNotExist:
+            event_type, _ = Event_Type.create(event_type_name=name, created_at=date.today())
+
+        return event_type
 
 
 # The events as they happen based on IAM creds not being rotated in a
