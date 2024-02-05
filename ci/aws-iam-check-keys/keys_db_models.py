@@ -186,12 +186,13 @@ class Event_Type(BaseModel):
 
     @classmethod
     def insert_event_type(cls, name):
-        try:
-            print(f'made it here with name: {name}')
-            event_type = Event_Type.get(event_type_name=name)
-        except Event_Type.DoesNotExist:
+        # try:
+        print(f'made it here with name: {name}')
+        event_type = Event_Type.get(event_type_name=name)
+        print(f'event_type: {event_type}')
+        if event_type == None:
+        #except Event_Type.DoesNotExist:
             event_type, _ = Event_Type.create(event_type_name=name, created_at=date.today())
-
         return event_type
 
 
