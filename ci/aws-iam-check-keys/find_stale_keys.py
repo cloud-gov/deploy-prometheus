@@ -61,6 +61,7 @@ def event_exists(events, access_key_num):
     An event has an event_type of warning or violation
     """
     foundEvent = None
+    print(f'events count: {len(events)}')
     for event in events:
         if (event.access_key_num == access_key_num):
             foundEvent = event
