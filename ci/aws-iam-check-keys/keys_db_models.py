@@ -155,7 +155,7 @@ class IAM_Keys(BaseModel):
                 for event in events:
                     event.cleared = True
             except IAM_Keys.DoesNotExist:
-                print("user unknown")
+                print(f'user not found! {user_row["user"]}')
         elif key_num == 2:
             try:
                 user = IAM_Keys.get(
@@ -176,7 +176,7 @@ class IAM_Keys(BaseModel):
                 for event in events:
                     event.cleared = True
             except IAM_Keys.DoesNotExist:
-                print("user unknown")
+                print(f'user not found! {user_row["user"]}')
 
         
 # Event Type stores the various event types such as warning and violation
