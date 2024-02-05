@@ -141,7 +141,7 @@ class IAM_Keys(BaseModel):
                 IAM_Keys.arn == user_row['arn'],
                 IAM_Keys.iam_user == user_row['user'],
                 IAM_Keys.access_key_1_active == True )
-                user['updated_at'] = date()
+                user['updated_at'] = date.today()
                 user['password_enabled']=user_row['password_enabled'],
                 user['password_last_used']=user_row['password_last_used'],
                 user['password_last_changed']=user_row['password_last_changed'],
@@ -162,7 +162,7 @@ class IAM_Keys(BaseModel):
                 IAM_Keys.arn == user_row['arn'],
                 IAM_Keys.iam_user == user_row['user'],
                 IAM_Keys.access_key_2_active == True)
-                user['updated_at'] = date()
+                user['updated_at'] = date.today()
                 user['password_enabled']=user_row['password_enabled'],
                 user['password_last_used']=user_row['password_last_used'],
                 user['password_last_changed']=user_row['password_last_changed'],
