@@ -99,6 +99,7 @@ class IAM_Keys(BaseModel):
         keys_dict = cls.clean_dict(keys_dict)
 
         try:
+            print(f'made it here with dict: {keys_dict}')
             user = IAM_Keys.get(
             (IAM_Keys.arn == cls.account_for_arn(keys_dict['arn']) &
             (IAM_Keys.iam_user == keys_dict['user'])))
