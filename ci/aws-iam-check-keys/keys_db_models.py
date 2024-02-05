@@ -189,7 +189,7 @@ class Event_Type(BaseModel):
         try:
             print(f'made it here with name: {name}')
             event_type = Event_Type.get(event_type_name=name)
-        except IAM_Keys.DoesNotExist:
+        except Event_Type.DoesNotExist:
             event_type, _ = Event_Type.create(event_type_name=name, created_at=date.today())
 
         return event_type
