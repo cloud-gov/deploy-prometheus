@@ -2,12 +2,12 @@
 groups:
 - name: deployment
   jobs:
-  # - set-self
+  - set-self
   - deploy-prometheus-staging
   - deploy-prometheus-production
 - name: checks
   jobs:
-  # - set-self
+  - set-self
   - awslogs-check
   - aws-mfa-check
   - aws-rds-storage-check
