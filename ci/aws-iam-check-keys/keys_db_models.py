@@ -99,13 +99,10 @@ class IAM_Keys(BaseModel):
         keys_dict = cls.clean_dict(keys_dict)
         user = None
         try:
-            print(f'made it here with dict: {keys_dict}')
             user = IAM_Keys.get(
             IAM_Keys.arn == keys_dict['arn'],
             IAM_Keys.iam_user == keys_dict['user'])
-            print(f'user {keys_dict["user"]} found!')
         except IAM_Keys.DoesNotExist:
-            print(f'creating user: {keys_dict["user"]}')
             user = IAM_Keys.create(
                 iam_user=keys_dict['user'],
                 aws_account=cls.account_for_arn(keys_dict['arn']),
@@ -158,10 +155,9 @@ class IAM_Keys(BaseModel):
                 for event in events:
                     event.cleared = True
                     event.save()
-                print(f'user: {user.iam_user} has key 1 last rotated: {user.access_key_1_last_rotated}')
                 user.save()
             except IAM_Keys.DoesNotExist:
-                print(f'========== user not found! {user_row["user"]} {user_row["arn"]} {user_row["access_key_1_active"]} ==========')
+                print(f'========== user not found! {user_row["user"]} {user_row["arn"]} key_num: {user_row["access_key_1_active"]} ==========')
         elif key_num == 2:
             try:
                 user = IAM_Keys.get(
@@ -182,10 +178,9 @@ class IAM_Keys(BaseModel):
                 for event in events:
                     event.cleared = True
                     event.save()
-                print(f'user: {user.iam_user} has key 2 last rotated: {user.access_key_2_last_rotated}')
                 user.save()
             except IAM_Keys.DoesNotExist:
-                print(f'user not found! {user_row["user"]}')
+                print(f'========== user not found! {user_row["user"]} {user_row["arn"]} key_num: {user_row["access_key_2_active"]} ==========')
 
         
 # Event Type stores the various event types such as warning and violation
@@ -196,9 +191,7 @@ class Event_Type(BaseModel):
     @classmethod
     def insert_event_type(cls, name):
         # try:
-        print(f'made it here with name: {name}')
         event_type = Event_Type.get(event_type_name=name)
-        print(f'event_type: {event_type}')
         if event_type == None:
         #except Event_Type.DoesNotExist:
             event_type, _ = Event_Type.create(event_type_name=name, created_at=date.today())

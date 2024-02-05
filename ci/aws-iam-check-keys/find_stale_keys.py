@@ -61,7 +61,6 @@ def event_exists(events, access_key_num):
     An event has an event_type of warning or violation
     """
     foundEvent = None
-    print(f'events count: {len(events)}')
     for event in events:
         if (event.access_key_num == access_key_num):
             foundEvent = event
@@ -98,7 +97,6 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
         iam_user = IAM_Keys.user_from_dict(user_row)
         if (alert_type):
             events = iam_user.events
-            print(f'iam_user is: {iam_user.iam_user} and events are: {events}')
             found_event = event_exists(events, access_key_num)
             if found_event:
                 update_event(found_event, alert_type)
