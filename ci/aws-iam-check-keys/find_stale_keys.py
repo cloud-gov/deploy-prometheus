@@ -104,8 +104,10 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
                 update_event(found_event, alert_type)
             elif alert:
                 add_event_to_db(iam_user, alert_type, access_key_num)
-    else:
-        IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
+        else:
+            IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
+    # else:
+    #     IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
 
 def send_alerts(cleared, events, db):
     alerts = ""
