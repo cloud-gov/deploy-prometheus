@@ -153,7 +153,7 @@ class IAM_Keys(BaseModel):
                 user.access_key_1_last_used_service=user_row['access_key_1_last_used_service']
                 events = Event.events_for_user(user)
                 for event in events:
-                    event['cleared'] = True
+                    event.cleared = True
             except IAM_Keys.DoesNotExist:
                 print("user unknown")
         elif key_num == 2:
@@ -174,7 +174,7 @@ class IAM_Keys(BaseModel):
                 user.access_key_2_last_used_service=user_row['access_key_2_last_used_service']
                 events = Event.events_for_user(user)
                 for event in events:
-                    event['cleared'] = True
+                    event.cleared = True
             except IAM_Keys.DoesNotExist:
                 print("user unknown")
 
