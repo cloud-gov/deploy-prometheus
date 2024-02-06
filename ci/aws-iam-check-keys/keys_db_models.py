@@ -157,7 +157,7 @@ class IAM_Keys(BaseModel):
                     event.save()
                 user.save()
             except IAM_Keys.DoesNotExist:
-                print(f'========== user not found! {user_row["user"]} {user_row["arn"]} key_num: {user_row["access_key_1_active"]} ==========')
+                print(f'========== user not found! {user_row["user"]} ==========')
         elif key_num == 2:
             try:
                 user = IAM_Keys.get(
@@ -180,7 +180,7 @@ class IAM_Keys(BaseModel):
                     event.save()
                 user.save()
             except IAM_Keys.DoesNotExist:
-                print(f'========== user not found! {user_row["user"]} {user_row["arn"]} key_num: {user_row["access_key_2_active"]} ==========')
+                print(f'========== user not found! {user_row["user"]} ==========')
 
         
 # Event Type stores the various event types such as warning and violation
