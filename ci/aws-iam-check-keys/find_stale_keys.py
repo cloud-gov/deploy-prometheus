@@ -140,7 +140,7 @@ def send_alerts(cleared, events, db):
         else:
             print(f'Warning! Metrics failed to record! See Logs status_code: {res.status_code} reason: {res.reason}')
             transaction.rollback()
-
+        print(f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n')
 
 def send_all_alerts(db):
     try:
