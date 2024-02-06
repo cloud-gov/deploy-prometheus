@@ -5,13 +5,13 @@
   alert: True
 - account_type: "Platform"
   is_wildcard: False
-  warn: 165
-  violation: 80
+  warn: 80
+  violation: 165
   alert: True
 - account_type: "Application"
   is_wildcard: False
-  warn: 165
-  violation: 80
+  warn: 80
+  violation: 165
   alert: True
 - account_type: "Customer"
   is_wildcard: True

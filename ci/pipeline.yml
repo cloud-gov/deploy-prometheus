@@ -69,18 +69,18 @@ jobs:
     - get: prometheus-config
       passed: [set-self]
     - get: aws-admin
-      trigger: true
+      trigger: false
     - get: terraform-yaml-production
-      trigger: true
+      trigger: false
     - get: terraform-prod-com-yml
       resource: terraform-prod-com-yml
-      trigger: true
+      trigger: false
     - get: terraform-prod-gov-yml
       resource: terraform-prod-gov-yml
-      trigger: true
+      trigger: false
     - get: other-iam-users-yml
       resource: other-iam-users-yml
-      trigger: true
+      trigger: false
   - task: aws-iam-check-keys
     file: prometheus-config/ci/aws-iam-check-keys.yml
     tags: [iaas]
@@ -484,8 +484,8 @@ resources:
   type: time
   source:
     days: [Tuesday]
-    start: 8:00 AM
-    stop: 9:00 AM
+    start: 11:00 AM
+    stop: 12:00 PM
     location: America/New_York
 
 - name: notify-cloud-gov
