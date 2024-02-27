@@ -112,29 +112,29 @@
   value: m5.large
 
 # add some prod-only rules
-# monitor Federalist proxy
+# monitor Pages proxy
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
   value:
-    name: federalist-proxy
+    name: pages-proxy
     rules:
-    - alert: FederalistProxyUnhealthy
+    - alert: PagesProxyUnhealthy
       # get all the cf application instances with matching org, space, and app IDs. 
       # Subtract from that all the instances with matching org, space, app ids with state Running.
       # Take the minimum of that, and see if it's more than zero
-      expr: min(cf_application_instances{organization_id="((federalist_org_id))", space_id="((federalist_proxy_space_id))", application_id="((federalist_proxy_app_id))"} - cf_application_instances_running{state=~"STARTED", organization_id="((federalist_org_id))", space_id="((federalist_proxy_space_id))", application_id="((federalist_proxy_app_id))"} ) > 0
+      expr: min(cf_application_instances{organization_id="((pages_org_id))", space_id="((pages_proxy_space_id))", application_id="((pages_proxy_app_id))"} - cf_application_instances_running{state=~"STARTED", organization_id="((pages_org_id))", space_id="((pages_proxy_space_id))", application_id="((pages_proxy_app_id))"} ) > 0
       for: 5m
       labels:
         severity: warning
       annotations:
-        summary: "Federalist proxy app unhealthy"
-        description: "Reach out to Federalist"
-    - alert: FederalistProxyCrashed
+        summary: "Pages proxy app unhealthy"
+        description: "Reach out to Pages"
+    - alert: PagesProxyCrashed
       # get all the cf application instances with matching org, space, and app IDs in state started. If there are zero, alert. 
-      expr: sum(cf_application_instances_running{organization_id="((federalist_org_id))", space_id="((federalist_proxy_space_id))", application_id="((federalist_proxy_app_id))"}) == 0
+      expr: sum(cf_application_instances_running{organization_id="((pages_org_id))", space_id="((pages_proxy_space_id))", application_id="((pages_proxy_app_id))"}) == 0
       for: 5m
       labels:
         severity: critical
       annotations:
-        summary: "Federalist proxy app crashed"
-        description: "Reach out to Federalist"
+        summary: "Pages proxy app crashed"
+        description: "Reach out to Pages"
