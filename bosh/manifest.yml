@@ -272,7 +272,7 @@ instance_groups:
           instance_group: web
           network: ((environment))-concourse
           query: '*'
-    
+
   - name: cloudfoundry_alerts-attic
     release: prometheus
   - name: elasticsearch_alerts
@@ -310,7 +310,7 @@ instance_groups:
             auto_login: true
             client_id: ((oauth-proxy-client-id))
             client_secret: ((oauth-proxy-client-secret))
-            scopes: openid
+            scopes: openid,prometheus.support,concourse.pages,concourse.admin
             auth_url: https://opslogin.fr.cloud.gov/oauth/authorize
             token_url: https://opslogin.fr.cloud.gov/oauth/token
             api_url: https://opslogin.fr.cloud.gov/userinfo
