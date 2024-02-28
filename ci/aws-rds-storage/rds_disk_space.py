@@ -37,7 +37,13 @@ def get_free_space(db_instance):
         EndTime=datetime.datetime.now(),
         Period=60,
         Statistics=['Average'],)
-    free_space = min([(lambda x: x['Average'])(datapoint) for datapoint in cloudtrail_response['Datapoints']])
+
+    try:
+        free_space = min([(lambda x: x['Average'])(datapoint) for datapoint in cloudtrail_response['Datapoints']])
+    except:
+        #print(f'Probably a new born db, could not pull cloudwatch metrics, setting value to 100000000: {db_instance}')
+        free_space = 100000000
+        
     return free_space
 
 def get_prometheus_metrics(db_to_storage):
