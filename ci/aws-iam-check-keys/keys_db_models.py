@@ -207,14 +207,15 @@ class Event(BaseModel):
     access_key_num = IntegerField()
     cleared = BooleanField()
     cleared_date = DateTimeField(null=True)
+    alert_delta = IntegerField()
     alert_sent = BooleanField()
     created_at = DateTimeField()
 
     @classmethod
-    def new_event_type_user(cls, event_type, user, access_key_num):
+    def new_event_type_user(cls, event_type, user, access_key_num, alert_delta):
         event = Event.create(user=user, event_type=event_type, cleared=False,
                              alert_sent=False, created_at=date.today(),
-                             access_key_num=access_key_num)
+                             access_key_num=access_key_num, alert_delta=alert_delta)
         event.save()
         return event
 
@@ -232,7 +233,6 @@ class Event(BaseModel):
     def events_for_user(cls, user):
         events = Event.select().where(Event.user == user)
         return events
-
 
 def drop_all_tables():
     if not db.is_connection_usable:
@@ -258,7 +258,8 @@ def create_tables_debug():
 def create_tables():
     db.connect(reuse_if_open=True)
     tables_created = False
-    for table in db.get_tables():
+    tables = db.get_tables()
+    for table in tables:
         if db.table_exists(table):
             tables_created = True
         else:

@@ -16,23 +16,27 @@ import sys
 import time
 import yaml
 
+
 def check_retention(warn_days, violation_days, key_date):
     """
     Returns violation when keys were last rotated more than :violation_days: ago and 
     warning when keys were last rotated :warn_days: ago if it is neither None is returned
     """
     key_date = parse(key_date, ignoretz=True)
-    if key_date + timedelta(days=int(violation_days)) <= datetime.now():
-        return "violation"
-    if key_date + timedelta(days=int(warn_days)) <= datetime.now():
-        return "warning"
+    violation_days_delta = key_date + timedelta(days=int(violation_days))
+    warning_days_delta = key_date + timedelta(days=int(warn_days))
+    if violation_days_delta <= datetime.now():
+        return "violation", violation_days_delta
+    if warning_days_delta <= datetime.now():
+        return "warning", warning_days_delta
     return None
+
 
 def find_known_user(report_user, all_users_dict):
     """
     Return the row from the users dictionary matching the report user if it exists and
     not_found list if the user isn't found. This will be used for validating thresholds 
-    for the key rotation date timeframes as well as help track users not foundf
+    for the key rotation date timeframes as well as help track users not found
     
     Note that if is_wildcard is true, the search will be a fuzzy search otherwise the 
     search will be looking for an exact match.
@@ -60,26 +64,27 @@ def event_exists(events, access_key_num):
     If the same event and key number are found, return the event
     An event has an event_type of warning or violation
     """
-    foundEvent = None
+    found_event = None
     for event in events:
-        if (event.access_key_num == access_key_num):
-            foundEvent = event
+        if event.access_key_num == access_key_num:
+            found_event = event
             break
-    return foundEvent
+    return found_event
 
 
-def add_event_to_db(user, alert_type, access_key_num):
+def add_event_to_db(user, alert_type, access_key_num, alert_delta):
     event_type = Event_Type.insert_event_type(alert_type)
-    event = Event.new_event_type_user(event_type, user, access_key_num)
+    event = Event.new_event_type_user(event_type, user, access_key_num, alert_delta)
     event.cleared = False
     event.alert_sent = False
     event.save()
 
 
-def update_event(event, alert_type):
+def update_event(event, alert_type, alert_delta):
     if alert_type:
         event_type = Event_Type.insert_event_type(alert_type)
         event.event_type = event_type
+        event.alert_delta = alert_delta
         event.cleared = False
         event.save()
     else:
@@ -90,22 +95,22 @@ def update_event(event, alert_type):
 
 def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
                             warn_days, violation_days, alert):
-
-    if (access_key_last_rotated != "N/A"):
-        alert_type = check_retention(warn_days, violation_days,
+    if access_key_last_rotated != "N/A":
+        alert_type, alert_delta = check_retention(warn_days, violation_days,
                                      access_key_last_rotated)
         iam_user = IAM_Keys.user_from_dict(user_row)
-        if (alert_type):
+        if alert_type:
             events = iam_user.events
             found_event = event_exists(events, access_key_num)
             if found_event:
-                update_event(found_event, alert_type)
+                update_event(found_event, alert_type, alert_delta)
             elif alert:
-                add_event_to_db(iam_user, alert_type, access_key_num)
+                add_event_to_db(iam_user, alert_type, access_key_num, alert_delta)
         else:
             IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
     else:
         IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
+
 
 def send_alerts(cleared, events, db):
     alerts = ""
@@ -116,26 +121,31 @@ def send_alerts(cleared, events, db):
             alert_type = event.event_type.event_type_name
             access_key_num = event.access_key_num
             scrubbed_arn = user.arn.split(':')[4][-4:]
-            user_string = user.iam_user+"-"+scrubbed_arn
+            user_string = user.iam_user + "-" + scrubbed_arn
             cleared_int = 0 if cleared else 1
-            access_key_last_rotated = user.access_key_1_last_rotated if access_key_num == 1 else user.access_key_2_last_rotated
-            
+            if access_key_num == 1:
+                access_key_last_rotated = user.access_key_1_last_rotated
+            else:
+                access_key_last_rotated = user.access_key_2_last_rotated
+
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
-            alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
-            
-            # Set the cleared and alert_sent attributes in the database, subject to the metric making it through the gateway
+            alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", \
+            key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
+            alerts += alert
+
+            # Set the cleared and alert_sent attributes in the database,
+            # subject to the metric making it through the gateway
             event.cleared = True if cleared else False
             event.alert_sent = True
             event.save()
-            print(f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n')
+            print(alert)
 
-        
         # Send alerts to prometheus to update alerts
         prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         res = requests.put(url=prometheus_url,
-                            data=alerts,
-                            headers={'Content-Type': 'application/octet-stream'}
-                            )
+                           data=alerts,
+                           headers={'Content-Type': 'application/octet-stream'}
+                           )
         print(res.raise_for_status())
         if res.status_code == 200:
             transaction.commit()
@@ -143,15 +153,17 @@ def send_alerts(cleared, events, db):
             print(f'Warning! Metrics failed to record! See Logs status_code: {res.status_code} reason: {res.reason}')
             transaction.rollback()
 
+
 def send_all_alerts(db):
     try:
         cleared_events = Event.all_cleared_events()
         send_alerts(True, cleared_events, db)
         uncleared_events = Event.all_uncleared_events()
         send_alerts(False, uncleared_events, db)
-    except:
-        print("an exception occured while adding alerts to the database")    
-    
+    except ValueError:
+        print(f"{ValueError} an exception occurred while adding alerts to the database")
+
+
 def check_access_keys(user_row, warn_days, violation_days, alert):
     """
     Validate key staleness for both access keys, provided they exist, for a
@@ -161,10 +173,10 @@ def check_access_keys(user_row, warn_days, violation_days, alert):
     last_rotated_key2 = user_row['access_key_2_last_rotated']
 
     check_retention_for_key(last_rotated_key1, 1, user_row, warn_days,
-                                violation_days, alert)
+                            violation_days, alert)
 
     check_retention_for_key(last_rotated_key2, 2, user_row, warn_days,
-                                violation_days, alert)
+                            violation_days, alert)
 
 
 def check_user_thresholds(user_thresholds, report_row):
@@ -187,9 +199,9 @@ def search_for_keys(region_name, profile, all_users):
     The main search function that reaches out to AWS IAM to grab the
     credentials report and read in csv.
     """
-    
-    # First let's get a session based on the user access key so we can get all of
-    # the users for a given account via the Python boto3 lib
+
+    # First let's get a session based on the user access key,
+    # so we can get all the users for a given account via the Python boto3 lib
     session = boto3.Session(region_name=region_name,
                             aws_access_key_id=profile['id'],
                             aws_secret_access_key=profile['secret'])
@@ -213,8 +225,8 @@ def search_for_keys(region_name, profile, all_users):
     csv_reader = csv.DictReader(content_lines, delimiter=",")
     not_found = []
     for row in csv_reader:
-        user_name = row["user"]
-        
+        user_name = row['user']
+
         # Note: second return value in tuple below is ignored for now
         # When we want to do something with unknown users we can hook it up here
         user_dict, _ = find_known_user(user_name, all_users)
@@ -243,11 +255,11 @@ def state_file_to_dict(all_outputs):
     output_dict = {}
     for key, value in all_outputs.items():
         profile = {}
-        newDict = {}
+        new_dict = {}
         new_key_comps = key.split(prefix_delimiter)
         key_prefix = new_key_comps[0]
         new_key = new_key_comps[3]
-        newDict[new_key] = value
+        new_dict[new_key] = value
         if key_prefix in output_dict:
             # one exists, lets use it!
             profile = output_dict[key_prefix]
@@ -270,29 +282,29 @@ def load_profiles(com_state_file, gov_state_file):
     all_outputs_gov = gov_state['terraform_outputs']
     com_state_dict = state_file_to_dict(all_outputs_com)
     gov_state_dict = state_file_to_dict(all_outputs_gov)
-    return (com_state_dict, gov_state_dict)
+    return com_state_dict, gov_state_dict
 
 
 def format_user_dicts(users_list, thresholds, account_type):
     """
     Augment the users list to have the threshold information.
     """
-    user_list = []
+    augmented_user_list = []
     for key in users_list:
-        found_thresholds = [dict for dict in thresholds
-                            if dict['account_type'] == account_type]
+        found_thresholds = [threshold_dict for threshold_dict in thresholds
+                            if threshold_dict['account_type'] == account_type]
         if found_thresholds:
             found_threshold = copy(found_thresholds[0])
             found_threshold["user"] = key
-            user_list.append(found_threshold)
-    return user_list
+            augmented_user_list.append(found_threshold)
+    return augmented_user_list
 
 
 def load_other_users(other_users_filename):
     # Schema for other_users is
     # {user: user_name, account_type:account_type, is_wildcard: True|False,
     # alert: True|False, warn: warn, violation: violation}
-    # Note that all values are hardcoded except the user name
+    # Note that all values are hardcoded except the username
     other_users_file = open(other_users_filename)
     other_users_yaml = yaml.safe_load(other_users_file)
 
@@ -309,14 +321,14 @@ def load_tf_users(tf_filename, thresholds):
     #   warn: 165,
     #   violation: 180
     # }
-    # Note that all values are hardcoded except the user name
+    # Note that all values are hardcoded except the username
     tf_users = []
     tf_file = open(tf_filename)
     tf_yaml = yaml.safe_load(tf_file)
     outputs = tf_yaml['terraform_outputs']
     for key in list(outputs):
         if "username" in key:
-            found_thresholds = [dict for dict in thresholds
+            found_thresholds = [threshold_dict for threshold_dict in thresholds
                                 if dict['account_type'] == "Platform"]
             if found_thresholds:
                 found_threshold = copy(found_thresholds[0])
@@ -339,12 +351,13 @@ def load_system_users(filename, thresholds):
 
 def load_thresholds(filename):
     """
-    This is the file that holds all of the threshold information to be added to
+    This is the file that holds all the threshold information to be added to
     the user list dictionaries.
     """
     thresholds_file = open(filename)
     thresholds_yaml = yaml.safe_load(thresholds_file)
     return thresholds_yaml
+
 
 def main():
     """
@@ -409,7 +422,7 @@ def main():
 
 
 if __name__ == "__main__":
-    if not ("GATEWAY_HOST") in os.environ:
+    if "GATEWAY_HOST" not in os.environ:
         print("GATEWAY_HOST is required.")
         sys.exit(1)
     main()
