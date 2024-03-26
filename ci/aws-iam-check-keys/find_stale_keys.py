@@ -12,6 +12,8 @@ from keys_db_models import (
     Event)
 import keys_db_models
 import os
+from playhouse.migrate import PostgresqlMigrator
+from playhouse.migrate import *
 import sys
 import time
 import yaml
@@ -26,10 +28,10 @@ def check_retention(warn_days, violation_days, key_date):
     violation_days_delta = key_date + timedelta(days=int(violation_days))
     warning_days_delta = key_date + timedelta(days=int(warn_days))
     if violation_days_delta <= datetime.now():
-        return "violation", violation_days_delta
+        return "violation", warning_days_delta, violation_days_delta
     if warning_days_delta <= datetime.now():
-        return "warning", warning_days_delta
-    return None
+        return "warning", warning_days_delta, violation_days_delta
+    return "", None, None
 
 
 def find_known_user(report_user, all_users_dict):
@@ -72,19 +74,20 @@ def event_exists(events, access_key_num):
     return found_event
 
 
-def add_event_to_db(user, alert_type, access_key_num, alert_delta):
+def add_event_to_db(user, alert_type, access_key_num, warning_delta, violation_delta):
     event_type = Event_Type.insert_event_type(alert_type)
-    event = Event.new_event_type_user(event_type, user, access_key_num, alert_delta)
+    event = Event.new_event_type_user(event_type, user, access_key_num, warning_delta, violation_delta)
     event.cleared = False
     event.alert_sent = False
     event.save()
 
 
-def update_event(event, alert_type, alert_delta):
+def update_event(event, alert_type, warning_delta, violation_delta):
     if alert_type:
         event_type = Event_Type.insert_event_type(alert_type)
         event.event_type = event_type
-        event.alert_delta = alert_delta
+        event.warning_delta = warning_delta
+        event.violation_delta = violation_delta 
         event.cleared = False
         event.save()
     else:
@@ -95,17 +98,19 @@ def update_event(event, alert_type, alert_delta):
 
 def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
                             warn_days, violation_days, alert):
+    alert_type = ""
     if access_key_last_rotated != "N/A":
-        alert_type, alert_delta = check_retention(warn_days, violation_days,
-                                     access_key_last_rotated)
+        if warn_days and violation_days:
+            alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days,
+                                        access_key_last_rotated)
         iam_user = IAM_Keys.user_from_dict(user_row)
-        if alert_type:
+        if alert_type and len(alert_type) > 0:
             events = iam_user.events
             found_event = event_exists(events, access_key_num)
             if found_event:
-                update_event(found_event, alert_type, alert_delta)
+                update_event(found_event, alert_type, warning_delta, violation_delta)
             elif alert:
-                add_event_to_db(iam_user, alert_type, access_key_num, alert_delta)
+                add_event_to_db(iam_user, alert_type, access_key_num, warning_delta, violation_delta)
         else:
             IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
     else:
@@ -129,8 +134,8 @@ def send_alerts(cleared, events, db):
                 access_key_last_rotated = user.access_key_2_last_rotated
 
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
-            alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", \
-            key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
+            alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", days_warn:"{event.warning_delta}"\
+            days_violation:"{event.violation_delta}" key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
             alerts += alert
 
             # Set the cleared and alert_sent attributes in the database,
@@ -248,7 +253,7 @@ def state_file_to_dict(all_outputs):
     #
     # example:
     #
-    # gov-stg-tool_access_key_id_stalekey -> prefix = gov-stg-tool
+    # gov-stg-tool_access_key_id_stalekey -> prefix = gov-stg-tool, so the delimiter is '-'
     # the rest = tool_access_key_id_stalekey
     prefix_delimiter = os.getenv('PREFIX_DELIMITER')
 
@@ -258,7 +263,7 @@ def state_file_to_dict(all_outputs):
         new_dict = {}
         new_key_comps = key.split(prefix_delimiter)
         key_prefix = new_key_comps[0]
-        new_key = new_key_comps[3]
+        new_key = new_key_comps[len(new_key_comps)-2]
         new_dict[new_key] = value
         if key_prefix in output_dict:
             # one exists, lets use it!
@@ -358,22 +363,37 @@ def load_thresholds(filename):
     thresholds_yaml = yaml.safe_load(thresholds_file)
     return thresholds_yaml
 
+def migrate_db(db):
+    migrator = PostgresqlMigrator(db)
+    migrate(
+        migrator.rename_column('event', 'alert_delta', 'warning_delta'),
+        migrator.add_column('event', 'violation_delta', DateTimeField(null=True))
+    )
 
 def main():
     """
-    The main function that creates tables, loads the csv for the reference
-    table and kicks off the search for stale keys
+    Create tables if needed, load the thresholds for alerting and kick off the search for stale keys
+    If there is a migration to do, do that first!
     """
+
     # grab the state files, user files and outputs from cg-provision from the
-    # s3 resources
-    base_dir = "../../.."
+    # s3 buckets for com and gov users
+    debug = False
+    if ('BASE_DIR' in os.environ):
+        debug = True
+        base_dir = os.getenv('BASE_DIR')
+    else:
+        base_dir = "../../.."
     com_state_file = os.path.join(base_dir, "terraform-prod-com-yml/state.yml")
     gov_state_file = os.path.join(base_dir, "terraform-prod-gov-yml/state.yml")
     com_users_filename = os.path.join(base_dir, "aws-admin/stacks/gov/sso/users.yaml")
     gov_users_filename = os.path.join(base_dir, "aws-admin/stacks/com/sso/users.yaml")
     tf_state_filename = os.path.join(base_dir, "terraform-yaml-production/state.yml")
     other_users_filename = os.path.join(base_dir, "other-iam-users-yml/other_iam_users.yml")
-    thresholds_filename = os.path.join(base_dir, "prometheus-config/ci/aws-iam-check-keys/thresholds.yml")
+    if debug == True:
+        thresholds_filename = "/Users/robertagottlieb/Dev/cg-deploy-prometheus/ci/aws-iam-check-keys/thresholds.yml"
+    else: 
+        thresholds_filename = os.path.join(base_dir, "prometheus-config/ci/aws-iam-check-keys/thresholds.yml")
 
     # AWS regions
     com_region = "us-east-1"
@@ -390,13 +410,18 @@ def main():
     st = time.time()
 
     create_tables_bool = os.getenv('IAM_CREATE_TABLES')
-    # Flag for debugging in dev or staging
+    # Flag for debugging in dev or staging as the initial run creates the tables
+    # the rest of the time we'll want to create them for debugging or testing db migrations
     if create_tables_bool == "True":
         print("DEBUG: creating tables...")
         db = keys_db_models.create_tables_debug()
     else:
         print("connecting to database, and creating tables if this is the first run")
         db = keys_db_models.create_tables()
+
+    # Take care of migrations if there are any before searching
+    if os.getenv('MIGRATE'):
+        migrate_db(db)
 
     (com_state_dict, gov_state_dict) = load_profiles(com_state_file,
                                                      gov_state_file)
@@ -422,6 +447,7 @@ def main():
 
 
 if __name__ == "__main__":
+    # Set up the GATEWAY to send alerts to Prometheus
     if "GATEWAY_HOST" not in os.environ:
         print("GATEWAY_HOST is required.")
         sys.exit(1)

@@ -207,15 +207,16 @@ class Event(BaseModel):
     access_key_num = IntegerField()
     cleared = BooleanField()
     cleared_date = DateTimeField(null=True)
-    alert_delta = IntegerField()
+    warning_delta = DateTimeField(null=True)
+    violation_delta = DateTimeField(null=True)
     alert_sent = BooleanField()
     created_at = DateTimeField()
 
     @classmethod
-    def new_event_type_user(cls, event_type, user, access_key_num, alert_delta):
+    def new_event_type_user(cls, event_type, user, access_key_num, warning_delta, violation_delta):
         event = Event.create(user=user, event_type=event_type, cleared=False,
                              alert_sent=False, created_at=date.today(),
-                             access_key_num=access_key_num, alert_delta=alert_delta)
+                             access_key_num=access_key_num, warning_delta=warning_delta, violation_delta=violation_delta)
         event.save()
         return event
 
