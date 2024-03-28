@@ -334,7 +334,7 @@ def load_tf_users(tf_filename, thresholds):
     for key in list(outputs):
         if "username" in key:
             found_thresholds = [threshold_dict for threshold_dict in thresholds
-                                if dict['account_type'] == "Platform"]
+                                if threshold_dict['account_type'] == "Platform"]
             if found_thresholds:
                 found_threshold = copy(found_thresholds[0])
                 found_threshold["user"] = outputs[key]
