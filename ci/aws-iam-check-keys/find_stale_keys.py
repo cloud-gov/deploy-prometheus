@@ -290,31 +290,24 @@ def load_profiles(com_state_file, gov_state_file):
     return com_state_dict, gov_state_dict
 
 
+def get_platform_thresholds(thresholds, account_type):
+    found_thresholds = [threshold_dict for threshold_dict in thresholds
+        if threshold_dict['account_type'] == account_type]
+    if found_thresholds:
+        return copy(found_thresholds[0])
+    else:
+        return None
+
 def format_user_dicts(users_list, thresholds, account_type):
     """
     Augment the users list to have the threshold information.
     """
     augmented_user_list = []
     for key in users_list:
-        found_thresholds = [threshold_dict for threshold_dict in thresholds
-                            if threshold_dict['account_type'] == account_type]
-        if found_thresholds:
-            found_threshold = copy(found_thresholds[0])
-            found_threshold["user"] = key
-            augmented_user_list.append(found_threshold)
+        found_threshold = get_platform_thresholds(thresholds, account_type)
+        found_threshold["user"] = key
+        augmented_user_list.append(found_threshold)
     return augmented_user_list
-
-
-def load_other_users(other_users_filename):
-    # Schema for other_users is
-    # {user: user_name, account_type:account_type, is_wildcard: True|False,
-    # alert: True|False, warn: warn, violation: violation}
-    # Note that all values are hardcoded except the username
-    other_users_file = open(other_users_filename)
-    other_users_yaml = yaml.safe_load(other_users_file)
-
-    return other_users_yaml
-
 
 def load_tf_users(tf_filename, thresholds):
     # Schema for tf_users - need to verify this is correct
@@ -333,15 +326,21 @@ def load_tf_users(tf_filename, thresholds):
     outputs = tf_yaml['terraform_outputs']
     for key in list(outputs):
         if "username" in key:
-            print(f'thresholds are: {thresholds}')
-            found_thresholds = [threshold_dict for threshold_dict in thresholds
-                                if threshold_dict['account_type'] == "Platform"]
-            if found_thresholds:
-                found_threshold = copy(found_thresholds[0])
-                found_threshold["user"] = outputs[key]
-                tf_users.append(found_threshold)
+            found_threshold = get_platform_thresholds(thresholds, "Platform")
+            found_threshold["user"] = outputs[key]
+            tf_users.append(found_threshold)
     return tf_users
 
+
+def load_other_users(other_users_filename):
+    # Schema for other_users is
+    # {user: user_name, account_type:account_type, is_wildcard: True|False,
+    # alert: True|False, warn: warn, violation: violation}
+    # Note that all values are hardcoded except the username
+    other_users_file = open(other_users_filename)
+    other_users_yaml = yaml.safe_load(other_users_file)
+
+    return other_users_yaml
 
 def load_system_users(filename, thresholds):
     # Schema for gov or com users after pull out the "users" dict
@@ -353,7 +352,6 @@ def load_system_users(filename, thresholds):
     users_list = list(yaml.safe_load(file)["users"])
     users_list = format_user_dicts(users_list, thresholds, "Operator")
     return users_list
-
 
 def load_thresholds(filename):
     """
@@ -367,7 +365,7 @@ def load_thresholds(filename):
 def migrate_db(db):
     migrator = PostgresqlMigrator(db)
     migrate(
-        migrator.rename_column('event', 'alert_delta', 'warning_delta'),
+        migrator.add_column('event', 'warning_delta', DateTimeField(null=True))
         migrator.add_column('event', 'violation_delta', DateTimeField(null=True))
     )
 
