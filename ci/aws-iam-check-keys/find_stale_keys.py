@@ -365,7 +365,7 @@ def load_thresholds(filename):
 def migrate_db(db):
     migrator = PostgresqlMigrator(db)
     migrate(
-        migrator.add_column('event', 'warning_delta', DateTimeField(null=True))
+        migrator.add_column('event', 'warning_delta', DateTimeField(null=True)),
         migrator.add_column('event', 'violation_delta', DateTimeField(null=True))
     )
 
