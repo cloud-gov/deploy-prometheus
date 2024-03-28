@@ -333,6 +333,7 @@ def load_tf_users(tf_filename, thresholds):
     outputs = tf_yaml['terraform_outputs']
     for key in list(outputs):
         if "username" in key:
+            print(f'thresholds are: {thresholds}')
             found_thresholds = [threshold_dict for threshold_dict in thresholds
                                 if threshold_dict['account_type'] == "Platform"]
             if found_thresholds:
