@@ -122,11 +122,10 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
 
     # Calculate deltas (assuming check_retention returns deltas)
     alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days, access_key_last_rotated)
-
-    iam_user = IAM_Keys.user_from_dict(user_row)
-
+    print(f"alert_type: {alert_type}, warning_delta: {warning_delta}, violation_delta: {violation_delta}")
     # Check for alert based on calculated delta and alert type
     if alert_type:
+        iam_user = IAM_Keys.user_from_dict(user_row)
         events = iam_user.events
         if event_exists(events, access_key_num):
             update_event(event_exists(events, access_key_num), alert_type, warning_delta, violation_delta)
