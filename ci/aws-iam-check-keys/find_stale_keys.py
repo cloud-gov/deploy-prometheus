@@ -112,6 +112,7 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
         None
     """
 
+    print(f"access_key_last_rotated: {access_key_last_rotated}")
     # Check if access key has been rotated (avoid unnecessary calculations)
     if access_key_last_rotated == "N/A":
         return
