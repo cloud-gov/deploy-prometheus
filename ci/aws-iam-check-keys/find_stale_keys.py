@@ -95,26 +95,66 @@ def update_event(event, alert_type, warning_delta, violation_delta):
         event.cleared_date = datetime.now()
         event.save()
 
-
 def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
                             warn_days, violation_days, alert):
-    alert_type = ""
-    if access_key_last_rotated != "N/A":
-        if warn_days and violation_days:
-            alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days,
-                                        access_key_last_rotated)
-        iam_user = IAM_Keys.user_from_dict(user_row)
-        if alert_type and len(alert_type) > 0:
-            events = iam_user.events
-            found_event = event_exists(events, access_key_num)
-            if found_event:
-                update_event(found_event, alert_type, warning_delta, violation_delta)
-            elif alert:
-                add_event_to_db(iam_user, alert_type, access_key_num, warning_delta, violation_delta)
+    """
+    Checks access key rotation and triggers alerts if necessary.
+
+    Args:
+        access_key_last_rotated: Last rotation date of the access key (str).
+        access_key_num: Access key number (str).
+        user_row: User data dictionary (dict).
+        warn_days: Number of days before violation triggers a warning (int or None).
+        violation_days: Number of days since rotation triggers a violation (int or None).
+        alert: Default alert message if no warning/violation conditions are met (str or None).
+
+    Returns:
+        None
+    """
+
+    # Check if access key has been rotated (avoid unnecessary calculations)
+    if access_key_last_rotated == "N/A":
+        return
+
+    # Check if both warning and violation days are defined
+    if not (warn_days and violation_days):
+        raise ValueError("Both warn_days and violation_days must be provided")
+
+    # Calculate deltas (assuming check_retention returns deltas)
+    alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days, access_key_last_rotated)
+
+    iam_user = IAM_Keys.user_from_dict(user_row)
+
+    # Check for alert based on calculated delta and alert type
+    if alert_type:
+        events = iam_user.events
+        if event_exists(events, access_key_num):
+            update_event(event_exists(events, access_key_num), alert_type, warning_delta, violation_delta)
         else:
-            IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
+            add_event_to_db(iam_user, alert_type, access_key_num, warning_delta, violation_delta)
     else:
         IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
+
+
+# def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
+#                             warn_days, violation_days, alert):
+#     alert_type = ""
+#     if access_key_last_rotated != "N/A":
+#         if warn_days and violation_days:
+#             alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days,
+#                                         access_key_last_rotated)
+#         iam_user = IAM_Keys.user_from_dict(user_row)
+#         if alert_type and len(alert_type) > 0 and warning_delta and violation_delta:
+#             events = iam_user.events
+#             found_event = event_exists(events, access_key_num)
+#             if found_event:
+#                 update_event(found_event, alert_type, warning_delta, violation_delta)
+#             elif alert:
+#                 add_event_to_db(iam_user, alert_type, access_key_num, warning_delta, violation_delta)
+#         else:
+#             IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
+#     else:
+#         IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
 
 
 def send_alerts(cleared, events, db):

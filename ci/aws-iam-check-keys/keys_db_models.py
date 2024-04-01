@@ -135,6 +135,16 @@ class IAM_Keys(BaseModel):
     
     @classmethod
     def check_key_in_db_and_update(cls, user_row, key_num):
+        """
+            Checks to see if user is in db, and update with the user row if they are
+
+            Args:
+                user_row: User data dictionary (dict).
+                key_num: Access key number (str).
+
+            Returns:
+                None
+        """
         if key_num == 1:
             try:
                 user = IAM_Keys.get(
@@ -157,7 +167,7 @@ class IAM_Keys(BaseModel):
                     event.save()
                 user.save()
             except IAM_Keys.DoesNotExist:
-                print(f'========== user not found! {user_row["user"]} ==========')
+                print(f'========== user not found in db! {user_row["user"]} ==========')
         elif key_num == 2:
             try:
                 user = IAM_Keys.get(
@@ -180,7 +190,7 @@ class IAM_Keys(BaseModel):
                     event.save()
                 user.save()
             except IAM_Keys.DoesNotExist:
-                print(f'========== user not found! {user_row["user"]} ==========')
+                print(f'========== user not found in db! {user_row["user"]} ==========')
 
         
 # Event Type stores the various event types such as warning and violation
