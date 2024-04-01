@@ -134,8 +134,8 @@ def send_alerts(cleared, events, db):
                 access_key_last_rotated = user.access_key_2_last_rotated
 
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
-            alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", days_warn:"{event.warning_delta}"\
-            days_violation:"{event.violation_delta}" key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
+            alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", days_warn:"{event.warning_delta},"\
+            days_violation:"{event.violation_delta}," key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
             alerts += alert
 
             # Set the cleared and alert_sent attributes in the database,
