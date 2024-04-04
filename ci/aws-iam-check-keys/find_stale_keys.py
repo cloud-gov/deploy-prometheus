@@ -139,6 +139,7 @@ def send_alerts(cleared, events, db):
                 alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", days_until_warn="{event.warning_delta}",\
                 days_until_violation="{event.violation_delta}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
                 alerts += alert
+                print(alert)
 
             # Set the cleared and alert_sent attributes in the database,
             # subject to the metric making it through the gateway
