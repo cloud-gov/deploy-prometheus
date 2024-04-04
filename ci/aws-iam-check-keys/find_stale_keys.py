@@ -98,7 +98,6 @@ def update_event(event, alert_type, warning_delta, violation_delta):
 def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
                             warn_days, violation_days, alert):
     alert_type = ""
-    #if access_key_last_rotated != "N/A":
     if warn_days and violation_days and access_key_last_rotated != "N/A":
         alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days,
                                     access_key_last_rotated)
@@ -112,9 +111,6 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
             add_event_to_db(iam_user, alert_type, access_key_num, warning_delta, violation_delta)
     else:
         IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
-    # else:
-    #     print(f"N/A entry: {user_row}")
-    #     IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
 
 
 def send_alerts(cleared, events, db):
@@ -128,8 +124,7 @@ def send_alerts(cleared, events, db):
             scrubbed_arn = user.arn.split(':')[4][-4:]
             user_string = user.iam_user + "-" + scrubbed_arn
             cleared_int = 0 if cleared else 1
-            if user.iam_user == "james.tenney":
-                cleared_int = 1
+
             if access_key_num == 1:
                 access_key_last_rotated = user.access_key_1_last_rotated
             else:
