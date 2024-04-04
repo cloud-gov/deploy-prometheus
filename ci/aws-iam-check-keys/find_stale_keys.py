@@ -1,27 +1,30 @@
 #!/usr/bin/env python
 
-import requests
-import boto3
 from copy import copy
 import csv
 from datetime import timedelta, datetime
 from dateutil.parser import parse
+from pathlib import Path
+import os
+import sys
+import time
+import yaml
+
+import requests
+import boto3
+from playhouse.migrate import PostgresqlMigrator
+from playhouse.migrate import *
+
 from keys_db_models import (
     IAM_Keys,
     Event_Type,
     Event)
 import keys_db_models
-import os
-from playhouse.migrate import PostgresqlMigrator
-from playhouse.migrate import *
-import sys
-import time
-import yaml
 
 
 def check_retention(warn_days, violation_days, key_date):
     """
-    Returns violation when keys were last rotated more than :violation_days: ago and 
+    Returns violation when keys were last rotated more than :violation_days: ago and
     warning when keys were last rotated :warn_days: ago if it is neither None is returned
     """
     key_date = parse(key_date, ignoretz=True)
@@ -37,10 +40,10 @@ def check_retention(warn_days, violation_days, key_date):
 def find_known_user(report_user, all_users_dict):
     """
     Return the row from the users dictionary matching the report user if it exists and
-    not_found list if the user isn't found. This will be used for validating thresholds 
+    not_found list if the user isn't found. This will be used for validating thresholds
     for the key rotation date timeframes as well as help track users not found
-    
-    Note that if is_wildcard is true, the search will be a fuzzy search otherwise the 
+
+    Note that if is_wildcard is true, the search will be a fuzzy search otherwise the
     search will be looking for an exact match.
     """
     not_found = []
@@ -87,7 +90,7 @@ def update_event(event, alert_type, warning_delta, violation_delta):
         event_type = Event_Type.insert_event_type(alert_type)
         event.event_type = event_type
         event.warning_delta = warning_delta
-        event.violation_delta = violation_delta 
+        event.violation_delta = violation_delta
         event.cleared = False
         event.save()
     else:
@@ -382,16 +385,18 @@ def main():
         #base_dir = "/Users/robertagottlieb/Dev/"
     else:
         base_dir = "../../.."
-    com_state_file = os.path.join(base_dir, "terraform-prod-com-yml/state.yml")
-    gov_state_file = os.path.join(base_dir, "terraform-prod-gov-yml/state.yml")
-    com_users_filename = os.path.join(base_dir, "aws-admin/stacks/gov/sso/users.yaml")
-    gov_users_filename = os.path.join(base_dir, "aws-admin/stacks/com/sso/users.yaml")
-    tf_state_filename = os.path.join(base_dir, "terraform-yaml-production/state.yml")
-    other_users_filename = os.path.join(base_dir, "other-iam-users-yml/other_iam_users.yml")
+
+    base_path = Path(base_dir)
+    com_state_file = base_path / "terraform-prod-com-yml/state.yml"
+    gov_state_file = base_path / "terraform-prod-gov-yml/state.yml"
+    com_users_filename = base_path / "aws-admin/stacks/gov/sso/users.yaml"
+    gov_users_filename = base_path / "aws-admin/stacks/com/sso/users.yaml"
+    tf_state_filename = base_path / "terraform-yaml-production/state.yml"
+    other_users_filename = base_path / "other-iam-users-yml/other_iam_users.yml"
     if debug == True:
         thresholds_filename = "/Users/robertagottlieb/Dev/cg-deploy-prometheus/ci/aws-iam-check-keys/thresholds.yml"
-    else: 
-        thresholds_filename = os.path.join(base_dir, "prometheus-config/ci/aws-iam-check-keys/thresholds.yml")
+    else:
+        thresholds_filename = base_path / "prometheus-config/ci/aws-iam-check-keys/thresholds.yml"
 
     # AWS regions
     com_region = "us-east-1"
