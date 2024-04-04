@@ -20,21 +20,28 @@ from keys_db_models import (
     Event_Type,
     Event)
 import keys_db_models
+from threshold import Threshold
 
 
-def check_retention(warn_days, violation_days, key_date):
+VIOLATION = "violation"
+WARNING = "warning"
+OK = ""
+
+
+def check_retention(warn_days: int, violation_days: int, key_date):
     """
     Returns violation when keys were last rotated more than :violation_days: ago and
     warning when keys were last rotated :warn_days: ago if it is neither None is returned
     """
     key_date = parse(key_date, ignoretz=True)
-    violation_days_delta = key_date + timedelta(days=int(violation_days))
-    warning_days_delta = key_date + timedelta(days=int(warn_days))
+    violation_days_delta = key_date + timedelta(days=violation_days)
+    warning_days_delta = key_date + timedelta(days=warn_days)
+    status = OK
     if violation_days_delta <= datetime.now():
-        return "violation", warning_days_delta, violation_days_delta
+        status = VIOLATION
     if warning_days_delta <= datetime.now():
-        return "warning", warning_days_delta, violation_days_delta
-    return "", None, None
+        status = WARNING
+    return status, warning_days_delta, violation_days_delta
 
 
 def find_known_user(report_user, all_users_dict):
@@ -98,8 +105,9 @@ def update_event(event, alert_type, warning_delta, violation_delta):
         event.cleared_date = datetime.now()
         event.save()
 
+
 def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
-                            warn_days, violation_days, alert):
+                            warn_days: int, violation_days: int, alert):
     alert_type = ""
     if warn_days and violation_days and access_key_last_rotated != "N/A":
         alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days,
@@ -170,7 +178,7 @@ def send_all_alerts(db):
         print(f"{ValueError} an exception occurred while adding alerts to the database")
 
 
-def check_access_keys(user_row, warn_days, violation_days, alert):
+def check_access_keys(user_row, warn_days: int, violation_days: int, alert):
     """
     Validate key staleness for both access keys, provided they exist, for a
     given user
@@ -185,18 +193,20 @@ def check_access_keys(user_row, warn_days, violation_days, alert):
                             violation_days, alert)
 
 
-def check_user_thresholds(user_thresholds, report_row):
+def check_user_thresholds(user_threshold: Threshold, report_row):
     """
     Grab the thresholds from the user_thresholds and pass them on with the row
     from the credentials report to be used for checking the keys
     """
-    warn_days = user_thresholds['warn']
-    violation_days = user_thresholds['violation']
-    alert = user_thresholds['alert']
+    warn_days = user_threshold.warn
+    violation_days = user_threshold.violation
+    alert = user_thresholds.alert
 
     if warn_days == 0 or violation_days == 0:
         warn_days = os.getenv("WARN_DAYS")
+        warn_days = int(warn_days)
         violation_days = os.getenv("VIOLATION_DAYS")
+        violation_days = int(violation_days)
     check_access_keys(report_row, warn_days, violation_days, alert)
 
 
@@ -280,10 +290,10 @@ def load_profiles(com_state_file, gov_state_file):
     """
     Clean up yaml from state files for com and gov
     """
-    com_file = open(com_state_file)
-    gov_file = open(gov_state_file)
-    com_state = yaml.safe_load(com_file)
-    gov_state = yaml.safe_load(gov_file)
+    with open(com_state_file) as f:
+        com_state = yaml.safe_load(f)
+    with open(gov_state_file) as f:
+        gov_state = yaml.safe_load(f)
     all_outputs_com = com_state['terraform_outputs']
     all_outputs_gov = gov_state['terraform_outputs']
     com_state_dict = state_file_to_dict(all_outputs_com)
@@ -291,26 +301,28 @@ def load_profiles(com_state_file, gov_state_file):
     return com_state_dict, gov_state_dict
 
 
-def get_platform_thresholds(thresholds, account_type):
+def get_platform_thresholds(thresholds: list[Threshold], account_type):
     found_thresholds = [threshold_dict for threshold_dict in thresholds
-        if threshold_dict['account_type'] == account_type]
+        if threshold_dict.account_type == account_type]
     if found_thresholds:
         return copy(found_thresholds[0])
     else:
         return None
 
-def format_user_dicts(users_list, thresholds, account_type):
+
+def format_user_dicts(users_list, thresholds: list[Threshold], account_type):
     """
     Augment the users list to have the threshold information.
     """
     augmented_user_list = []
     for key in users_list:
         found_threshold = get_platform_thresholds(thresholds, account_type)
-        found_threshold["user"] = key
+        found_threshold.user = key
         augmented_user_list.append(found_threshold)
     return augmented_user_list
 
-def load_tf_users(tf_filename, thresholds):
+
+def load_tf_users(tf_filename, thresholds: list[Threshold]):
     # Schema for tf_users - need to verify this is correct
     # {
     #   user:user_name,
@@ -322,13 +334,13 @@ def load_tf_users(tf_filename, thresholds):
     # }
     # Note that all values are hardcoded except the username
     tf_users = []
-    tf_file = open(tf_filename)
-    tf_yaml = yaml.safe_load(tf_file)
+    with open(tf_filename) as f:
+        tf_yaml = yaml.safe_load(f)
     outputs = tf_yaml['terraform_outputs']
     for key in list(outputs):
         if "username" in key:
             found_threshold = get_platform_thresholds(thresholds, "Platform")
-            found_threshold["user"] = outputs[key]
+            found_threshold.user = outputs[key]
             tf_users.append(found_threshold)
     return tf_users
 
@@ -338,10 +350,11 @@ def load_other_users(other_users_filename):
     # {user: user_name, account_type:account_type, is_wildcard: True|False,
     # alert: True|False, warn: warn, violation: violation}
     # Note that all values are hardcoded except the username
-    other_users_file = open(other_users_filename)
-    other_users_yaml = yaml.safe_load(other_users_file)
+    with open(other_users_filename) as f:
+        other_users_yaml = yaml.safe_load(f)
 
     return other_users_yaml
+
 
 def load_system_users(filename, thresholds):
     # Schema for gov or com users after pull out the "users" dict
@@ -349,19 +362,21 @@ def load_system_users(filename, thresholds):
     # translated to:
     # {"user":user_name, "account_type":"Operators"} - note Operators is
     # hardcoded for now
-    file = open(filename)
-    users_list = list(yaml.safe_load(file)["users"])
+    with open(filename) as f:
+        users_list = list(yaml.safe_load(f)["users"])
     users_list = format_user_dicts(users_list, thresholds, "Operator")
     return users_list
 
-def load_thresholds(filename):
+
+def load_thresholds(filename: Path) -> list[Threshold]:
     """
     This is the file that holds all the threshold information to be added to
     the user list dictionaries.
     """
-    thresholds_file = open(filename)
-    thresholds_yaml = yaml.safe_load(thresholds_file)
-    return thresholds_yaml
+    with open(filename) as f:
+        thresholds_yaml = yaml.safe_load(f)
+    return [Threshold(**threshold) for threshold in thresholds_yaml]
+
 
 def migrate_db(db):
     migrator = PostgresqlMigrator(db)
@@ -369,6 +384,7 @@ def migrate_db(db):
         migrator.add_column('event', 'warning_delta', DateTimeField(null=True)),
         migrator.add_column('event', 'violation_delta', DateTimeField(null=True))
     )
+
 
 def main():
     """
