@@ -90,7 +90,7 @@ class IAM_Keys(BaseModel):
     @classmethod
     def clean_dict(cls, keys_dict):
         for key in keys_dict:
-            if keys_dict[key] == 'N/A':
+            if keys_dict[key] in ["N/A","no_information"]:
                 keys_dict[key] = None
         return keys_dict
 
