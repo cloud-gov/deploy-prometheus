@@ -27,7 +27,6 @@ def check_retention(warn_days, violation_days, key_date):
     key_date = parse(key_date, ignoretz=True)
     violation_days_delta = key_date + timedelta(days=int(violation_days))
     warning_days_delta = key_date + timedelta(days=int(warn_days))
-    print(f"deltas: violation: {violation_days_delta} warning: {warning_days_delta}")
     if violation_days_delta <= datetime.now():
         return "violation", warning_days_delta, violation_days_delta
     if warning_days_delta <= datetime.now():
@@ -100,14 +99,11 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
                             warn_days, violation_days, alert):
     alert_type = ""
     if access_key_last_rotated != "N/A":
-        print(f"user: {user_row['user']}, warn_days: {warn_days}, violation_days: {violation_days}")
         if warn_days and violation_days:
             alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days,
                                         access_key_last_rotated)
-            print(f"alert is {alert_type}")
         iam_user = IAM_Keys.user_from_dict(user_row)
         if alert_type: #and len(alert_type) > 0 and warning_delta and violation_delta:
-            print(f"inside alert type > 0 with {alert_type}, warning: {warning_delta}, violation: {violation_delta}")
             events = iam_user.events
             found_event = event_exists(events, access_key_num)
             if found_event:
@@ -140,12 +136,9 @@ def send_alerts(cleared, events, db):
 
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
             if event.warning_delta and event.violation_delta:
-                alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", days_warn="{event.warning_delta}",\
-                days_violation="{event.violation_delta}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
+                alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", days_until_warn="{event.warning_delta}",\
+                days_until_violation="{event.violation_delta}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
                 alerts += alert
-            #else:
-            #    print(f'NOT SURE WHATS UP: user="{user_string}", alert_type="{alert_type}", days_warn="{event.warning_delta}",\
-            #    days_violation="{event.violation_delta}", key="{access_key_num}", last_rotated="{access_key_last_rotated}" {cleared_int}\n')
 
             # Set the cleared and alert_sent attributes in the database,
             # subject to the metric making it through the gateway
