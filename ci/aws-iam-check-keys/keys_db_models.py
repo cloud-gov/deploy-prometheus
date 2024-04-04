@@ -145,6 +145,7 @@ class IAM_Keys(BaseModel):
             Returns:
                 None
         """
+        user_row = cls.clean_dict(user_row)
         if key_num == 1:
             try:
                 user = IAM_Keys.get(

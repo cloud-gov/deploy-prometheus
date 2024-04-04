@@ -27,6 +27,7 @@ def check_retention(warn_days, violation_days, key_date):
     key_date = parse(key_date, ignoretz=True)
     violation_days_delta = key_date + timedelta(days=int(violation_days))
     warning_days_delta = key_date + timedelta(days=int(warn_days))
+    print(f"deltas: violation: {violation_days_delta} warning: {warning_days_delta}")
     if violation_days_delta <= datetime.now():
         return "violation", warning_days_delta, violation_days_delta
     if warning_days_delta <= datetime.now():
@@ -97,64 +98,26 @@ def update_event(event, alert_type, warning_delta, violation_delta):
 
 def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
                             warn_days, violation_days, alert):
-    """
-    Checks access key rotation and triggers alerts if necessary.
-
-    Args:
-        access_key_last_rotated: Last rotation date of the access key (str).
-        access_key_num: Access key number (str).
-        user_row: User data dictionary (dict).
-        warn_days: Number of days before violation triggers a warning (int or None).
-        violation_days: Number of days since rotation triggers a violation (int or None).
-        alert: Default alert message if no warning/violation conditions are met (str or None).
-
-    Returns:
-        None
-    """
-
-    print(f"access_key_last_rotated: {access_key_last_rotated}")
-    # Check if access key has been rotated (avoid unnecessary calculations)
-    if access_key_last_rotated == "N/A":
-        return
-
-    # Check if both warning and violation days are defined
-    if not (warn_days and violation_days):
-        raise ValueError("Both warn_days and violation_days must be provided")
-
-    # Calculate deltas (assuming check_retention returns deltas)
-    alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days, access_key_last_rotated)
-    print(f"alert_type: {alert_type}, warning_delta: {warning_delta}, violation_delta: {violation_delta}")
-    # Check for alert based on calculated delta and alert type
-    if alert_type:
+    alert_type = ""
+    if access_key_last_rotated != "N/A":
+        print(f"user: {user_row['user']}, warn_days: {warn_days}, violation_days: {violation_days}")
+        if warn_days and violation_days:
+            alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days,
+                                        access_key_last_rotated)
+            print(f"alert is {alert_type}")
         iam_user = IAM_Keys.user_from_dict(user_row)
-        events = iam_user.events
-        if event_exists(events, access_key_num):
-            update_event(event_exists(events, access_key_num), alert_type, warning_delta, violation_delta)
+        if alert_type: #and len(alert_type) > 0 and warning_delta and violation_delta:
+            print(f"inside alert type > 0 with {alert_type}, warning: {warning_delta}, violation: {violation_delta}")
+            events = iam_user.events
+            found_event = event_exists(events, access_key_num)
+            if found_event:
+                update_event(found_event, alert_type, warning_delta, violation_delta)
+            elif alert:
+                add_event_to_db(iam_user, alert_type, access_key_num, warning_delta, violation_delta)
         else:
-            add_event_to_db(iam_user, alert_type, access_key_num, warning_delta, violation_delta)
+            IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
     else:
         IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
-
-
-# def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
-#                             warn_days, violation_days, alert):
-#     alert_type = ""
-#     if access_key_last_rotated != "N/A":
-#         if warn_days and violation_days:
-#             alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days,
-#                                         access_key_last_rotated)
-#         iam_user = IAM_Keys.user_from_dict(user_row)
-#         if alert_type and len(alert_type) > 0 and warning_delta and violation_delta:
-#             events = iam_user.events
-#             found_event = event_exists(events, access_key_num)
-#             if found_event:
-#                 update_event(found_event, alert_type, warning_delta, violation_delta)
-#             elif alert:
-#                 add_event_to_db(iam_user, alert_type, access_key_num, warning_delta, violation_delta)
-#         else:
-#             IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
-#     else:
-#         IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
 
 
 def send_alerts(cleared, events, db):
@@ -168,22 +131,27 @@ def send_alerts(cleared, events, db):
             scrubbed_arn = user.arn.split(':')[4][-4:]
             user_string = user.iam_user + "-" + scrubbed_arn
             cleared_int = 0 if cleared else 1
+            if user.iam_user == "james.tenney":
+                cleared_int = 1
             if access_key_num == 1:
                 access_key_last_rotated = user.access_key_1_last_rotated
             else:
                 access_key_last_rotated = user.access_key_2_last_rotated
 
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
-            alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", days_warn:"{event.warning_delta},"\
-            days_violation:"{event.violation_delta}," key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
-            alerts += alert
+            if event.warning_delta and event.violation_delta:
+                alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", days_warn="{event.warning_delta}",\
+                days_violation="{event.violation_delta}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
+                alerts += alert
+            #else:
+            #    print(f'NOT SURE WHATS UP: user="{user_string}", alert_type="{alert_type}", days_warn="{event.warning_delta}",\
+            #    days_violation="{event.violation_delta}", key="{access_key_num}", last_rotated="{access_key_last_rotated}" {cleared_int}\n')
 
             # Set the cleared and alert_sent attributes in the database,
             # subject to the metric making it through the gateway
             event.cleared = True if cleared else False
             event.alert_sent = True
             event.save()
-            print(alert)
 
         # Send alerts to prometheus to update alerts
         prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
@@ -421,6 +389,7 @@ def main():
     if ('BASE_DIR' in os.environ):
         debug = True
         base_dir = os.getenv('BASE_DIR')
+        #base_dir = "/Users/robertagottlieb/Dev/"
     else:
         base_dir = "../../.."
     com_state_file = os.path.join(base_dir, "terraform-prod-com-yml/state.yml")
