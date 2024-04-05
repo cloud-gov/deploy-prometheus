@@ -210,7 +210,7 @@ def check_user_thresholds(user_threshold: Threshold, report_row):
     check_access_keys(report_row, warn_days, violation_days, alert)
 
 
-def search_for_keys(region_name, profile, all_users):
+def search_for_keys(region_name, profile, all_users: list[Threshold]):
     """
     The main search function that reaches out to AWS IAM to grab the
     credentials report and read in csv.
@@ -310,7 +310,7 @@ def get_platform_thresholds(thresholds: list[Threshold], account_type):
         return None
 
 
-def format_user_dicts(users_list, thresholds: list[Threshold], account_type):
+def format_user_dicts(users_list, thresholds: list[Threshold], account_type) -> list[Threshold]:
     """
     Augment the users list to have the threshold information.
     """
@@ -356,7 +356,7 @@ def load_other_users(other_users_filename):
     return other_users_yaml
 
 
-def load_system_users(filename, thresholds):
+def load_system_users(filename, thresholds) -> list[Threshold]:
     # Schema for gov or com users after pull out the "users" dict
     # {"user.name":{'aws_groups': ['Operators', 'OrgAdmins']}}
     # translated to:
