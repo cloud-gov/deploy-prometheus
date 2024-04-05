@@ -4,6 +4,7 @@ from copy import copy
 import csv
 from datetime import timedelta, datetime
 from dateutil.parser import parse
+from environs import Env
 from pathlib import Path
 import os
 import sys
@@ -155,6 +156,7 @@ def send_alerts(cleared, events, db):
             event.save()
 
         # Send alerts to prometheus to update alerts
+        # TODO: Look at all uses of os.getenv and see if I can replace with Env (or if that is desirable)
         prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         res = requests.put(url=prometheus_url,
                            data=alerts,
@@ -394,9 +396,9 @@ def main():
 
     # grab the state files, user files and outputs from cg-provision from the
     # s3 buckets for com and gov users
-    debug = False
-    if ('BASE_DIR' in os.environ):
-        debug = True
+    env = Env()
+    DEBUG_BASE = env.bool("BASE_DIR", False)
+    if DEBUG_BASE:
         base_dir = os.getenv('BASE_DIR')
         #base_dir = "/Users/robertagottlieb/Dev/"
     else:
@@ -409,7 +411,7 @@ def main():
     gov_users_filename = base_path / "aws-admin/stacks/com/sso/users.yaml"
     tf_state_filename = base_path / "terraform-yaml-production/state.yml"
     other_users_filename = base_path / "other-iam-users-yml/other_iam_users.yml"
-    if debug == True:
+    if DEBUG_BASE == True:
         thresholds_filename = "/Users/robertagottlieb/Dev/cg-deploy-prometheus/ci/aws-iam-check-keys/thresholds.yml"
     else:
         thresholds_filename = base_path / "prometheus-config/ci/aws-iam-check-keys/thresholds.yml"
@@ -428,10 +430,10 @@ def main():
     st_cpu_time = time.process_time()
     st = time.time()
 
-    create_tables_bool = os.getenv('IAM_CREATE_TABLES')
     # Flag for debugging in dev or staging as the initial run creates the tables
     # the rest of the time we'll want to create them for debugging or testing db migrations
-    if create_tables_bool == "True":
+    DEBUG_TABLES =  env.bool("IAM_CREATE_TABLES", False)
+    if DEBUG_TABLES:
         print("DEBUG: creating tables...")
         db = keys_db_models.create_tables_debug()
     else:
@@ -439,7 +441,8 @@ def main():
         db = keys_db_models.create_tables()
 
     # Take care of migrations if there are any before searching
-    if os.getenv('MIGRATE'):
+    MIGRATE = env.bool("MIGRATE", False)
+    if MIGRATE:
         migrate_db(db)
 
     (com_state_dict, gov_state_dict) = load_profiles(com_state_file,
