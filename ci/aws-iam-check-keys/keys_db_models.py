@@ -56,7 +56,7 @@ class IAM_Keys(BaseModel):
     aws_account = CharField()
     arn = CharField(unique=True)
     user_creation_time = DateTimeField(null=True)
-    password_enabled = BooleanField()
+    password_enabled = BooleanField(null=True)
     password_last_used = DateTimeField(null=True)
     password_last_changed = DateTimeField(null=True)
     password_next_rotation = DateTimeField(null=True)
@@ -90,8 +90,11 @@ class IAM_Keys(BaseModel):
     @classmethod
     def clean_dict(cls, keys_dict):
         for key in keys_dict:
-            if keys_dict[key] in ["N/A","no_information"]:
-                keys_dict[key] = None
+            if keys_dict[key] in ["N/A","no_information","not_supported"]:
+                if key == "password_enabled":
+                    keys_dict[key] = False
+                else:
+                    keys_dict[key] = None
         return keys_dict
 
     @classmethod
@@ -271,6 +274,7 @@ def create_tables():
     db.connect(reuse_if_open=True)
     tables_created = False
     tables = db.get_tables()
+    
     for table in tables:
         if db.table_exists(table):
             tables_created = True
