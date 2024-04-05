@@ -1,46 +1,57 @@
 #!/usr/bin/env python
 
-import requests
-import boto3
 from copy import copy
 import csv
 from datetime import timedelta, datetime
 from dateutil.parser import parse
+from environs import Env
+from pathlib import Path
+import os
+import sys
+import time
+import yaml
+
+import requests
+import boto3
+from playhouse.migrate import PostgresqlMigrator
+from playhouse.migrate import *
+
 from keys_db_models import (
     IAM_Keys,
     Event_Type,
     Event)
 import keys_db_models
-import os
-from playhouse.migrate import PostgresqlMigrator
-from playhouse.migrate import *
-import sys
-import time
-import yaml
+from threshold import Threshold
 
 
-def check_retention(warn_days, violation_days, key_date):
+VIOLATION = "violation"
+WARNING = "warning"
+OK = ""
+
+
+def check_retention(warn_days: int, violation_days: int, key_date):
     """
-    Returns violation when keys were last rotated more than :violation_days: ago and 
+    Returns violation when keys were last rotated more than :violation_days: ago and
     warning when keys were last rotated :warn_days: ago if it is neither None is returned
     """
     key_date = parse(key_date, ignoretz=True)
-    violation_days_delta = key_date + timedelta(days=int(violation_days))
-    warning_days_delta = key_date + timedelta(days=int(warn_days))
+    violation_days_delta = key_date + timedelta(days=violation_days)
+    warning_days_delta = key_date + timedelta(days=warn_days)
+    status = OK
     if violation_days_delta <= datetime.now():
-        return "violation", warning_days_delta, violation_days_delta
+        status = VIOLATION
     if warning_days_delta <= datetime.now():
-        return "warning", warning_days_delta, violation_days_delta
-    return "", None, None
+        status = WARNING
+    return status, warning_days_delta, violation_days_delta
 
 
 def find_known_user(report_user, all_users_dict):
     """
     Return the row from the users dictionary matching the report user if it exists and
-    not_found list if the user isn't found. This will be used for validating thresholds 
+    not_found list if the user isn't found. This will be used for validating thresholds
     for the key rotation date timeframes as well as help track users not found
-    
-    Note that if is_wildcard is true, the search will be a fuzzy search otherwise the 
+
+    Note that if is_wildcard is true, the search will be a fuzzy search otherwise the
     search will be looking for an exact match.
     """
     not_found = []
@@ -87,7 +98,7 @@ def update_event(event, alert_type, warning_delta, violation_delta):
         event_type = Event_Type.insert_event_type(alert_type)
         event.event_type = event_type
         event.warning_delta = warning_delta
-        event.violation_delta = violation_delta 
+        event.violation_delta = violation_delta
         event.cleared = False
         event.save()
     else:
@@ -95,8 +106,9 @@ def update_event(event, alert_type, warning_delta, violation_delta):
         event.cleared_date = datetime.now()
         event.save()
 
+
 def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
-                            warn_days, violation_days, alert):
+                            warn_days: int, violation_days: int, alert):
     alert_type = ""
     if warn_days and violation_days and access_key_last_rotated != "N/A":
         alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days,
@@ -144,6 +156,7 @@ def send_alerts(cleared, events, db):
             event.save()
 
         # Send alerts to prometheus to update alerts
+        # TODO: Look at all uses of os.getenv and see if I can replace with Env (or if that is desirable)
         prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         res = requests.put(url=prometheus_url,
                            data=alerts,
@@ -167,7 +180,7 @@ def send_all_alerts(db):
         print(f"{ValueError} an exception occurred while adding alerts to the database")
 
 
-def check_access_keys(user_row, warn_days, violation_days, alert):
+def check_access_keys(user_row, warn_days: int, violation_days: int, alert):
     """
     Validate key staleness for both access keys, provided they exist, for a
     given user
@@ -182,22 +195,24 @@ def check_access_keys(user_row, warn_days, violation_days, alert):
                             violation_days, alert)
 
 
-def check_user_thresholds(user_thresholds, report_row):
+def check_user_thresholds(user_threshold: Threshold, report_row):
     """
     Grab the thresholds from the user_thresholds and pass them on with the row
     from the credentials report to be used for checking the keys
     """
-    warn_days = user_thresholds['warn']
-    violation_days = user_thresholds['violation']
-    alert = user_thresholds['alert']
+    warn_days = user_threshold.warn
+    violation_days = user_threshold.violation
+    alert = user_thresholds.alert
 
     if warn_days == 0 or violation_days == 0:
         warn_days = os.getenv("WARN_DAYS")
+        warn_days = int(warn_days)
         violation_days = os.getenv("VIOLATION_DAYS")
+        violation_days = int(violation_days)
     check_access_keys(report_row, warn_days, violation_days, alert)
 
 
-def search_for_keys(region_name, profile, all_users):
+def search_for_keys(region_name, profile, all_users: list[Threshold]):
     """
     The main search function that reaches out to AWS IAM to grab the
     credentials report and read in csv.
@@ -277,10 +292,10 @@ def load_profiles(com_state_file, gov_state_file):
     """
     Clean up yaml from state files for com and gov
     """
-    com_file = open(com_state_file)
-    gov_file = open(gov_state_file)
-    com_state = yaml.safe_load(com_file)
-    gov_state = yaml.safe_load(gov_file)
+    with open(com_state_file) as f:
+        com_state = yaml.safe_load(f)
+    with open(gov_state_file) as f:
+        gov_state = yaml.safe_load(f)
     all_outputs_com = com_state['terraform_outputs']
     all_outputs_gov = gov_state['terraform_outputs']
     com_state_dict = state_file_to_dict(all_outputs_com)
@@ -288,26 +303,28 @@ def load_profiles(com_state_file, gov_state_file):
     return com_state_dict, gov_state_dict
 
 
-def get_platform_thresholds(thresholds, account_type):
+def get_platform_thresholds(thresholds: list[Threshold], account_type):
     found_thresholds = [threshold_dict for threshold_dict in thresholds
-        if threshold_dict['account_type'] == account_type]
+        if threshold_dict.account_type == account_type]
     if found_thresholds:
         return copy(found_thresholds[0])
     else:
         return None
 
-def format_user_dicts(users_list, thresholds, account_type):
+
+def format_user_dicts(users_list, thresholds: list[Threshold], account_type) -> list[Threshold]:
     """
     Augment the users list to have the threshold information.
     """
     augmented_user_list = []
     for key in users_list:
         found_threshold = get_platform_thresholds(thresholds, account_type)
-        found_threshold["user"] = key
+        found_threshold.user = key
         augmented_user_list.append(found_threshold)
     return augmented_user_list
 
-def load_tf_users(tf_filename, thresholds):
+
+def load_tf_users(tf_filename, thresholds: list[Threshold]):
     # Schema for tf_users - need to verify this is correct
     # {
     #   user:user_name,
@@ -319,13 +336,13 @@ def load_tf_users(tf_filename, thresholds):
     # }
     # Note that all values are hardcoded except the username
     tf_users = []
-    tf_file = open(tf_filename)
-    tf_yaml = yaml.safe_load(tf_file)
+    with open(tf_filename) as f:
+        tf_yaml = yaml.safe_load(f)
     outputs = tf_yaml['terraform_outputs']
     for key in list(outputs):
         if "username" in key:
             found_threshold = get_platform_thresholds(thresholds, "Platform")
-            found_threshold["user"] = outputs[key]
+            found_threshold.user = outputs[key]
             tf_users.append(found_threshold)
     return tf_users
 
@@ -335,30 +352,33 @@ def load_other_users(other_users_filename):
     # {user: user_name, account_type:account_type, is_wildcard: True|False,
     # alert: True|False, warn: warn, violation: violation}
     # Note that all values are hardcoded except the username
-    other_users_file = open(other_users_filename)
-    other_users_yaml = yaml.safe_load(other_users_file)
+    with open(other_users_filename) as f:
+        other_users_yaml = yaml.safe_load(f)
 
     return other_users_yaml
 
-def load_system_users(filename, thresholds):
+
+def load_system_users(filename, thresholds) -> list[Threshold]:
     # Schema for gov or com users after pull out the "users" dict
     # {"user.name":{'aws_groups': ['Operators', 'OrgAdmins']}}
     # translated to:
     # {"user":user_name, "account_type":"Operators"} - note Operators is
     # hardcoded for now
-    file = open(filename)
-    users_list = list(yaml.safe_load(file)["users"])
+    with open(filename) as f:
+        users_list = list(yaml.safe_load(f)["users"])
     users_list = format_user_dicts(users_list, thresholds, "Operator")
     return users_list
 
-def load_thresholds(filename):
+
+def load_thresholds(filename: Path) -> list[Threshold]:
     """
     This is the file that holds all the threshold information to be added to
     the user list dictionaries.
     """
-    thresholds_file = open(filename)
-    thresholds_yaml = yaml.safe_load(thresholds_file)
-    return thresholds_yaml
+    with open(filename) as f:
+        thresholds_yaml = yaml.safe_load(f)
+    return [Threshold(**threshold) for threshold in thresholds_yaml]
+
 
 def migrate_db(db):
     migrator = PostgresqlMigrator(db)
@@ -366,6 +386,7 @@ def migrate_db(db):
         migrator.add_column('event', 'warning_delta', DateTimeField(null=True)),
         migrator.add_column('event', 'violation_delta', DateTimeField(null=True))
     )
+
 
 def main():
     """
@@ -375,23 +396,25 @@ def main():
 
     # grab the state files, user files and outputs from cg-provision from the
     # s3 buckets for com and gov users
-    debug = False
-    if ('BASE_DIR' in os.environ):
-        debug = True
+    env = Env()
+    DEBUG_BASE = env.bool("BASE_DIR", False)
+    if DEBUG_BASE:
         base_dir = os.getenv('BASE_DIR')
         #base_dir = "/Users/robertagottlieb/Dev/"
     else:
         base_dir = "../../.."
-    com_state_file = os.path.join(base_dir, "terraform-prod-com-yml/state.yml")
-    gov_state_file = os.path.join(base_dir, "terraform-prod-gov-yml/state.yml")
-    com_users_filename = os.path.join(base_dir, "aws-admin/stacks/gov/sso/users.yaml")
-    gov_users_filename = os.path.join(base_dir, "aws-admin/stacks/com/sso/users.yaml")
-    tf_state_filename = os.path.join(base_dir, "terraform-yaml-production/state.yml")
-    other_users_filename = os.path.join(base_dir, "other-iam-users-yml/other_iam_users.yml")
-    if debug == True:
+
+    base_path = Path(base_dir)
+    com_state_file = base_path / "terraform-prod-com-yml/state.yml"
+    gov_state_file = base_path / "terraform-prod-gov-yml/state.yml"
+    com_users_filename = base_path / "aws-admin/stacks/gov/sso/users.yaml"
+    gov_users_filename = base_path / "aws-admin/stacks/com/sso/users.yaml"
+    tf_state_filename = base_path / "terraform-yaml-production/state.yml"
+    other_users_filename = base_path / "other-iam-users-yml/other_iam_users.yml"
+    if DEBUG_BASE == True:
         thresholds_filename = "/Users/robertagottlieb/Dev/cg-deploy-prometheus/ci/aws-iam-check-keys/thresholds.yml"
-    else: 
-        thresholds_filename = os.path.join(base_dir, "prometheus-config/ci/aws-iam-check-keys/thresholds.yml")
+    else:
+        thresholds_filename = base_path / "prometheus-config/ci/aws-iam-check-keys/thresholds.yml"
 
     # AWS regions
     com_region = "us-east-1"
@@ -407,10 +430,10 @@ def main():
     st_cpu_time = time.process_time()
     st = time.time()
 
-    create_tables_bool = os.getenv('IAM_CREATE_TABLES')
     # Flag for debugging in dev or staging as the initial run creates the tables
     # the rest of the time we'll want to create them for debugging or testing db migrations
-    if create_tables_bool == "True":
+    DEBUG_TABLES =  env.bool("IAM_CREATE_TABLES", False)
+    if DEBUG_TABLES:
         print("DEBUG: creating tables...")
         db = keys_db_models.create_tables_debug()
     else:
@@ -418,7 +441,8 @@ def main():
         db = keys_db_models.create_tables()
 
     # Take care of migrations if there are any before searching
-    if os.getenv('MIGRATE'):
+    MIGRATE = env.bool("MIGRATE", False)
+    if MIGRATE:
         migrate_db(db)
 
     (com_state_dict, gov_state_dict) = load_profiles(com_state_file,
