@@ -13,4 +13,6 @@ peewee = "*"
 PyYAML = "*"
 
 
+[requires]
+python_version = "3.11.x"
 
