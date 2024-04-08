@@ -1,6 +1,13 @@
 from datetime import date
 import os
-from peewee import *
+
+from peewee import BooleanField
+from peewee import CharField
+from peewee import DateTimeField
+from peewee import ForeignKeyField
+from peewee import IntegerField
+from peewee import Model
+from peewee import PostgresqlDatabase
 
 """
 Credential Report columns:
@@ -206,7 +213,7 @@ class Event_Type(BaseModel):
     def insert_event_type(cls, name):
         # try:
         event_type = Event_Type.get(event_type_name=name)
-        if event_type == None:
+        if event_type is None:
         #except Event_Type.DoesNotExist:
             event_type, _ = Event_Type.create(event_type_name=name, created_at=date.today())
             event_type.save()
@@ -256,35 +263,24 @@ def drop_all_tables():
         db.drop_tables([IAM_Keys, Event_Type, Event])
 
 
-def create_tables_debug():
-    """
-    Convenience for creating the tables, can be dropped in favor of sql scripts
-    if preferred
-    NOTE: This is destructive! The tables all get dropped before it's created!
-
-    """
-    db.connect(reuse_if_open=True)  # can check if this is True to go on
-    with db:
-        drop_all_tables()
-        db.create_tables([IAM_Keys, Event_Type, Event])
-
-    return db
+#def create_tables_debug():
+#    """
+#    Convenience for creating the tables, can be dropped in favor of sql scripts
+#    if preferred
+#    NOTE: This is destructive! The tables all get dropped before it's created!
+#
+#    """
+#    db.connect(reuse_if_open=True)  # can check if this is True to go on
+#    with db:
+#        db.create_tables([IAM_Keys, Event_Type, Event])
+#
+#    return db
 
 def create_tables():
     db.connect(reuse_if_open=True)
-    tables_created = False
-    tables = db.get_tables()
-    
-    for table in tables:
-        if db.table_exists(table):
-            tables_created = True
-        else:
-            tables_created = False
-            
-    if not tables_created:
+    with db:
         db.create_tables([IAM_Keys, Event_Type, Event])
-    
     return db
 
 def connect():
-    db.connect()
+    db.connect(reuse_if_open=True)
