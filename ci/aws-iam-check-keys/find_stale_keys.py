@@ -11,8 +11,9 @@ import sys
 import time
 import yaml
 
-import requests
 import boto3
+from peewee import Database
+import requests
 
 from keys_db_models import (
     IAM_Keys,
@@ -27,7 +28,7 @@ WARNING = "warning"
 OK = ""
 
 
-def check_retention(warn_days: int, violation_days: int, key_date):
+def check_retention(warn_days: int, violation_days: int, key_date) -> (str, datetime, datetime):
     """
     Returns violation when keys were last rotated more than :violation_days: ago and
     warning when keys were last rotated :warn_days: ago if it is neither None is returned
@@ -43,7 +44,7 @@ def check_retention(warn_days: int, violation_days: int, key_date):
     return status, warning_days_delta, violation_days_delta
 
 
-def find_known_user(report_user, aws_users:list[AWS_User]) -> (AWS_User, list[dict]):
+def find_known_user(report_user: str, aws_users:list[AWS_User]) -> (AWS_User, list[dict]):
     """
     Return the row from the users dictionary matching the report user if it exists and
     not_found list if the user isn't found. This will be used for validating thresholds
@@ -68,7 +69,7 @@ def find_known_user(report_user, aws_users:list[AWS_User]) -> (AWS_User, list[di
     return aws_user, not_found
 
 
-def event_exists(events, access_key_num):
+def event_exists(events: [Event], access_key_num: int) -> bool:
     """
     Look for an access key rotation based on key number (1 or 2) corresponding
     to the number of access keys a user might have.
@@ -83,7 +84,7 @@ def event_exists(events, access_key_num):
     return found_event
 
 
-def add_event_to_db(user, alert_type, access_key_num, warning_delta, violation_delta):
+def add_event_to_db(user: IAM_Keys, alert_type: Alert_Type, access_key_num: int, warning_delta: datetime, violation_delta: datetime):
     event_type = Event_Type.insert_event_type(alert_type)
     event = Event.new_event_type_user(event_type, user, access_key_num, warning_delta, violation_delta)
     event.cleared = False
@@ -91,7 +92,7 @@ def add_event_to_db(user, alert_type, access_key_num, warning_delta, violation_d
     event.save()
 
 
-def update_event(event, alert_type, warning_delta, violation_delta):
+def update_event(event: Event, alert_type: str, warning_delta: datetime, violation_delta: datetime):
     if alert_type:
         event_type = Event_Type.insert_event_type(alert_type)
         event.event_type = event_type
@@ -105,8 +106,8 @@ def update_event(event, alert_type, warning_delta, violation_delta):
         event.save()
 
 
-def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
-                            warn_days: int, violation_days: int, alert):
+def check_retention_for_key(access_key_last_rotated: datetime, access_key_num: int, user_row:dict,
+                            warn_days: int, violation_days: int, alert: bool):
     alert_type = ""
     if warn_days and violation_days and access_key_last_rotated != "N/A":
         alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days,
@@ -123,7 +124,7 @@ def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
         IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
 
 
-def send_alerts(cleared, events, db):
+def send_alerts(cleared: bool, events: list[Event], db: Database ):
     alerts = ""
     with db.atomic() as transaction:
         for event in events:
@@ -174,7 +175,7 @@ def send_alerts(cleared, events, db):
             transaction.rollback()
 
 
-def send_all_alerts(db):
+def send_all_alerts(db: Database):
     try:
         cleared_events = Event.all_cleared_events()
         send_alerts(True, cleared_events, db)
@@ -184,7 +185,7 @@ def send_all_alerts(db):
         print(f"{ValueError} an exception occurred while adding alerts to the database")
 
 
-def check_access_keys(user_row, warn_days: int, violation_days: int, alert):
+def check_access_keys(user_row:dict, warn_days: int, violation_days: int, alert: bool):
     """
     Validate key staleness for both access keys, provided they exist, for a
     given user
@@ -199,7 +200,7 @@ def check_access_keys(user_row, warn_days: int, violation_days: int, alert):
                             violation_days, alert)
 
 
-def check_user_thresholds(aws_user: AWS_User, report_row):
+def check_user_thresholds(aws_user: AWS_User, report_row: dict):
     """
     Grab the thresholds from the user_thresholds and pass them on with the row
     from the credentials report to be used for checking the keys
@@ -216,7 +217,7 @@ def check_user_thresholds(aws_user: AWS_User, report_row):
     check_access_keys(report_row, warn_days, violation_days, alert)
 
 
-def search_for_keys(region_name, profile, all_users: list[Threshold]):
+def search_for_keys(region_name:str, profile:dict, all_users: list[Threshold]):
     """
     The main search function that reaches out to AWS IAM to grab the
     credentials report and read in csv.
@@ -258,22 +259,23 @@ def search_for_keys(region_name, profile, all_users: list[Threshold]):
             check_user_thresholds(aws_user, row)
 
 
-def state_file_to_dict(all_outputs):
-    # Convert the production state file to a dict
-    # data structure
-    # {new_key = {key1:value, key2:value}}
+def state_file_to_dict(all_outputs:list[dict]):
+    """ Convert the production state file to a dict
+    data structure
+    {new_key = {key1:value, key2:value}}
 
-    # NOTE: If anything changes with the outputs in aws-admin for gov and com
-    # make sure the delimiter stays the same, or change the below var, set in config.yml, if it
-    # changes just make sure that whatever it changes to is consistent with:
-    # profile name prefix+delimiter+the rest of the string
-    #
-    # example:
-    #
-    # gov-stg-tool_access_key_id_stalekey -> prefix = gov-stg-tool, so the delimiter is '-'
-    # the rest = tool_access_key_id_stalekey
+    NOTE: If anything changes with the outputs in aws-admin for gov and com
+    make sure the delimiter stays the same, or change the below var, set in config.yml, if it
+    changes just make sure that whatever it changes to is consistent with:
+    profile name prefix+delimiter+the rest of the string
+
+    example:
+
+    gov-stg-tool_access_key_id_stalekey -> prefix = gov-stg-tool, so the delimiter is '-'
+    the rest = tool_access_key_id_stalekey
+    """
+
     prefix_delimiter = os.getenv('PREFIX_DELIMITER')
-
     output_dict = {}
     for key, value in all_outputs.items():
         profile = {}
@@ -292,7 +294,7 @@ def state_file_to_dict(all_outputs):
     return output_dict
 
 
-def load_profiles(com_state_file, gov_state_file):
+def load_profiles(com_state_file: str, gov_state_file: str):
     """
     Clean up yaml from state files for com and gov
     These are the secrets used for assume_role to pull
@@ -309,7 +311,7 @@ def load_profiles(com_state_file, gov_state_file):
     return com_state_dict, gov_state_dict
 
 
-def get_platform_thresholds(thresholds: list[Threshold], account_type):
+def get_platform_thresholds(thresholds: list[Threshold], account_type:str) -> AWS_User:
     found_thresholds = [threshold_dict for threshold_dict in thresholds
         if threshold_dict.account_type == account_type]
     if found_thresholds:
@@ -318,7 +320,7 @@ def get_platform_thresholds(thresholds: list[Threshold], account_type):
         return None
 
 
-def format_user_dicts(users_list, thresholds: list[Threshold], account_type) -> list[IAM_Keys]:
+def format_user_dicts(users_list:list, thresholds: list[Threshold], account_type) -> list[IAM_Keys]:
     """
     Augment the users list to have the threshold information.
     """
@@ -329,18 +331,20 @@ def format_user_dicts(users_list, thresholds: list[Threshold], account_type) -> 
         augmented_user_list.append(found_user_threshold)
     return augmented_user_list
 
-def load_tf_users(tf_filename, thresholds: list[Threshold]) -> list[AWS_User]:
-    # Schema for tf_users - need to verify this is correct
-    # {
-    #   user:user_name,
-    #   account_type:"Platform",
-    #   is_wildcard: False,
-    #   alert: True,
-    #   warn: 165,
-    #   violation: 180
-    # }
-    # Note that all values are hardcoded except the username
-    # This file is scraped for more users to search for stale keys
+def load_tf_users(tf_filename: Path, thresholds: list[Threshold]) -> list[AWS_User]:
+    """
+    Schema for tf_users - need to verify this is correct
+    {
+      user:user_name,
+      account_type:"Platform",
+      is_wildcard: False,
+      alert: True,
+      warn: 165,
+      violation: 180
+    }
+    Note that all values are hardcoded except the username
+    This file is scraped for more users to search for stale keys
+    """
     tf_users = []
     with open(tf_filename) as f:
         tf_yaml = yaml.safe_load(f)
@@ -353,22 +357,26 @@ def load_tf_users(tf_filename, thresholds: list[Threshold]) -> list[AWS_User]:
     return tf_users
 
 
-def load_other_users(other_users_filename) -> list[AWS_User]:
-    # Schema for other_users is
-    # {user: user_name, account_type:account_type, is_wildcard: True|False,
-    # alert: True|False, warn: warn, violation: violation}
-    # Note that all values are hardcoded except the username
+def load_other_users(other_users_filename: Path) -> list[AWS_User]:
+    """
+    Schema for other_users is
+    {user: user_name, account_type:account_type, is_wildcard: True|False,
+    alert: True|False, warn: warn, violation: violation}
+    Note that all values are hardcoded except the username
+    """
     with open(other_users_filename) as f:
         other_users_yaml = yaml.safe_load(f)
 
     return [AWS_User(**other) for other in other_users_yaml]
 
-def load_system_users(filename, thresholds) -> list[AWS_User]:
-    # Schema for gov or com users after pull out the "users" dict
-    # {"user.name":{'aws_groups': ['Operators', 'OrgAdmins']}}
-    # translated to:
-    # {"user":user_name, "account_type":"Operators"} - note Operators is
-    # hardcoded for now
+def load_system_users(filename: Path, thresholds: list[Threshold]) -> list[AWS_User]:
+    """
+    Schema for gov or com users after pull out the "users" dict
+    {"user.name":{'aws_groups': ['Operators', 'OrgAdmins']}}
+    translated to:
+    {"user":user_name, "account_type":"Operators"} - note Operators is
+    hardcoded for now
+    """
     with open(filename) as f:
         users_list = list(yaml.safe_load(f)["users"])
     users_list = format_user_dicts(users_list, thresholds, "Operator")
@@ -395,7 +403,6 @@ def main():
     # s3 buckets for com and gov users
     env = Env()
     base_dir = env.str("BASE_DIR",None)
-    #base_dir = os.getenv('BASE_DIR')
     if not base_dir:
         base_dir = "../../.."
 
