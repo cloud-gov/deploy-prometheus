@@ -84,7 +84,7 @@ def event_exists(events: [Event], access_key_num: int) -> bool:
     return found_event
 
 
-def add_event_to_db(user: IAM_Keys, alert_type: Alert_Type, access_key_num: int, warning_delta: datetime, violation_delta: datetime):
+def add_event_to_db(user: IAM_Keys, alert_type: Event_Type, access_key_num: int, warning_delta: datetime, violation_delta: datetime):
     event_type = Event_Type.insert_event_type(alert_type)
     event = Event.new_event_type_user(event_type, user, access_key_num, warning_delta, violation_delta)
     event.cleared = False
