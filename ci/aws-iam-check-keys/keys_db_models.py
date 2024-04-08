@@ -3,6 +3,7 @@ import os
 
 from peewee import BooleanField
 from peewee import CharField
+from peewee import Database
 from peewee import DateTimeField
 from peewee import ForeignKeyField
 from peewee import IntegerField
