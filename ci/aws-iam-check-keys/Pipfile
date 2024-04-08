@@ -14,5 +14,5 @@ PyYAML = "*"
 
 
 [requires]
-python_version = "3.11.x"
+python_version = "3.11"
 
