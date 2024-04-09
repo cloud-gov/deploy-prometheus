@@ -22,9 +22,10 @@ run:
   args:
   - -c
   - |
+    PYENV_ROOT=".pyenv"
     pip install pipenv
-    git clone https://github.com/pyenv/pyenv.git .pyenv
-    ./.pyenv/bin/pyenv install 3.11:latest
+    git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT
+    ./.pyenv/bin/pyenv install 3.11.9
     cd prometheus-config/ci/aws-iam-check-keys
     pipenv install
     pipenv run find_stale_keys.py
