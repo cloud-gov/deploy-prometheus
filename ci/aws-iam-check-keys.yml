@@ -23,7 +23,7 @@ run:
   - -c
   - |
     export PYENV_ROOT="$HOME/.pyenv"
-    export $PATH=$PATH:$PYENV_ROOT/shims
+    export PATH=$PATH:$PYENV_ROOT/shims
     pip install pipenv
     git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT
     $HOME/.pyenv/bin/pyenv install 3.11.9
