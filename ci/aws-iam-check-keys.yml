@@ -7,7 +7,7 @@ image_resource:
     aws_secret_access_key: ((ecr_aws_secret))
     repository: harden-concourse-task
     aws_region: us-gov-west-1
-    tag: ((harden-concourse-task-tag))
+    tag: ((stale-keys-image-tag))
 
 inputs:
 - name: prometheus-config
@@ -22,14 +22,11 @@ run:
   args:
   - -c
   - |
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH=$PATH:$PYENV_ROOT/shims
     pip install pipenv
-    git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT
-    $HOME/.pyenv/bin/pyenv install 3.11.9
     cd prometheus-config/ci/aws-iam-check-keys
     pipenv install
-    pipenv python3 find_stale_keys.py
+    pipenv run python3 find_stale_keys.py
+
 params:
   AWS_DEFAULT_REGION:
   AWS_ACCESS_KEY_ID:
