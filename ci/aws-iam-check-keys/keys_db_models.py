@@ -9,6 +9,8 @@ from peewee import ForeignKeyField
 from peewee import IntegerField
 from peewee import Model
 from peewee import PostgresqlDatabase
+from playhouse.migrate import PostgresqlMigrator
+from playhouse.migrate import migrate
 
 """
 Credential Report columns:
@@ -257,31 +259,21 @@ class Event(BaseModel):
         events = Event.select().where(Event.user == user)
         return events
 
-def drop_all_tables():
-    if not db.is_connection_usable:
-        db.connect(reuse_if_open=True)
-    with db:
-        db.drop_tables([IAM_Keys, Event_Type, Event])
-
-
-#def create_tables_debug():
-#    """
-#    Convenience for creating the tables, can be dropped in favor of sql scripts
-#    if preferred
-#    NOTE: This is destructive! The tables all get dropped before it's created!
-#
-#    """
-#    db.connect(reuse_if_open=True)  # can check if this is True to go on
-#    with db:
-#        db.create_tables([IAM_Keys, Event_Type, Event])
-#
-#    return db
-
-def create_tables():
+def connect() -> Database:
     db.connect(reuse_if_open=True)
-    with db:
-        db.create_tables([IAM_Keys, Event_Type, Event])
     return db
 
-def connect():
-    db.connect(reuse_if_open=True)
+def create_tables():
+    db = connect()
+    with db:
+        print("creating tables")
+        db.create_tables([IAM_Keys, Event_Type, Event])
+        print("done creating tables")
+
+def migrate_db():
+    db = connect()
+    migrator = PostgresqlMigrator(db)
+    migrate(
+        migrator.add_column('event', 'warning_delta', DateTimeField(null=True)),
+        migrator.add_column('event', 'violation_delta', DateTimeField(null=True))
+    )

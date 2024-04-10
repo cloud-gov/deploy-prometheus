@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 from copy import copy
 import csv
 from datetime import timedelta, datetime
@@ -14,6 +15,7 @@ import yaml
 import boto3
 from peewee import Database
 import requests
+
 
 from keys_db_models import (
     IAM_Keys,
@@ -146,7 +148,6 @@ def send_alerts(cleared: bool, events: list[Event], db: Database ):
                 alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", warn_date="{event.warning_delta}",\
                 violation_date="{event.violation_delta}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
                 alerts += alert
-                print(alert)
 
             # Set the cleared and alert_sent attributes in the database,
             # subject to the metric making it through the gateway
@@ -238,7 +239,6 @@ def search_for_keys(region_name:str, profile:dict, all_users: list[Threshold]):
         w_time = w_time + 5
         print("Waiting...{}".format(w_time))
         time.sleep(w_time)
-    print("Report is ready")
     report = iam.get_credential_report()
     content = report["Content"].decode("utf-8")
     content_lines = content.split("\n")
@@ -402,9 +402,37 @@ def main():
     # grab the state files, user files and outputs from cg-provision from the
     # s3 buckets for com and gov users
     env = Env()
+    DEBUG = False
     base_dir = env.str("BASE_DIR",None)
     if not base_dir:
         base_dir = "../../.."
+    base_path = Path(base_dir)
+
+    # Parse the CLI for any arguments
+    # Note that the default value of 1 is following to allow for levels or other
+    # info to be passed later if needed
+    parser = argparse.ArgumentParser(description='Arguments for find_stale_keys')
+    parser.add_argument('-c','--create-tables', action="store_true",help='create tables WARNING: This is destructive')
+    parser.add_argument('-d','--debug', action="store_true",help='debug mode no levels for now')
+    parser.add_argument('-m','--migrate', action="store_true", help='run migrations')
+    args = parser.parse_args()
+    if args.debug:
+        print("debug")
+        DEBUG=True
+    if args.migrate:
+        print("migrate")
+        keys_db_models.migrate_db()
+
+    # Debug code goes here
+    if DEBUG:
+        thresholds_filename = "/Users/robertagottlieb/Dev/cg-deploy-prometheus/ci/aws-iam-check-keys/thresholds.yml"
+    else:
+        thresholds_filename = base_path / "prometheus-config/ci/aws-iam-check-keys/thresholds.yml"
+        
+    # checks to see if we are creating tables
+    if args.create_tables:
+        keys_db_models.create_tables()
+    db = keys_db_models.connect()
 
     base_path = Path(base_dir)
     com_state_file = base_path / "terraform-prod-com-yml/state.yml"
@@ -413,11 +441,6 @@ def main():
     gov_users_filename = base_path / "aws-admin/stacks/com/sso/users.yaml"
     tf_state_filename = base_path / "terraform-yaml-production/state.yml"
     other_users_filename = base_path / "other-iam-users-yml/other_iam_users.yml"
-    debug = env.bool("DEBUG", False)
-    if debug:
-        thresholds_filename = "/Users/robertagottlieb/Dev/cg-deploy-prometheus/ci/aws-iam-check-keys/thresholds.yml"
-    else:
-        thresholds_filename = base_path / "prometheus-config/ci/aws-iam-check-keys/thresholds.yml"
 
     # AWS regions
     com_region = "us-east-1"
@@ -429,20 +452,6 @@ def main():
     tf_users = load_tf_users(tf_state_filename, thresholds)
     other_users = load_other_users(other_users_filename)
 
-    # timing metrics for testing, not sure if they'll be useful later
-    st_cpu_time = time.process_time()
-    st = time.time()
-
-    # Flag for debugging in dev or staging as the initial run creates the tables
-    # the rest of the time we'll want to create them for debugging or testing db migrations
-    DEBUG_TABLES =  env.bool("IAM_CREATE_TABLES", False)
-    if DEBUG_TABLES:
-        print("DEBUG: creating tables...")
-        db = keys_db_models.create_tables_debug()
-    else:
-        print("connecting to database, and creating tables if this is the first run")
-        db = keys_db_models.create_tables()
-
 
     (com_state_dict, gov_state_dict) = load_profiles(com_state_file,
                                                      gov_state_file)
@@ -453,18 +462,8 @@ def main():
     for gov_key in gov_state_dict:
         all_gov_users = gov_users_list + tf_users + other_users
         search_for_keys(gov_region, gov_state_dict[gov_key], all_gov_users)
-
-    et_cpu_time = time.process_time()
-    et = time.time()
-
-    # get execution time
-    res = et_cpu_time - st_cpu_time
-    print('CPU Execution time:', res, 'seconds')
-
-    # get the execution time
-    elapsed_time = et - st
-    print('Execution time:', elapsed_time, 'seconds')
     send_all_alerts(db)
+
 
 
 if __name__ == "__main__":
