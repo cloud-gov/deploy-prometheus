@@ -28,7 +28,7 @@ WARNING = "warning"
 OK = ""
 
 
-def check_retention(warn_days: int, violation_days: int, key_date) -> (str, datetime, datetime):
+def check_retention(warn_days: int, violation_days: int, key_date:datetime) -> (str, datetime, datetime):
     """
     Returns violation when keys were last rotated more than :violation_days: ago and
     warning when keys were last rotated :warn_days: ago if it is neither None is returned
