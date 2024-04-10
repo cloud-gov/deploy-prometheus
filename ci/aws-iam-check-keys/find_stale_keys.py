@@ -28,12 +28,12 @@ WARNING = "warning"
 OK = ""
 
 
-def check_retention(warn_days: int, violation_days: int, key_date:datetime) -> (str, datetime, datetime):
+def check_retention(warn_days: int, violation_days: int, access_key_date:str) -> (str, datetime, datetime):
     """
     Returns violation when keys were last rotated more than :violation_days: ago and
     warning when keys were last rotated :warn_days: ago if it is neither None is returned
     """
-    key_date = parse(key_date, ignoretz=True)
+    key_date = parse(access_key_date, ignoretz=True)
     violation_days_delta = key_date + timedelta(days=violation_days)
     warning_days_delta = key_date + timedelta(days=warn_days)
     status = OK
@@ -110,7 +110,7 @@ def check_retention_for_key(access_key_last_rotated: datetime, access_key_num: i
                             warn_days: int, violation_days: int, alert: bool):
     alert_type = ""
     if warn_days and violation_days and access_key_last_rotated != "N/A":
-        alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days,
+        alert_type, warning_delta, violation_delta = check_retention(int(warn_days), int(violation_days),
                                     access_key_last_rotated)
     iam_user = IAM_Keys.user_from_dict(user_row)
     if alert_type:
