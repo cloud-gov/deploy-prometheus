@@ -11,6 +11,7 @@ environs="*"
 requests = "*"
 psycopg2-binary = "*"
 peewee = "*"
+python-dateutil = "*"
 PyYAML = "*"
 
 [requires]
