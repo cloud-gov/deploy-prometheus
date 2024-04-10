@@ -7,6 +7,7 @@ name = "pypi"
 
 [packages]
 boto3 = "*"
+environs="*"
 requests = "*"
 psycopg2-binary = "*"
 peewee = "*"
