@@ -324,7 +324,6 @@
     rules:
     - alert: NetworkTrafficBurst
       expr: avg by (environment) (irate(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m] offset 5m)) / avg by (environment) (irate(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m])) >= 1.40
-      for: 5m
       labels:
         severity: warning
       annotations:
@@ -332,7 +331,6 @@
         description: "The platform has seen a burst in incoming network traffic, please review this dashboard: https://grafana.fr.cloud.gov/d/cf_router/cf-router"
     - alert: LargeNetworkTrafficBurst
       expr: avg by (environment) (irate(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m] offset 5m)) / avg by (environment) (irate(firehose_counter_event_gorouter_total_requests_total{bosh_job_name="router"}[5m])) >= 1.50
-      for: 5m
       labels:
         severity: critical
       annotations:
@@ -427,4 +425,3 @@
       annotations:
         summary: Uptime check failed (non-200 response) for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}
         description: Uptime check failed (non-200 response) for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}. Runbook - https://github.com/cloud-gov/internal-docs/blob/main/docs/runbooks/Metrics-and-Alerting/uptime-monitoring.md#uptimemonitorfailed
-
