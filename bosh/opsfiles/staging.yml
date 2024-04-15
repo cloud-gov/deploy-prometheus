@@ -3,8 +3,8 @@
   value: m5.large
 
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rule/name=networker/rules/name=NetworkTrafficBurst/for?
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rule/name=networker/rules/alert=NetworkTrafficBurst/for?
   value: 5m
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rule/name=networker/rules/name=LargeNetworkTrafficBurst/for?
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rule/name=networker/rules/alert=LargeNetworkTrafficBurst/for?
   value: 5m
