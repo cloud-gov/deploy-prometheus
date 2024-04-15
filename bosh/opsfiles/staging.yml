@@ -1,3 +1,10 @@
 - type: replace
   path: /instance_groups/name=prometheus/vm_type
   value: m5.large
+
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rule/name=networker/rules/name=NetworkTrafficBurst/for?
+  value: 5m
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rule/name=networker/rules/name=LargeNetworkTrafficBurst/for?
+  value: 5m
