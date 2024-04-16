@@ -48,7 +48,7 @@ def check_retention(warn_days: int, violation_days: int, access_key_date:str) ->
 
 def find_known_user(report_user: str, aws_users:list[AWS_User]) -> (AWS_User, list[dict]):
     """
-    Return the row from the users dictionary matching the report user if it exists and
+    Return the row as an AWS_User, from the users dictionary matching the report user if it exists and
     not_found list if the user isn't found. This will be used for validating thresholds
     for the key rotation date timeframes as well as help track users not found
 
@@ -56,7 +56,8 @@ def find_known_user(report_user: str, aws_users:list[AWS_User]) -> (AWS_User, li
     search will be looking for an exact match.
     """
     not_found = []
-    aws_user:AWS_User = AWS_User(account_type="",is_wildcard=False,warn=0,violation=0,alert=False, user="")
+    #aws_user:AWS_User = AWS_User(account_type="",is_wildcard=False,warn=0,violation=0,alert=False, user="")
+    aws_user = None
     for an_aws_user in aws_users:
         if an_aws_user.is_wildcard:
             if an_aws_user.user in report_user:
@@ -155,6 +156,7 @@ def send_alerts(cleared: bool, events: list[Event], db: Database ):
             event.alert_sent = True
             event.save()
 
+        print(alerts)
         # Send alerts to prometheus to update alerts
         # TODO: Look at all uses of os.getenv and see if I can replace with Env (or if that is desirable)
         prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
@@ -209,16 +211,17 @@ def check_user_thresholds(aws_user: AWS_User, report_row: dict):
     warn_days = aws_user.warn
     violation_days = aws_user.violation
     alert = aws_user.alert
+    env = Env()
 
     if warn_days == 0 or violation_days == 0:
-        env_warn_days = os.getenv("WARN_DAYS")
-        warn_days = env_warn_days
-        env_violation_days = os.getenv("VIOLATION_DAYS")
-        violation_days = env_violation_days
+        default_warn_days = env.int("WARN_DAYS",60)
+        warn_days = default_warn_days
+        default_violation_days = env.int("VIOLATION_DAYS",90)
+        violation_days = default_violation_days
     check_access_keys(report_row, warn_days, violation_days, alert)
 
 
-def search_for_keys(region_name:str, profile:dict, all_users: list[Threshold]):
+def search_for_keys(region_name:str, profile:dict, all_users: list[AWS_User]):
     """
     The main search function that reaches out to AWS IAM to grab the
     credentials report and read in csv.
@@ -360,9 +363,16 @@ def load_tf_users(tf_filename: Path, thresholds: list[Threshold]) -> list[AWS_Us
 def load_other_users(other_users_filename: Path) -> list[AWS_User]:
     """
     Schema for other_users is
-    {user: user_name, account_type:account_type, is_wildcard: True|False,
-    alert: True|False, warn: warn, violation: violation}
-    Note that all values are hardcoded except the username
+    {   user: user_name,
+        account_type:account_type,
+        is_wildcard: True|False,
+        alert: True|False,
+        warn: warn,
+        violation: violation
+    }
+    Note that all values are hardcoded in the yaml
+    AWS_User is a subclass of the threshold dataclass which has the properties
+    in the above schema
     """
     with open(other_users_filename) as f:
         other_users_yaml = yaml.safe_load(f)
@@ -402,7 +412,7 @@ def main():
     # grab the state files, user files and outputs from cg-provision from the
     # s3 buckets for com and gov users
     env = Env()
-    DEBUG = False
+    debug = False
     base_dir = env.str("BASE_DIR",None)
     if not base_dir:
         base_dir = "../../.."
@@ -418,21 +428,16 @@ def main():
     args = parser.parse_args()
     if args.debug:
         print("debug")
-        DEBUG=True
+        debug=True
     if args.migrate:
         print("migrate")
         keys_db_models.migrate_db()
 
     # Debug code goes here
-    if DEBUG:
+    if debug:
         thresholds_filename = "/Users/robertagottlieb/Dev/cg-deploy-prometheus/ci/aws-iam-check-keys/thresholds.yml"
     else:
         thresholds_filename = base_path / "prometheus-config/ci/aws-iam-check-keys/thresholds.yml"
-        
-    # checks to see if we are creating tables
-    if args.create_tables:
-        keys_db_models.create_tables()
-    db = keys_db_models.connect()
 
     base_path = Path(base_dir)
     com_state_file = base_path / "terraform-prod-com-yml/state.yml"
@@ -452,6 +457,10 @@ def main():
     tf_users = load_tf_users(tf_state_filename, thresholds)
     other_users = load_other_users(other_users_filename)
 
+    # checks to see if we are creating tables
+    if args.create_tables:
+        keys_db_models.create_tables()
+    db = keys_db_models.connect()
 
     (com_state_dict, gov_state_dict) = load_profiles(com_state_file,
                                                      gov_state_file)
