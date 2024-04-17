@@ -132,6 +132,7 @@
         summary: Logsearch archive to index ratio on environment {{$labels.environment}} is too low
         description: Logsearch archive to index ratio on environment {{$labels.environment}} has been too low for 30m.  The S3 archival process or the ES ingest process may not be working.  See the archival and ingestor instances in the logsearch deployment in case any of their components need restarting.
     - alert: LogsearchBackupExpired
+      # TODO: get the backup checks running on better time, then change this back to 60 * 30
       expr: time() - max(logsearch_backup_timestamp) > 60 * 45
       for: 5m
       labels:
