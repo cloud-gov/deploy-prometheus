@@ -1,3 +1,0 @@
-- type: replace
-  path: /instance_groups/name=alertmanager/jobs/name=alertmanager/properties/alertmanager/web?/external_url?
-  value: alertmanager.((domain))
