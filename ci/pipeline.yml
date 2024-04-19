@@ -666,4 +666,3 @@ resource_types:
   type: registry-image
   source:
     repository: concourse/github-release-resource
-

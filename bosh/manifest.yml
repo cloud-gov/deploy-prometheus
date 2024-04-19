@@ -80,6 +80,8 @@ instance_groups:
           auth_username: ((smtp-username))
           auth_password: ((smtp-password))
           require_tls: true
+        web:
+          external_url: alertmanager.((domain))
 
 - name: prometheus
   instances: 1
