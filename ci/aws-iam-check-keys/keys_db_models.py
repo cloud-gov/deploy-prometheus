@@ -1,16 +1,16 @@
 from datetime import date
+from datetime import datetime
 import os
-
-from peewee import BooleanField
-from peewee import CharField
-from peewee import Database
-from peewee import DateTimeField
-from peewee import ForeignKeyField
-from peewee import IntegerField
-from peewee import Model
-from peewee import PostgresqlDatabase
-from playhouse.migrate import PostgresqlMigrator
-from playhouse.migrate import migrate
+from sqlalchemy import create_engine
+from sqlalchemy import ForeignKey
+from sqlalchemy import select
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Session
+from typing import List
+from typing import Optional
 
 """
 Credential Report columns:
@@ -31,7 +31,7 @@ access_key_2_active Boolean
 access_key_2_last_rotated ISO 8601, N/A
 access_key_2_last_used_date ISO 8601, N/A
 access_key_2_last_used_region String, N/
-access_key_2_last_used_service String, N/
+AccessKey_2_last_used_service String, N/
 cert_1_active Boolean
 cert_1_last_rotated ISO 8601, N/A
 cert_2_active Boolean
@@ -46,50 +46,67 @@ user = os.getenv('IAM_KEYS_USER')
 password = os.getenv('IAM_KEYS_PASSWORD')
 host = os.getenv('IAM_KEYS_HOST')
 port = os.getenv('IAM_KEYS_PORT')
+print(f'keys_db: {keys_db}\nuser: {user}\npassword: {password}\nhost: {host}\nport: {port}\n')
 
 
-db = PostgresqlDatabase(
-    keys_db,
-    user=user,
-    password=password,
-    host=host,
-    port=port)
+class Base(DeclarativeBase):
+    pass
 
-class BaseModel(Model):
-    """A base model that will use our Postgresql database"""
-    class Meta:
-        database = db
 
+engine = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{keys_db}")
 # Model for IAM_Keys, note the attributes that allow null and those that don't
-class IAM_Keys(BaseModel):
-    iam_user = CharField()
-    aws_account = CharField()
-    arn = CharField(unique=True)
-    user_creation_time = DateTimeField(null=True)
-    password_enabled = BooleanField(null=True)
-    password_last_used = DateTimeField(null=True)
-    password_last_changed = DateTimeField(null=True)
-    password_next_rotation = DateTimeField(null=True)
-    mfa_active = BooleanField()
-    access_key_1_active = BooleanField()
-    access_key_1_last_rotated = DateTimeField(null=True)
-    access_key_1_last_used_date = DateTimeField(null=True)
-    access_key_1_last_used_region = CharField(null=True)
-    access_key_1_last_used_service = CharField(null=True)
-    access_key_2_active = BooleanField()
-    access_key_2_last_rotated = DateTimeField(null=True)
-    access_key_2_last_used_date = DateTimeField(null=True)
-    access_key_2_last_used_region = CharField(null=True)
-    access_key_2_last_used_service = CharField(null=True)
-    cert_1_active = BooleanField()
-    cert_1_last_rotated = DateTimeField(null=True)
-    cert_2_active = BooleanField()
-    cert_2_last_rotated = DateTimeField(null=True)
-    created_at = DateTimeField()
-    updated_at = DateTimeField(null=True)
 
-    @classmethod
-    def account_for_arn(cls, arn):
+
+class AccessKey(Base):
+    __tablename__ = "AccessKey"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    key_num: Mapped[int]
+    access_key_active: Mapped[bool]
+    access_key_last_rotated: Mapped[Optional[datetime]]
+    access_key_last_used_date: Mapped[Optional[datetime]]
+    access_key_last_used_region: Mapped[Optional[str]]
+    access_key_last_used_service: Mapped[Optional[str]]
+    cert_active: Mapped[bool]
+    cert_last_rotated: Mapped[Optional[datetime]]
+    user_id: Mapped[int] = mapped_column(ForeignKey("iam_keys.id"))
+    user: Mapped["IAMKeys"] = relationship(back_populates="access_keys")
+
+    @staticmethod
+    def new_akeys_for_dict(ak_dict: dict):
+        keys = []
+        for key_num in [1, 2]:
+            akey = AccessKey()
+            akey.access_key_active = ak_dict[f'access_key_{key_num}_active']
+            akey.access_key_last_rotated = ak_dict[f'access_key_{key_num}_last_rotated']
+            akey.access_key_last_used_date = ak_dict[f'access_key_{key_num}_last_used_date']
+            akey.access_key_last_used_region = ak_dict[f'access_key_{key_num}_last_used_region']
+            akey.access_key_last_used_service = ak_dict[f'access_key_{key_num}_last_used_service']
+            keys.append(akey)
+        return keys
+
+
+class IAMKeys(Base):
+    __tablename__ = "iam_keys"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iam_user: Mapped[str]
+    aws_account: Mapped[str]
+    arn: Mapped[str] = mapped_column(unique=True)
+    user_creation_time: Mapped[Optional[datetime]]
+    password_enabled: Mapped[Optional[bool]]
+    password_last_used: Mapped[Optional[datetime]]
+    password_last_changed: Mapped[Optional[datetime]]
+    password_next_rotation: Mapped[Optional[datetime]]
+    mfa_active: Mapped[Optional[bool]]
+    created_at: Mapped[datetime]
+    updated_at: Mapped[Optional[datetime]]
+    events: Mapped[List["Event"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    access_keys: Mapped[List["AccessKey"]] = relationship(back_populates="user")
+
+    def __repr__(self) -> str:
+        return f"User(id={self.id!r}, name={self.iam_user!r} )"
+
+    @staticmethod
+    def account_for_arn(arn):
         # arn:aws-us-gov:iam::account-here:user/cf-production/s3/cg-s3-some-guid-here
         arn_components = arn.split(':')
         account = ""
@@ -97,57 +114,42 @@ class IAM_Keys(BaseModel):
             account = arn_components[4]
         return account
 
-    @classmethod
-    def clean_dict(cls, keys_dict):
-        for key in keys_dict:
-            if keys_dict[key] in ["N/A","no_information","not_supported"]:
+    @staticmethod
+    def clean_dict(keys_dict):
+        for key in keys_dict.keys():
+            if keys_dict[key] in ["N/A", "no_information", "not_supported"]:
                 if key == "password_enabled":
                     keys_dict[key] = False
                 else:
                     keys_dict[key] = None
         return keys_dict
 
-    @classmethod
-    def user_from_dict(cls, keys_dict):
-        keys_dict = cls.clean_dict(keys_dict)
-        user = None
-        try:
-            user = IAM_Keys.get(
-            IAM_Keys.arn == keys_dict['arn'],
-            IAM_Keys.iam_user == keys_dict['user'])
-        except IAM_Keys.DoesNotExist:
-            user = IAM_Keys.create(
-                iam_user=keys_dict['user'],
-                aws_account=cls.account_for_arn(keys_dict['arn']),
-                arn=keys_dict['arn'],
-                user_creation_time=keys_dict['user_creation_time'],
-                password_enabled=keys_dict['password_enabled'],
-                password_last_used=keys_dict['password_last_used'],
-                password_last_changed=keys_dict['password_last_changed'],
-                password_next_rotation=keys_dict['password_next_rotation'],
-                mfa_active=keys_dict['mfa_active'],
-                access_key_1_active=keys_dict['access_key_1_active'],
-                access_key_1_last_rotated=keys_dict['access_key_1_last_rotated'],
-                access_key_1_last_used_date=keys_dict['access_key_1_last_used_date'],
-                access_key_1_last_used_region=keys_dict['access_key_1_last_used_region'],
-                access_key_1_last_used_service=keys_dict['access_key_1_last_used_service'],
-                access_key_2_active=keys_dict['access_key_2_active'],
-                access_key_2_last_rotated=keys_dict['access_key_2_last_rotated'],
-                access_key_2_last_used_date=keys_dict['access_key_2_last_used_date'],
-                access_key_2_last_used_region=keys_dict['access_key_2_last_used_region'],
-                access_key_2_last_used_service=keys_dict['access_key_2_last_used_service'],
-                cert_1_active=keys_dict['cert_1_active'],
-                cert_1_last_rotated=keys_dict['cert_1_last_rotated'],
-                cert_2_active=keys_dict['cert_2_active'],
-                cert_2_last_rotated=keys_dict['cert_2_last_rotated'],
-                created_at=date.today(),
-                updated_at=date.today(),
-            )
-            user.save()
-        return user
+    def user_from_dict(self, keys_dict):
+        keys_dict = self.clean_dict(keys_dict)
+        with (Session(engine) as session):
+            user_stmt = select(IAMKeys).where(IAMKeys.arn == keys_dict['arn']).where(IAMKeys.iam_user == keys_dict['user'])
+            db_user = session.execute(user_stmt)
+            if not user:
+                print(f"didn't find user: {keys_dict['user']}")
+                new_user = IAMKeys()
+                new_user.iam_user = keys_dict['user']
+                new_user.aws_account = keys_dict['aws_account']
+                new_user.arn = keys_dict['arn']
+                new_user.user_creation_time = keys_dict['user_creation_time']
+                new_user.password_enabled = keys_dict['password_enabled']
+                new_user.password_last_used = keys_dict['password_last_used']
+                new_user.password_last_changed = keys_dict['password_last_changed']
+                new_user.password_next_rotation = keys_dict['password_next_rotation']
+                new_user.mfa_active = keys_dict['mfa_active']
+                new_user.created_at = datetime.now()
+                new_user.updated_at = datetime.now()
+                new_user.access_keys = AccessKey.new_akeys_for_dict(keys_dict)
+                session.add(new_user)
+                session.commit()
+                db_user = new_user
+        return db_user
     
-    @classmethod
-    def check_key_in_db_and_update(cls, user_row, key_num):
+    def check_key_in_db_and_update(self, user_row, key_num):
         """
             Checks to see if user is in db, and update with the user row if they are
 
@@ -158,122 +160,174 @@ class IAM_Keys(BaseModel):
             Returns:
                 None
         """
-        user_row = cls.clean_dict(user_row)
-        if key_num == 1:
+        user_row = self.clean_dict(user_row)
+        with Session(engine) as session:
             try:
-                user = IAM_Keys.get(
-                IAM_Keys.arn == user_row['arn'],
-                IAM_Keys.iam_user == user_row['user'],
-                IAM_Keys.access_key_1_active == True )
-                user.updated_at = date.today()
-                user.password_enabled=user_row['password_enabled'],
-                user.password_last_used=user_row['password_last_used'],
-                user.password_last_changed=user_row['password_last_changed'],
-                user.password_next_rotation=user_row['password_next_rotation'],
-                user.mfa_active=user_row['mfa_active'],
-                user.access_key_1_last_rotated=user_row['access_key_1_last_rotated']
-                user.access_key_1_last_used_date=user_row['access_key_1_last_used_date'],
-                user.access_key_1_last_used_region=user_row['access_key_1_last_used_region'],
-                user.access_key_1_last_used_service=user_row['access_key_1_last_used_service']
-                events = Event.events_for_user(user)
+                user_stmt = select(IAMKeys).where(IAMKeys.arn == user_row['arn']).where(IAMKeys.iam_user == user_row['user'])
+                found_user = session.execute(user_stmt)
+                access_key_stmt = select(AccessKey).where(IAMKeys.iam_user == found_user)\
+                                  .where(AccessKey.key_num == key_num)\
+                                  .where(AccessKey.access_key_active == True)\
+                                  .where(AccessKey.key_num == key_num)
+                access_key = session.execute(access_key_stmt)
+                found_user.updated_at = date.today()
+                found_user.password_enabled = user_row['password_enabled'],
+                found_user.password_last_used = user_row['password_last_used'],
+                found_user.password_last_changed = user_row['password_last_changed'],
+                found_user.password_next_rotation = user_row['password_next_rotation'],
+                found_user.mfa_active = user_row['mfa_active'],
+                access_key.access_key_last_rotated = user_row[f'access_key_{key_num}_last_rotated']
+                access_key.access_key_last_used_date = user_row[f'access_key_{key_num}_last_used_date'],
+                access_key.access_key_last_used_region = user_row[f'access_key_{key_num}_last_used_region'],
+                access_key.access_key_last_used_service = user_row[f'access_key_{key_num}_last_used_service']
+                access_key.cert_active = user_row[f'cert_{key_num}_active']
+                access_key.cert_last_rotated = user_row[f'cert_{key_num}_last_rotated']
+                events = Event.events_for_user(found_user)
                 for event in events:
                     event.cleared = True
-                    event.save()
-                user.save()
-            except IAM_Keys.DoesNotExist:
+                session.commit()
+            except Exception:
                 print(f'========== user not found in db! {user_row["user"]} ==========')
-        elif key_num == 2:
-            try:
-                user = IAM_Keys.get(
-                IAM_Keys.arn == user_row['arn'],
-                IAM_Keys.iam_user == user_row['user'],
-                IAM_Keys.access_key_2_active == True)
-                user.updated_at = date.today()
-                user.password_enabled=user_row['password_enabled'],
-                user.password_last_used=user_row['password_last_used'],
-                user.password_last_changed=user_row['password_last_changed'],
-                user.password_next_rotation=user_row['password_next_rotation'],
-                user.mfa_active=user_row['mfa_active'],
-                user.access_key_2_last_rotated=user_row['access_key_2_last_rotated']
-                user.access_key_2_last_used_date=user_row['access_key_2_last_used_date'],
-                user.access_key_2_last_used_region=user_row['access_key_2_last_used_region'],
-                user.access_key_2_last_used_service=user_row['access_key_2_last_used_service']
-                events = Event.events_for_user(user)
-                for event in events:
-                    event.cleared = True
-                    event.save()
-                user.save()
-            except IAM_Keys.DoesNotExist:
-                print(f'========== user not found in db! {user_row["user"]} ==========')
+                session.rollback()
 
+    def akey_for_num(self, num: int) -> AccessKey:
+        with Session(engine) as session:
+            stmt = select(AccessKey).where(AccessKey.key_num == num, user=self)
+            access_key = session.execute(stmt)
+        return access_key
         
 # Event Type stores the various event types such as warning and violation
-class Event_Type(BaseModel):
-    event_type_name = CharField(unique=True)
-    created_at = DateTimeField()
 
-    @classmethod
-    def insert_event_type(cls, name):
-        # try:
-        event_type = Event_Type.get(event_type_name=name)
-        if event_type is None:
-        #except Event_Type.DoesNotExist:
-            event_type, _ = Event_Type.create(event_type_name=name, created_at=date.today())
-            event_type.save()
+class EventType(Base):
+    __tablename__ = "event_type"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    event_type_name: Mapped[Optional[str]]
+    created_at: Mapped[datetime]
+    events: Mapped[List["Event"]] = relationship(back_populates="event_type", cascade="all, delete-orphan")
+
+    @staticmethod
+    def insert_event_type(name):
+        with Session(engine) as session:
+            event_type_stmt = select(EventType).where(EventType.event_type_name == name)
+            event_type = session.execute(event_type_stmt)
+            if not event_type:
+                event_type = EventType()
+                event_type.event_type_name = name
+                event_type.created_at = datetime.now()
+
+                print(f"didn't find event type: {name}")
         return event_type
 
 
 # The events as they happen based on IAM creds not being rotated in a
 # timely manner
-class Event(BaseModel):
-    user = ForeignKeyField(IAM_Keys, backref='events')
-    event_type = ForeignKeyField(Event_Type, backref='events')
-    access_key_num = IntegerField()
-    cleared = BooleanField()
-    cleared_date = DateTimeField(null=True)
-    warning_delta = DateTimeField(null=True)
-    violation_delta = DateTimeField(null=True)
-    alert_sent = BooleanField()
-    created_at = DateTimeField()
+class Event(Base):
+    __tablename__ = "event"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("iam_keys.id"))
+    user: Mapped["IAMKeys"] = relationship(back_populates="events")
+    event_type_id: Mapped[int] = mapped_column(ForeignKey("event_type.id"))
+    event_type: Mapped["EventType"] = relationship(back_populates="events")
+    access_key_num: Mapped[int]
+    cleared: Mapped[bool]
+    cleared_date: Mapped[Optional[datetime]]
+    warning_delta: Mapped[Optional[datetime]]
+    violation_delta: Mapped[Optional[datetime]]
+    alert_sent: Mapped[bool]
+    created_at: Mapped[datetime]
 
-    @classmethod
-    def new_event_type_user(cls, event_type, user, access_key_num, warning_delta, violation_delta):
-        event = Event.create(user=user, event_type=event_type, cleared=False,
-                             alert_sent=False, created_at=date.today(),
-                             access_key_num=access_key_num, warning_delta=warning_delta, violation_delta=violation_delta)
-        event.save()
+    @staticmethod
+    def new_event_type_user(event_type, iam_user, access_key_num, warning_delta, violation_delta):
+        event = None
+        with Session(engine) as session:
+            found_event_stmt = select(Event).where(Event.user == iam_user)\
+                               .where(Event.access_key_num == access_key_num)\
+                               .where(Event.warning_delta == warning_delta)\
+                               .where(Event.violation_delta == violation_delta)
+            found_event = session.execute(found_event_stmt)
+            if not found_event:
+                print(f"didn't find event for user: {user}")
+                event = Event()
+                event.user = user
+                event.event_type = event_type
+                event.access_key_num = access_key_num
+                event.warning_delta = warning_delta
+                event.violation_delta = violation_delta
+                event_type.events.append(event)
+                session.add(event)
+                session.commit()
+                event = found_event
         return event
 
-    @classmethod
-    def all_cleared_events(cls):
-        events = Event.select().where(Event.cleared == True)
+    @staticmethod
+    def all_cleared_events():
+        events: List[Event]
+        with Session(engine) as session:
+            event_stmt = select(Event).where(Event.cleared == True)
+            found_events = session.execute(event_stmt).all()
+            events = [r for r in found_events]
         return events
 
-    @classmethod
-    def all_uncleared_events(cls):
-        events = Event.select().where(Event.cleared == False)
+    @staticmethod
+    def all_uncleared_events():
+        events: List[Event]
+        with Session(engine) as session:
+            stmt = select(Event).where(Event.cleared==False)
+            events = session.execute(stmt).all()
         return events
     
-    @classmethod
-    def events_for_user(cls, user):
-        events = Event.select().where(Event.user == user)
+    @staticmethod
+    def events_for_user(iam_user):
+        events: List[Event]
+        with Session(engine) as session:
+            stmt = select(Event).where(Event.user == iam_user)
+            events = session.execute(stmt).all()
         return events
 
-def connect() -> Database:
-    db.connect(reuse_if_open=True)
-    return db
+    # def event_exists(self, events: [Event], access_key_num: int) -> bool:
+    @staticmethod
+    def event_exists(self, key_num: int, iam_user: IAMKeys):
+        """
+        Look for an access key rotation based on key number (1 or 2) corresponding
+        to the number of access keys a user might have.
+        If the same event and key number are found, return the event
+        An event has an event_type of warning or violation
+        """
+        events = self.events_for_user(iam_user)
+        found_event = None
+        for event in events:
+            if event.access_key_num == key_num:
+                found_event = event
+                break
+        return found_event
+
+
+    @staticmethod
+    def add_event_to_db(iam_user: IAMKeys, alert_type: EventType, access_key_num: int, warning_delta: datetime, violation_delta: datetime):
+        with Session(engine) as session:
+            event_type = EventType.insert_event_type(alert_type)
+            event = Event.new_event_type_user(event_type, iam_user, access_key_num, warning_delta, violation_delta)
+            event.cleared = False
+            event.alert_sent = False
+            session.commit()
+
+    @staticmethod
+    def update_event(event, alert_type: str, warning_delta: datetime, violation_delta: datetime):
+        with Session(engine) as session:
+            if alert_type:
+                event_type = EventType.insert_event_type(alert_type)
+                event.event_type = event_type
+                event.warning_delta = warning_delta
+                event.violation_delta = violation_delta
+                event.cleared = False
+                session.commit()
+            else:
+                event.cleared = True
+                event.cleared_date = datetime.now()
+                session.commit()
+
+def create_tables_debug():
+    Base.metadata.create_all(engine)
 
 def create_tables():
-    db = connect()
-    with db:
-        print("creating tables")
-        db.create_tables([IAM_Keys, Event_Type, Event])
-        print("done creating tables")
-
-def migrate_db():
-    db = connect()
-    migrator = PostgresqlMigrator(db)
-    migrate(
-        migrator.add_column('event', 'warning_delta', DateTimeField(null=True)),
-        migrator.add_column('event', 'violation_delta', DateTimeField(null=True))
-    )
+    Base.metadata.create_all(engine)

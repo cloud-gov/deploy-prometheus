@@ -6,13 +6,14 @@ name = "pypi"
 [dev-packages]
 
 [packages]
+alembic = "*"
 boto3 = "*"
 environs="*"
 requests = "*"
 psycopg2-binary = "*"
-peewee = "*"
 python-dateutil = "*"
 PyYAML = "*"
+sqlalchemy = "*"
 
 [requires]
 python_version = "3.10.6"

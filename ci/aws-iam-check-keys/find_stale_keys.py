@@ -13,11 +13,13 @@ import time
 import yaml
 
 import boto3
-from peewee import Database
 import requests
+from sqlalchemy.orm import Session
 
 
 from keys_db_models import (
+    engine,
+    Access_Key,
     IAM_Keys,
     Event_Type,
     Event)
@@ -29,6 +31,74 @@ VIOLATION = "violation"
 WARNING = "warning"
 OK = ""
 
+def main():
+    """
+    Create tables if needed, load the thresholds for alerting and kick off the search for stale keys
+    If there is a migration to do, do that first!
+    """
+
+    # grab the state files, user files and outputs from cg-provision from the
+    # s3 buckets for com and gov users
+    env = Env()
+    debug = False
+    base_dir = env.str("BASE_DIR",None)
+    if not base_dir:
+        base_dir = "../../../.."
+    base_path = Path(base_dir)
+
+    # Parse the CLI for any arguments
+    # Note that the default value of 1 is following to allow for levels or other
+    # info to be passed later if needed
+    parser = argparse.ArgumentParser(description='Arguments for find_stale_keys')
+    parser.add_argument('-c','--create-tables', action="store_true",help='create tables WARNING: This is destructive')
+    parser.add_argument('-d','--debug', action="store_true",help='debug mode no levels for now')
+    parser.add_argument('-m','--migrate', action="store_true", help='run migrations')
+    args = parser.parse_args()
+    if args.debug:
+        print("debug")
+        debug=True
+    if args.migrate:
+        print("migrate")
+        keys_db_models.migrate_db()
+
+    # Debug code goes here
+    if debug:
+        thresholds_filename = "./ci/aws-iam-check-keys/thresholds.yml"
+    else:
+        thresholds_filename = base_path / "prometheus-config/ci/aws-iam-check-keys/thresholds.yml"
+
+    base_path = Path(base_dir)
+    com_state_file = base_path / "terraform-prod-com-yml/state.yml"
+    gov_state_file = base_path / "terraform-prod-gov-yml/state.yml"
+    com_users_filename = base_path / "aws-admin/stacks/gov/sso/users.yaml"
+    gov_users_filename = base_path / "aws-admin/stacks/com/sso/users.yaml"
+    tf_state_filename = base_path / "terraform-yaml-production/state.yml"
+    other_users_filename = base_path / "other-iam-users-yml/other_iam_users.yml"
+
+    # AWS regions
+    com_region = "us-east-1"
+    gov_region = "us-gov-west-1"
+
+    thresholds = load_thresholds(thresholds_filename)
+    com_users_list = load_system_users(com_users_filename, thresholds)
+    gov_users_list = load_system_users(gov_users_filename, thresholds)
+    tf_users = load_tf_users(tf_state_filename, thresholds)
+    other_users = load_other_users(other_users_filename)
+
+    # checks to see if we are creating tables
+    if args.create_tables:
+        keys_db_models.create_tables()
+
+    (com_state_dict, gov_state_dict) = load_profiles(com_state_file,
+                                                     gov_state_file)
+
+    for com_key in com_state_dict:
+        all_com_users = com_users_list + tf_users + other_users
+        search_for_keys(com_region, com_state_dict[com_key], all_com_users)
+    for gov_key in gov_state_dict:
+        all_gov_users = gov_users_list + tf_users + other_users
+        search_for_keys(gov_region, gov_state_dict[gov_key], all_gov_users)
+    send_all_alerts(db)
 
 def check_retention(warn_days: int, violation_days: int, access_key_date:str) -> (str, datetime, datetime):
     """
@@ -55,7 +125,7 @@ def find_known_user(report_user: str, aws_users:list[AWS_User]) -> (AWS_User, li
     Note that if is_wildcard is true, the search will be a fuzzy search otherwise the
     search will be looking for an exact match.
     """
-    not_found = []
+    users_not_found = []
     #aws_user:AWS_User = AWS_User(account_type="",is_wildcard=False,warn=0,violation=0,alert=False, user="")
     aws_user = None
     for an_aws_user in aws_users:
@@ -68,45 +138,10 @@ def find_known_user(report_user: str, aws_users:list[AWS_User]) -> (AWS_User, li
                 aws_user = an_aws_user
                 break
     if not aws_user:
-        not_found.append(report_user)
-    return aws_user, not_found
+        users_not_found.append(report_user)
+    return aws_user, users_not_found
 
 
-def event_exists(events: [Event], access_key_num: int) -> bool:
-    """
-    Look for an access key rotation based on key number (1 or 2) corresponding
-    to the number of access keys a user might have.
-    If the same event and key number are found, return the event
-    An event has an event_type of warning or violation
-    """
-    found_event = None
-    for event in events:
-        if event.access_key_num == access_key_num:
-            found_event = event
-            break
-    return found_event
-
-
-def add_event_to_db(user: IAM_Keys, alert_type: Event_Type, access_key_num: int, warning_delta: datetime, violation_delta: datetime):
-    event_type = Event_Type.insert_event_type(alert_type)
-    event = Event.new_event_type_user(event_type, user, access_key_num, warning_delta, violation_delta)
-    event.cleared = False
-    event.alert_sent = False
-    event.save()
-
-
-def update_event(event: Event, alert_type: str, warning_delta: datetime, violation_delta: datetime):
-    if alert_type:
-        event_type = Event_Type.insert_event_type(alert_type)
-        event.event_type = event_type
-        event.warning_delta = warning_delta
-        event.violation_delta = violation_delta
-        event.cleared = False
-        event.save()
-    else:
-        event.cleared = True
-        event.cleared_date = datetime.now()
-        event.save()
 
 
 def check_retention_for_key(access_key_last_rotated: datetime, access_key_num: int, user_row:dict,
@@ -115,21 +150,20 @@ def check_retention_for_key(access_key_last_rotated: datetime, access_key_num: i
     if warn_days and violation_days and access_key_last_rotated != "N/A":
         alert_type, warning_delta, violation_delta = check_retention(int(warn_days), int(violation_days),
                                     access_key_last_rotated)
-    iam_user = IAM_Keys.user_from_dict(user_row)
+    iam_user = IAM_Keys().user_from_dict(user_row)
     if alert_type:
-        events = iam_user.events
-        found_event = event_exists(events, access_key_num)
+        found_event = Event.event_exists(access_key_num, iam_user)
         if found_event:
-            update_event(found_event, alert_type, warning_delta, violation_delta)
+            Event.update_event(found_event, alert_type, warning_delta, violation_delta)
         elif alert:
-            add_event_to_db(iam_user, alert_type, access_key_num, warning_delta, violation_delta)
+            Event.add_event_to_db(iam_user, alert_type, access_key_num, warning_delta, violation_delta)
     else:
         IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
 
 
-def send_alerts(cleared: bool, events: list[Event], db: Database ):
+def send_alerts(cleared: bool, events: list[Event]):
     alerts = ""
-    with db.atomic() as transaction:
+    with Session(engine) as session:
         for event in events:
             # set up the attributes to be sent to prometheus
             user = event.user
@@ -139,10 +173,8 @@ def send_alerts(cleared: bool, events: list[Event], db: Database ):
             user_string = user.iam_user + "-" + scrubbed_arn
             cleared_int = 0 if cleared else 1
 
-            if access_key_num == 1:
-                access_key_last_rotated = user.access_key_1_last_rotated
-            else:
-                access_key_last_rotated = user.access_key_2_last_rotated
+            access_key = user.akey_for_num(access_key_num)
+            access_key_last_rotated = access_key.access_key_last_rotated
 
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
             if event.warning_delta and event.violation_delta:
@@ -154,7 +186,7 @@ def send_alerts(cleared: bool, events: list[Event], db: Database ):
             # subject to the metric making it through the gateway
             event.cleared = True if cleared else False
             event.alert_sent = True
-            event.save()
+            session.commit()
 
         print(alerts)
         # Send alerts to prometheus to update alerts
@@ -178,12 +210,12 @@ def send_alerts(cleared: bool, events: list[Event], db: Database ):
             transaction.rollback()
 
 
-def send_all_alerts(db: Database):
+def send_all_alerts():
     try:
         cleared_events = Event.all_cleared_events()
-        send_alerts(True, cleared_events, db)
+        send_alerts(True, cleared_events)
         uncleared_events = Event.all_uncleared_events()
-        send_alerts(False, uncleared_events, db)
+        send_alerts(False, uncleared_events)
     except ValueError:
         print(f"{ValueError} an exception occurred while adding alerts to the database")
 
@@ -260,7 +292,7 @@ def search_for_keys(region_name:str, profile:dict, all_users: list[AWS_User]):
             not_found.append(user_name)
         else:
             check_user_thresholds(aws_user, row)
-
+            #get_user_thresholds(aws_user, row)
 
 def state_file_to_dict(all_outputs:list[dict]):
     """ Convert the production state file to a dict
@@ -296,24 +328,6 @@ def state_file_to_dict(all_outputs:list[dict]):
             output_dict[key_prefix] = profile
     return output_dict
 
-
-def load_profiles(com_state_file: str, gov_state_file: str):
-    """
-    Clean up yaml from state files for com and gov
-    These are the secrets used for assume_role to pull
-    user info from the accounts
-    """
-    with open(com_state_file) as f:
-        com_state = yaml.safe_load(f)
-    with open(gov_state_file) as f:
-        gov_state = yaml.safe_load(f)
-    all_outputs_com = com_state['terraform_outputs']
-    all_outputs_gov = gov_state['terraform_outputs']
-    com_state_dict = state_file_to_dict(all_outputs_com)
-    gov_state_dict = state_file_to_dict(all_outputs_gov)
-    return com_state_dict, gov_state_dict
-
-
 def get_platform_thresholds(thresholds: list[Threshold], account_type:str) -> AWS_User:
     found_thresholds = [threshold_dict for threshold_dict in thresholds
         if threshold_dict.account_type == account_type]
@@ -333,6 +347,22 @@ def format_user_dicts(users_list:list, thresholds: list[Threshold], account_type
         found_user_threshold.user = key
         augmented_user_list.append(found_user_threshold)
     return augmented_user_list
+
+def load_profiles(com_state_file: str, gov_state_file: str):
+    """
+    Clean up yaml from state files for com and gov
+    These are the secrets used for assume_role to pull
+    user info from the accounts
+    """
+    with open(com_state_file) as f:
+        com_state = yaml.safe_load(f)
+    with open(gov_state_file) as f:
+        gov_state = yaml.safe_load(f)
+    all_outputs_com = com_state['terraform_outputs']
+    all_outputs_gov = gov_state['terraform_outputs']
+    com_state_dict = state_file_to_dict(all_outputs_com)
+    gov_state_dict = state_file_to_dict(all_outputs_gov)
+    return com_state_dict, gov_state_dict
 
 def load_tf_users(tf_filename: Path, thresholds: list[Threshold]) -> list[AWS_User]:
     """
@@ -358,7 +388,6 @@ def load_tf_users(tf_filename: Path, thresholds: list[Threshold]) -> list[AWS_Us
             found_user_threshold.user = outputs[key]
             tf_users.append(found_user_threshold)
     return tf_users
-
 
 def load_other_users(other_users_filename: Path) -> list[AWS_User]:
     """
@@ -392,7 +421,6 @@ def load_system_users(filename: Path, thresholds: list[Threshold]) -> list[AWS_U
     users_list = format_user_dicts(users_list, thresholds, "Operator")
     return users_list
 
-
 def load_thresholds(filename: Path) -> list[Threshold]:
     """
     This is the file that holds all the threshold information to be added to
@@ -401,79 +429,6 @@ def load_thresholds(filename: Path) -> list[Threshold]:
     with open(filename) as f:
         thresholds_yaml = yaml.safe_load(f)
     return [Threshold(**threshold) for threshold in thresholds_yaml]
-
-
-def main():
-    """
-    Create tables if needed, load the thresholds for alerting and kick off the search for stale keys
-    If there is a migration to do, do that first!
-    """
-
-    # grab the state files, user files and outputs from cg-provision from the
-    # s3 buckets for com and gov users
-    env = Env()
-    debug = False
-    base_dir = env.str("BASE_DIR",None)
-    if not base_dir:
-        base_dir = "../../.."
-    base_path = Path(base_dir)
-
-    # Parse the CLI for any arguments
-    # Note that the default value of 1 is following to allow for levels or other
-    # info to be passed later if needed
-    parser = argparse.ArgumentParser(description='Arguments for find_stale_keys')
-    parser.add_argument('-c','--create-tables', action="store_true",help='create tables WARNING: This is destructive')
-    parser.add_argument('-d','--debug', action="store_true",help='debug mode no levels for now')
-    parser.add_argument('-m','--migrate', action="store_true", help='run migrations')
-    args = parser.parse_args()
-    if args.debug:
-        print("debug")
-        debug=True
-    if args.migrate:
-        print("migrate")
-        keys_db_models.migrate_db()
-
-    # Debug code goes here
-    if debug:
-        thresholds_filename = "/Users/robertagottlieb/Dev/cg-deploy-prometheus/ci/aws-iam-check-keys/thresholds.yml"
-    else:
-        thresholds_filename = base_path / "prometheus-config/ci/aws-iam-check-keys/thresholds.yml"
-
-    base_path = Path(base_dir)
-    com_state_file = base_path / "terraform-prod-com-yml/state.yml"
-    gov_state_file = base_path / "terraform-prod-gov-yml/state.yml"
-    com_users_filename = base_path / "aws-admin/stacks/gov/sso/users.yaml"
-    gov_users_filename = base_path / "aws-admin/stacks/com/sso/users.yaml"
-    tf_state_filename = base_path / "terraform-yaml-production/state.yml"
-    other_users_filename = base_path / "other-iam-users-yml/other_iam_users.yml"
-
-    # AWS regions
-    com_region = "us-east-1"
-    gov_region = "us-gov-west-1"
-
-    thresholds = load_thresholds(thresholds_filename)
-    com_users_list = load_system_users(com_users_filename, thresholds)
-    gov_users_list = load_system_users(gov_users_filename, thresholds)
-    tf_users = load_tf_users(tf_state_filename, thresholds)
-    other_users = load_other_users(other_users_filename)
-
-    # checks to see if we are creating tables
-    if args.create_tables:
-        keys_db_models.create_tables()
-    db = keys_db_models.connect()
-
-    (com_state_dict, gov_state_dict) = load_profiles(com_state_file,
-                                                     gov_state_file)
-
-    for com_key in com_state_dict:
-        all_com_users = com_users_list + tf_users + other_users
-        search_for_keys(com_region, com_state_dict[com_key], all_com_users)
-    for gov_key in gov_state_dict:
-        all_gov_users = gov_users_list + tf_users + other_users
-        search_for_keys(gov_region, gov_state_dict[gov_key], all_gov_users)
-    send_all_alerts(db)
-
-
 
 if __name__ == "__main__":
     # Set up the GATEWAY to send alerts to Prometheus
