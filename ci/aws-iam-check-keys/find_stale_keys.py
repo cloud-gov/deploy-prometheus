@@ -19,9 +19,9 @@ from sqlalchemy.orm import Session
 
 from keys_db_models import (
     engine,
-    Access_Key,
-    IAM_Keys,
-    Event_Type,
+    AccessKey,
+    IAMKeys,
+    EventType,
     Event)
 import keys_db_models
 from threshold import Threshold
@@ -30,6 +30,7 @@ from threshold import AWS_User
 VIOLATION = "violation"
 WARNING = "warning"
 OK = ""
+
 
 def main():
     """
@@ -41,7 +42,7 @@ def main():
     # s3 buckets for com and gov users
     env = Env()
     debug = False
-    base_dir = env.str("BASE_DIR",None)
+    base_dir = env.str("BASE_DIR", None)
     if not base_dir:
         base_dir = "../../../.."
     base_path = Path(base_dir)
@@ -50,20 +51,20 @@ def main():
     # Note that the default value of 1 is following to allow for levels or other
     # info to be passed later if needed
     parser = argparse.ArgumentParser(description='Arguments for find_stale_keys')
-    parser.add_argument('-c','--create-tables', action="store_true",help='create tables WARNING: This is destructive')
-    parser.add_argument('-d','--debug', action="store_true",help='debug mode no levels for now')
-    parser.add_argument('-m','--migrate', action="store_true", help='run migrations')
+    parser.add_argument('-c', '--create-tables', action="store_true", help='create tables WARNING: This is destructive')
+    parser.add_argument('-d', '--debug', action="store_true", help='debug mode no levels for now')
+    parser.add_argument('-m', '--migrate', action="store_true", help='run migrations -1 go back a revision default: upgrade')
     args = parser.parse_args()
     if args.debug:
         print("debug")
-        debug=True
+        debug = True
     if args.migrate:
-        print("migrate")
-        keys_db_models.migrate_db()
+        print("migrate - either remove this or update it to use alembic")
 
     # Debug code goes here
     if debug:
-        thresholds_filename = "./ci/aws-iam-check-keys/thresholds.yml"
+        thresholds_filename = "thresholds.yml"
+        base_dir = "../../.."
     else:
         thresholds_filename = base_path / "prometheus-config/ci/aws-iam-check-keys/thresholds.yml"
 
@@ -98,9 +99,10 @@ def main():
     for gov_key in gov_state_dict:
         all_gov_users = gov_users_list + tf_users + other_users
         search_for_keys(gov_region, gov_state_dict[gov_key], all_gov_users)
-    send_all_alerts(db)
+    send_all_alerts()
 
-def check_retention(warn_days: int, violation_days: int, access_key_date:str) -> (str, datetime, datetime):
+
+def check_retention(warn_days: int, violation_days: int, access_key_date: str) -> (str, datetime, datetime):
     """
     Returns violation when keys were last rotated more than :violation_days: ago and
     warning when keys were last rotated :warn_days: ago if it is neither None is returned
@@ -116,7 +118,7 @@ def check_retention(warn_days: int, violation_days: int, access_key_date:str) ->
     return status, warning_days_delta, violation_days_delta
 
 
-def find_known_user(report_user: str, aws_users:list[AWS_User]) -> (AWS_User, list[dict]):
+def find_known_user(report_user: str, aws_users: list[AWS_User]) -> (AWS_User, list[dict]):
     """
     Return the row as an AWS_User, from the users dictionary matching the report user if it exists and
     not_found list if the user isn't found. This will be used for validating thresholds
@@ -126,7 +128,7 @@ def find_known_user(report_user: str, aws_users:list[AWS_User]) -> (AWS_User, li
     search will be looking for an exact match.
     """
     users_not_found = []
-    #aws_user:AWS_User = AWS_User(account_type="",is_wildcard=False,warn=0,violation=0,alert=False, user="")
+    # aws_user:AWS_User = AWS_User(account_type="",is_wildcard=False,warn=0,violation=0,alert=False, user="")
     aws_user = None
     for an_aws_user in aws_users:
         if an_aws_user.is_wildcard:
@@ -142,23 +144,24 @@ def find_known_user(report_user: str, aws_users:list[AWS_User]) -> (AWS_User, li
     return aws_user, users_not_found
 
 
-
-
-def check_retention_for_key(access_key_last_rotated: datetime, access_key_num: int, user_row:dict,
+def check_retention_for_key(access_key_last_rotated: str, access_key_num: int, user_row: dict,
                             warn_days: int, violation_days: int, alert: bool):
     alert_type = ""
+    warning_delta = None
+    violation_delta = None
+
     if warn_days and violation_days and access_key_last_rotated != "N/A":
         alert_type, warning_delta, violation_delta = check_retention(int(warn_days), int(violation_days),
-                                    access_key_last_rotated)
-    iam_user = IAM_Keys().user_from_dict(user_row)
-    if alert_type:
+                                                                     access_key_last_rotated)
+    iam_user = IAMKeys.user_from_dict(user_row, access_key_num)
+    if alert_type and warning_delta and violation_delta:
         found_event = Event.event_exists(access_key_num, iam_user)
         if found_event:
             Event.update_event(found_event, alert_type, warning_delta, violation_delta)
         elif alert:
             Event.add_event_to_db(iam_user, alert_type, access_key_num, warning_delta, violation_delta)
     else:
-        IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
+        iam_user.check_key_in_db_and_update(user_row, access_key_num)
 
 
 def send_alerts(cleared: bool, events: list[Event]):
@@ -166,14 +169,14 @@ def send_alerts(cleared: bool, events: list[Event]):
     with Session(engine) as session:
         for event in events:
             # set up the attributes to be sent to prometheus
-            user = event.user
+            event_user = event.user
             alert_type = event.event_type.event_type_name
             access_key_num = event.access_key_num
-            scrubbed_arn = user.arn.split(':')[4][-4:]
-            user_string = user.iam_user + "-" + scrubbed_arn
+            scrubbed_arn = event_user.arn.split(':')[4][-4:]
+            user_string = event_user.iam_user + "-" + scrubbed_arn
             cleared_int = 0 if cleared else 1
 
-            access_key = user.akey_for_num(access_key_num)
+            access_key = event_user.akey_for_num(access_key_num)
             access_key_last_rotated = access_key.access_key_last_rotated
 
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
@@ -194,20 +197,18 @@ def send_alerts(cleared: bool, events: list[Event]):
         prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         try:
             res = requests.put(url=prometheus_url,
-                    data=alerts,
-                    headers={'Content-Type': 'application/octet-stream'},
-                    timeout=60
-                  )
+                               data=alerts,
+                               headers={'Content-Type': 'application/octet-stream'},
+                               timeout=60)
         except requests.exceptions.Timeout:
             print("call timed out, see what's up with the server")
 
-
         print(res.raise_for_status())
         if res.status_code == 200:
-            transaction.commit()
+            session.commit()
         else:
             print(f'Warning! Metrics failed to record! See Logs status_code: {res.status_code} reason: {res.reason}')
-            transaction.rollback()
+            session.rollback()
 
 
 def send_all_alerts():
@@ -220,7 +221,7 @@ def send_all_alerts():
         print(f"{ValueError} an exception occurred while adding alerts to the database")
 
 
-def check_access_keys(user_row:dict, warn_days: int, violation_days: int, alert: bool):
+def check_access_keys(user_row: dict, warn_days: int, violation_days: int, alert: bool):
     """
     Validate key staleness for both access keys, provided they exist, for a
     given user
@@ -246,14 +247,14 @@ def check_user_thresholds(aws_user: AWS_User, report_row: dict):
     env = Env()
 
     if warn_days == 0 or violation_days == 0:
-        default_warn_days = env.int("WARN_DAYS",60)
+        default_warn_days = env.int("WARN_DAYS", 60)
         warn_days = default_warn_days
-        default_violation_days = env.int("VIOLATION_DAYS",90)
+        default_violation_days = env.int("VIOLATION_DAYS", 90)
         violation_days = default_violation_days
     check_access_keys(report_row, warn_days, violation_days, alert)
 
 
-def search_for_keys(region_name:str, profile:dict, all_users: list[AWS_User]):
+def search_for_keys(region_name: str, profile: dict, all_users: list[AWS_User]):
     """
     The main search function that reaches out to AWS IAM to grab the
     credentials report and read in csv.
@@ -292,9 +293,10 @@ def search_for_keys(region_name:str, profile:dict, all_users: list[AWS_User]):
             not_found.append(user_name)
         else:
             check_user_thresholds(aws_user, row)
-            #get_user_thresholds(aws_user, row)
+            # get_user_thresholds(aws_user, row)
 
-def state_file_to_dict(all_outputs:list[dict]):
+
+def state_file_to_dict(all_outputs: list[dict]):
     """ Convert the production state file to a dict
     data structure
     {new_key = {key1:value, key2:value}}
@@ -328,41 +330,44 @@ def state_file_to_dict(all_outputs:list[dict]):
             output_dict[key_prefix] = profile
     return output_dict
 
-def get_platform_thresholds(thresholds: list[Threshold], account_type:str) -> AWS_User:
+
+def get_platform_thresholds(thresholds: list[Threshold], account_type: str):
     found_thresholds = [threshold_dict for threshold_dict in thresholds
-        if threshold_dict.account_type == account_type]
+                        if threshold_dict.account_type == account_type]
     if found_thresholds:
         return copy(found_thresholds[0])
     else:
         return None
 
 
-def format_user_dicts(users_list:list, thresholds: list[Threshold], account_type) -> list[IAM_Keys]:
+def format_user_dicts(users_list: list, thresholds: list[Threshold], account_type) -> list[Threshold]:
     """
     Augment the users list to have the threshold information.
     """
     augmented_user_list = []
     for key in users_list:
-        found_user_threshold:list[AWS_User] = get_platform_thresholds(thresholds, account_type)
+        found_user_threshold = get_platform_thresholds(thresholds, account_type)
         found_user_threshold.user = key
         augmented_user_list.append(found_user_threshold)
     return augmented_user_list
 
-def load_profiles(com_state_file: str, gov_state_file: str):
+
+def load_profiles(com_state_file: Path, gov_state_file: Path):
     """
     Clean up yaml from state files for com and gov
     These are the secrets used for assume_role to pull
     user info from the accounts
     """
-    with open(com_state_file) as f:
+    with com_state_file.open() as f:
         com_state = yaml.safe_load(f)
-    with open(gov_state_file) as f:
+    with gov_state_file.open() as f:
         gov_state = yaml.safe_load(f)
     all_outputs_com = com_state['terraform_outputs']
     all_outputs_gov = gov_state['terraform_outputs']
     com_state_dict = state_file_to_dict(all_outputs_com)
     gov_state_dict = state_file_to_dict(all_outputs_gov)
     return com_state_dict, gov_state_dict
+
 
 def load_tf_users(tf_filename: Path, thresholds: list[Threshold]) -> list[AWS_User]:
     """
@@ -384,10 +389,11 @@ def load_tf_users(tf_filename: Path, thresholds: list[Threshold]) -> list[AWS_Us
     outputs = tf_yaml['terraform_outputs']
     for key in list(outputs):
         if "username" in key:
-            found_user_threshold:AWS_User = get_platform_thresholds(thresholds, "Platform")
+            found_user_threshold = get_platform_thresholds(thresholds, "Platform")
             found_user_threshold.user = outputs[key]
             tf_users.append(found_user_threshold)
     return tf_users
+
 
 def load_other_users(other_users_filename: Path) -> list[AWS_User]:
     """
@@ -408,6 +414,7 @@ def load_other_users(other_users_filename: Path) -> list[AWS_User]:
 
     return [AWS_User(**other) for other in other_users_yaml]
 
+
 def load_system_users(filename: Path, thresholds: list[Threshold]) -> list[AWS_User]:
     """
     Schema for gov or com users after pull out the "users" dict
@@ -421,6 +428,7 @@ def load_system_users(filename: Path, thresholds: list[Threshold]) -> list[AWS_U
     users_list = format_user_dicts(users_list, thresholds, "Operator")
     return users_list
 
+
 def load_thresholds(filename: Path) -> list[Threshold]:
     """
     This is the file that holds all the threshold information to be added to
@@ -429,6 +437,7 @@ def load_thresholds(filename: Path) -> list[Threshold]:
     with open(filename) as f:
         thresholds_yaml = yaml.safe_load(f)
     return [Threshold(**threshold) for threshold in thresholds_yaml]
+
 
 if __name__ == "__main__":
     # Set up the GATEWAY to send alerts to Prometheus

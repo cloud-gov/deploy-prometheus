@@ -4,7 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-from keys_db_models_alchemy import Base
+from keys_db_models import Base
 from os import getenv
 
 keys_db = getenv('IAM_KEYS_DB')
