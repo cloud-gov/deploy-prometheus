@@ -169,6 +169,7 @@ def send_alerts(cleared: bool, events: list[Event]):
     with Session(engine) as session:
         for event in events:
             # set up the attributes to be sent to prometheus
+            event = event[0]
             event_user = event.user
             alert_type = event.event_type.event_type_name
             access_key_num = event.access_key_num
@@ -176,7 +177,7 @@ def send_alerts(cleared: bool, events: list[Event]):
             user_string = event_user.iam_user + "-" + scrubbed_arn
             cleared_int = 0 if cleared else 1
 
-            access_key = event_user.akey_for_num(access_key_num)
+            access_key = IAMKeys.akey_for_num(event_user, access_key_num)
             access_key_last_rotated = access_key.access_key_last_rotated
 
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
@@ -214,9 +215,9 @@ def send_alerts(cleared: bool, events: list[Event]):
 def send_all_alerts():
     try:
         cleared_events = Event.all_cleared_events()
-        send_alerts(True, cleared_events)
         uncleared_events = Event.all_uncleared_events()
         send_alerts(False, uncleared_events)
+        send_alerts(True, cleared_events)
     except ValueError:
         print(f"{ValueError} an exception occurred while adding alerts to the database")
 
