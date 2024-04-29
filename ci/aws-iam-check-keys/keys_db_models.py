@@ -1,6 +1,10 @@
 from datetime import date
 from datetime import datetime
+import logging
 import os
+from typing import List
+from typing import Optional
+
 from sqlalchemy import create_engine
 from sqlalchemy import ForeignKey
 from sqlalchemy import select
@@ -10,8 +14,6 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import selectinload
 from sqlalchemy.orm import Session
-from typing import List
-from typing import Optional
 
 """
 Credential Report columns:
@@ -47,7 +49,9 @@ user = os.getenv('IAM_KEYS_USER')
 password = os.getenv('IAM_KEYS_PASSWORD')
 host = os.getenv('IAM_KEYS_HOST')
 port = os.getenv('IAM_KEYS_PORT')
-print(f'keys_db: {keys_db}\nuser: {user}\npassword: {password}\nhost: {host}\nport: {port}\n')
+# level = logging.DEBUG
+# fmt = '[%(levelname)s] %(asctime)s - %(message)s'
+# logging.basicConfig(level=level, format=fmt)
 
 
 class Base(DeclarativeBase):
@@ -107,9 +111,10 @@ class IAMKeys(Base):
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, name={self.iam_user!r} )"
 
-    def akey_for_num(self,a_num) -> AccessKey:
+    @classmethod
+    def akey_for_num(cls,iam_user,a_num) -> AccessKey:
         with Session(engine) as session:
-            ak_stmt = select(AccessKey).where(AccessKey.user == self).where(AccessKey.key_num == a_num)
+            ak_stmt = select(AccessKey).where(AccessKey.user == iam_user).where(AccessKey.key_num == a_num)
             ak_result = session.execute(ak_stmt).one()
         return ak_result[0]
 
@@ -120,57 +125,55 @@ class IAMKeys(Base):
         account = ""
         if len(arn_components) > 1:
             account = arn_components[4]
-        return account
+        return account.strip()
 
     @staticmethod
-    def clean_dict(keys_dict):
-        for key in keys_dict.keys():
-            print(keys_dict[key])
-            val_type = type(keys_dict[key])
-            if keys_dict[key] in ["N/A", "no_information", "not_supported"]:
+    def clean_dict(keys_dict:dict):
+        for key,val in keys_dict.items():
+            val_type = type(val)
+            if val in ["N/A", "no_information", "not_supported"]:
                 if key == "password_enabled":
                     keys_dict[key] = False
                 else:
                     keys_dict[key] = None
-            if val_type is tuple:
-                keys_dict[key] = keys_dict[key][0]
-            if val_type is not bool:
-                if keys_dict[key] and 'false' in keys_dict[key]:
+            elif isinstance(val, tuple):
+                keys_dict[key] = val[0]
+            if val and val_type is not bool:
+                if "false" in val:
                     keys_dict[key] = False
-                elif keys_dict[key] and 'true' in keys_dict[key]:
+                elif "true" in val:
                     keys_dict[key] = True
+
         return keys_dict
 
     @classmethod
     def user_from_dict(cls, keys_dict, key_num):
         keys_dict = cls.clean_dict(keys_dict)
-        found_user = None
-        with (Session(engine) as session):
-                user_stmt = select(IAMKeys).where(IAMKeys.arn == keys_dict['arn']).where(IAMKeys.iam_user == keys_dict['user'])
-                db_user = session.execute(user_stmt).one_or_none()
-                print(f'db_user: {db_user}')
-                if db_user:
-                    found_user = db_user[0]
-                else:
-                    print(f"didn't find user: {keys_dict['user']}")
-                    new_user = IAMKeys()
-                    new_user.iam_user = keys_dict['user']
-                    new_user.aws_account = IAMKeys.account_for_arn(keys_dict['arn'])
-                    new_user.arn = keys_dict['arn']
-                    new_user.user_creation_time = keys_dict['user_creation_time']
-                    new_user.password_enabled = keys_dict['password_enabled']
-                    new_user.password_last_used = keys_dict['password_last_used']
-                    new_user.password_last_changed = keys_dict['password_last_changed']
-                    new_user.password_next_rotation = keys_dict['password_next_rotation']
-                    new_user.mfa_active = keys_dict['mfa_active']
-                    new_user.created_at = datetime.now()
-                    new_user.updated_at = datetime.now()
-                    new_user.access_keys = AccessKey.new_akeys_for_dict(keys_dict, key_num)
-                    session.add(new_user)
-                    session.commit()
-                    found_user = new_user
+        iam_user = None
 
-        return found_user
+        with (Session(engine) as session):
+            user_stmt = select(IAMKeys).where(IAMKeys.arn == keys_dict['arn']).where(IAMKeys.iam_user == keys_dict['user'])
+            db_user = session.execute(user_stmt).one_or_none()
+            if db_user:
+                iam_user = db_user[0]
+            else:
+                iam_user = IAMKeys()
+                iam_user.iam_user = keys_dict['user']
+                iam_user.aws_account = IAMKeys.account_for_arn(keys_dict['arn'])
+                iam_user.arn = keys_dict['arn']
+                iam_user.user_creation_time = keys_dict['user_creation_time']
+                iam_user.password_enabled = keys_dict['password_enabled']
+                iam_user.password_last_used = keys_dict['password_last_used']
+                iam_user.password_last_changed = keys_dict['password_last_changed']
+                iam_user.password_next_rotation = keys_dict['password_next_rotation']
+                iam_user.mfa_active = keys_dict['mfa_active']
+                iam_user.created_at = datetime.now()
+                iam_user.updated_at = datetime.now()
+                iam_user.access_keys = AccessKey.new_akeys_for_dict(keys_dict, key_num)
+                session.add(iam_user)
+                session.commit()
+
+        return iam_user
 
 
 
@@ -217,7 +220,7 @@ class IAMKeys(Base):
                         access_key.cert_last_rotated = user_row[f'cert_{key_num}_last_rotated']
                         events = Event.events_for_user(found_user)
                         for event in events:
-                            event[0].cleared = True
+                            event.cleared = True
                         session.commit()
             except ValueError:
                 print(f'========== user not found in db! {user_row["user"]} ==========')
@@ -235,14 +238,16 @@ class EventType(Base):
     def insert_event_type(name):
         with Session(engine) as session:
             event_type_stmt = select(EventType).where(EventType.event_type_name == name)
-            event_type = session.execute(event_type_stmt).one()[0]
-            #  TODO: Doesn't work, go back to what iam user is using
+            event_type = session.execute(event_type_stmt).one()
+            if event_type:
+                event_type = event_type[0]
             if not event_type:
                 event_type = EventType()
                 event_type.event_type_name = name
                 event_type.created_at = datetime.now()
+                session.add(event_type)
+                session.commit()
 
-                print(f"didn't find event type: {name}")
         return event_type
 
 
@@ -281,28 +286,27 @@ class Event(Base):
                 event.warning_delta = warning_delta
                 event.violation_delta = violation_delta
                 event.event_type = event_type
-                #event_type.events.append(event)
                 event.cleared = False
                 event.alert_sent = False
                 event.created_at = datetime.now()
                 session.add(event)
                 session.commit()
             else:
-                event = found_event
+                event = found_event[0]
         return event
 
     @staticmethod
     def all_cleared_events():
         with Session(engine) as session:
             event_stmt = select(Event).where(Event.cleared == True).options(selectinload(Event.user)).options(selectinload(Event.event_type))
-            found_cleared_events = session.execute(event_stmt).all()[0]
+            found_cleared_events = session.execute(event_stmt).all()
         return found_cleared_events
 
     @staticmethod
     def all_uncleared_events():
         with Session(engine) as session:
             event_stmt = select(Event).where(Event.cleared == False).options(selectinload(Event.user)).options(selectinload(Event.event_type))
-            found_uncleared_events = session.execute(event_stmt).all()[0]
+            found_uncleared_events = session.execute(event_stmt).all()
         return found_uncleared_events
     
     @staticmethod
@@ -310,7 +314,9 @@ class Event(Base):
         events: List[Event]
         with Session(engine) as session:
             stmt = select(Event).where(Event.user == iam_user)
-            events = session.execute(stmt).fetchall()
+            events = session.execute(stmt).all()
+            if events:
+                events = events[0]
         return events
 
     # def event_exists(self, events: [Event], access_key_num: int) -> bool:
@@ -325,8 +331,8 @@ class Event(Base):
         events = Event.events_for_user(iam_user)
         found_event = None
         for event in events:
-            if event[0].access_key_num == key_num:
-                found_event = event[0]
+            if event.access_key_num == key_num:
+                found_event = event
                 break
         return found_event
 
@@ -347,10 +353,12 @@ class Event(Base):
                 event.warning_delta = warning_delta
                 event.violation_delta = violation_delta
                 event.cleared = False
+                session.add(event)
                 session.commit()
             else:
                 event.cleared = True
                 event.cleared_date = datetime.now()
+                session.add(event)
                 session.commit()
 
 

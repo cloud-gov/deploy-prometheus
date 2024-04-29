@@ -19,9 +19,7 @@ from sqlalchemy.orm import Session
 
 from keys_db_models import (
     engine,
-    AccessKey,
     IAMKeys,
-    EventType,
     Event)
 import keys_db_models
 from threshold import Threshold
@@ -63,8 +61,8 @@ def main():
 
     # Debug code goes here
     if debug:
-        thresholds_filename = "thresholds.yml"
-        base_dir = "../../.."
+        thresholds_filename = "ci/aws-iam-check-keys/thresholds.yml"
+        base_dir = ".."
     else:
         thresholds_filename = base_path / "prometheus-config/ci/aws-iam-check-keys/thresholds.yml"
 
