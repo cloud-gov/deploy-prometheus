@@ -64,7 +64,7 @@ def main():
         thresholds_filename = "ci/aws-iam-check-keys/thresholds.yml"
         base_dir = ".."
     else:
-        thresholds_filename = base_path / "prometheus-config/ci/aws-iam-check-keys/thresholds.yml"
+        thresholds_filename = "prometheus-config/ci/aws-iam-check-keys/thresholds.yml"
 
     base_path = Path(base_dir)
     com_state_file = base_path / "terraform-prod-com-yml/state.yml"
