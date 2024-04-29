@@ -1,6 +1,5 @@
 from datetime import date
 from datetime import datetime
-import logging
 import os
 from typing import List
 from typing import Optional
@@ -49,9 +48,6 @@ user = os.getenv('IAM_KEYS_USER')
 password = os.getenv('IAM_KEYS_PASSWORD')
 host = os.getenv('IAM_KEYS_HOST')
 port = os.getenv('IAM_KEYS_PORT')
-level = logging.DEBUG
-fmt = '[%(levelname)s] %(asctime)s - %(message)s'
-logging.basicConfig(level=level, format=fmt)
 
 
 class Base(DeclarativeBase):
