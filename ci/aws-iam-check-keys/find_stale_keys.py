@@ -42,7 +42,7 @@ def main():
     debug = False
     base_dir = env.str("BASE_DIR", None)
     if not base_dir:
-        base_dir = "../../../.."
+        base_dir = "../../.."
     base_path = Path(base_dir)
 
     # Parse the CLI for any arguments
