@@ -49,9 +49,9 @@ user = os.getenv('IAM_KEYS_USER')
 password = os.getenv('IAM_KEYS_PASSWORD')
 host = os.getenv('IAM_KEYS_HOST')
 port = os.getenv('IAM_KEYS_PORT')
-# level = logging.DEBUG
-# fmt = '[%(levelname)s] %(asctime)s - %(message)s'
-# logging.basicConfig(level=level, format=fmt)
+level = logging.DEBUG
+fmt = '[%(levelname)s] %(asctime)s - %(message)s'
+logging.basicConfig(level=level, format=fmt)
 
 
 class Base(DeclarativeBase):
@@ -151,7 +151,7 @@ class IAMKeys(Base):
         keys_dict = cls.clean_dict(keys_dict)
         iam_user = None
 
-        with (Session(engine) as session):
+        with Session(engine) as session:
             user_stmt = select(IAMKeys).where(IAMKeys.arn == keys_dict['arn']).where(IAMKeys.iam_user == keys_dict['user'])
             db_user = session.execute(user_stmt).one_or_none()
             if db_user:
