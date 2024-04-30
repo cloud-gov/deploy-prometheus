@@ -201,6 +201,7 @@ def send_alerts(cleared: bool, events: list[Event]):
         except requests.exceptions.Timeout:
             print("call timed out, see what's up with the server")
 
+        print("before raise status stuff")
         print(res.raise_for_status())
         if res.status_code == 200:
             session.commit()
