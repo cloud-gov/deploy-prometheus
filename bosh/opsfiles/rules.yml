@@ -132,14 +132,15 @@
         summary: Logsearch archive to index ratio on environment {{$labels.environment}} is too low
         description: Logsearch archive to index ratio on environment {{$labels.environment}} has been too low for 30m.  The S3 archival process or the ES ingest process may not be working.  See the archival and ingestor instances in the logsearch deployment in case any of their components need restarting.
     - alert: LogsearchBackupExpired
-      expr: time() - max(logsearch_backup_timestamp) > 60 * 30
+      # TODO: get the backup checks running on better time, then change this back to 60 * 30
+      expr: time() - max(logsearch_backup_timestamp) > 60 * 45
       for: 5m
       labels:
         service: logsearch-backup
         severity: warning
       annotations:
         summary: Logsearch timestamp on environment {{$labels.environment}} is too old
-        description: Logsearch timestamp on environment {{$labels.environment}} has been too old for 5m.  This indicates that the logsearch checks in https://github.com/18F/cg-deploy-logsearch/blob/master/ci/check-backup.sh have not run recently, so we do not have good data to alert on.
+        description: Logsearch timestamp on environment {{$labels.environment}} has been too old for 5m.  This indicates that the logsearch checks in https://github.com/cloud-gov/cg-deploy-logsearch/blob/main/ci/check-backup.sh have not run recently, so we do not have good data to alert on.
 
 # Nessus alerts
 - type: replace
