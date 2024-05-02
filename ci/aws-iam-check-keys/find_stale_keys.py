@@ -180,7 +180,8 @@ def send_alerts(cleared: bool, events: list[Event]):
 
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
             if event.warning_delta and event.violation_delta:
-                alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}", warn_date="{event.warning_delta}", violation_date="{event.violation_delta}"}} {cleared_int}\n'
+                #alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}", warn_date="{event.warning_delta}", violation_date="{event.violation_delta}"}} {cleared_int}\n'
+                alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
                 alerts += alert
 
             # Set the cleared and alert_sent attributes in the database,
