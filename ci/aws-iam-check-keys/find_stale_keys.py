@@ -200,8 +200,9 @@ def send_alerts(cleared: bool, events: list[Event]):
 
         res.raise_for_status()
         if res.status_code == 200:
-            a_length = len(alerts.split("\n"))
-            print(f"in theory I sent {a_length} alerts")
+            # a_length = len(alerts.split("\n"))
+            print(f"response body is: {res.body}")
+            #print(f"in theory I sent {a_length} alerts")
             session.commit()
         else:
             print(f'Warning! Metrics failed to record! See Logs status_code: {res.status_code} reason: {res.reason}')
