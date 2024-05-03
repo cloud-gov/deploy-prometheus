@@ -8,6 +8,7 @@ from dateutil.parser import parse
 from environs import Env
 from pathlib import Path
 import sys
+import time
 import yaml
 
 import boto3
