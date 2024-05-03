@@ -194,7 +194,6 @@ def send_alerts(cleared: bool, events: list[Event]):
         try:
             res = requests.put(url=prometheus_url,
                                data=alerts,
-                               headers={'Content-Type': 'application/octet-stream'},
                                timeout=60)
         except requests.exceptions.Timeout:
             print("call timed out, see what's up with the server")
@@ -202,7 +201,7 @@ def send_alerts(cleared: bool, events: list[Event]):
         res.raise_for_status()
         if res.status_code == 200:
             # a_length = len(alerts.split("\n"))
-            print(f"response body is: {res.body}")
+            print(f"response body is: {res.content}")
             #print(f"in theory I sent {a_length} alerts")
             session.commit()
         else:
