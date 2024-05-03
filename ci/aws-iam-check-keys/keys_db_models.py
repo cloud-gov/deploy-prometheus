@@ -1,6 +1,6 @@
 from datetime import date
 from datetime import datetime
-import os
+from environs import Env
 from typing import List
 from typing import Optional
 
@@ -42,12 +42,12 @@ cert_2_last_rotated ISO 8601, N/A
 reference:
 https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getting-report.html
 """
-
-keys_db = os.getenv('IAM_KEYS_DB')
-user = os.getenv('IAM_KEYS_USER')
-password = os.getenv('IAM_KEYS_PASSWORD')
-host = os.getenv('IAM_KEYS_HOST')
-port = os.getenv('IAM_KEYS_PORT')
+env = Env()
+keys_db = env.str('IAM_KEYS_DB')
+user = env.str('IAM_KEYS_USER')
+password = env.str('IAM_KEYS_PASSWORD')
+host = env.str('IAM_KEYS_HOST')
+port = env.str('IAM_KEYS_PORT')
 
 
 class Base(DeclarativeBase):

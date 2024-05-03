@@ -7,9 +7,7 @@ from datetime import timedelta, datetime
 from dateutil.parser import parse
 from environs import Env
 from pathlib import Path
-import os
 import sys
-import time
 import yaml
 
 import boto3
@@ -164,6 +162,7 @@ def check_retention_for_key(access_key_last_rotated: str, access_key_num: int, u
 
 def send_alerts(cleared: bool, events: list[Event]):
     alerts = ""
+    env = Env()
     with Session(engine) as session:
         for event in events:
             # set up the attributes to be sent to prometheus
@@ -190,8 +189,7 @@ def send_alerts(cleared: bool, events: list[Event]):
 
         print(alerts)
         # Send alerts to prometheus to update alerts
-        # TODO: Look at all uses of os.getenv and see if I can replace with Env (or if that is desirable)
-        prometheus_url = f'http://{os.getenv("GATEWAY_HOST")}:{os.getenv("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
+        prometheus_url = f'http://{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         try:
             res = requests.put(url=prometheus_url,
                                data=alerts,
@@ -311,8 +309,8 @@ def state_file_to_dict(all_outputs: list[dict]):
     gov-stg-tool_access_key_id_stalekey -> prefix = gov-stg-tool, so the delimiter is '-'
     the rest = tool_access_key_id_stalekey
     """
-
-    prefix_delimiter = os.getenv('PREFIX_DELIMITER')
+    env = Env()
+    prefix_delimiter = env.str('PREFIX_DELIMITER')
     output_dict = {}
     for key, value in all_outputs.items():
         profile = {}
@@ -441,7 +439,10 @@ def load_thresholds(filename: Path) -> list[Threshold]:
 
 if __name__ == "__main__":
     # Set up the GATEWAY to send alerts to Prometheus
-    if "GATEWAY_HOST" not in os.environ:
-        print("GATEWAY_HOST is required.")
+    env = Env()
+    try:
+        env.str("GATEWAY_HOST")
+    except ValueError:
+        print(f"GATEWAY_HOST missing")
         sys.exit(1)
     main()
