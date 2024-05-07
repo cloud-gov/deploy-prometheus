@@ -204,8 +204,8 @@ def send_alerts(cleared: bool, events: list[Event]):
 
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
             if event.warning_delta and event.violation_delta:
-                # alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}", warn_date="{event.warning_delta}", violation_date="{event.violation_delta}"}} {cleared_int}\n'
-                alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
+                alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}", warn_date="{event.warning_delta}", violation_date="{event.violation_delta}"}} {cleared_int}\n'
+                #alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
 
             # Set the cleared and alert_sent attributes in the database,
             # subject to the metric making it through the gateway
@@ -213,29 +213,31 @@ def send_alerts(cleared: bool, events: list[Event]):
             event.alert_sent = True
             session.commit()
 
+        print(alerts.strip())
         prometheus_url = f'http://{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
-        print(alerts)
         for alert in alerts.split('\n'):
-            print(f'alert is: {alert}')
+            alert += '\n'
+            print(f'local alert is: {alert}')
             res = requests.put(url=prometheus_url, data=alert, timeout=60)
             print(f'res is: {res.content} {res.status_code}')
         
         # Send alerts to prometheus to update alerts
-        #prometheus_url = f'http://{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
-        #try:
-        #    res = requests.put(url=prometheus_url,
-        #                       data=alerts,
+        # prometheus_url = f'http://{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
+        # try:
+        #     res = requests.put(url=prometheus_url,
+        #                       data=alerts.strip(),
         #                       timeout=60)
-        #except requests.exceptions.Timeout:
-        #    print("call timed out, see what's up with the server")
+        #     print(f'res is: {res.content} {res.status_code}')
+        # except requests.exceptions.Timeout:
+        #     print("call timed out, see what's up with the server")
 
-        #res.raise_for_status()
-        #if res.status_code == 200:
+        # res.raise_for_status()
+        # if res.status_code == 200:
         #    # a_length = len(alerts.split("\n"))
         #    print(f"response body is: {res.content}")
         #    #print(f"in theory I sent {a_length} alerts")
         #    session.commit()
-        #else:
+        # else:
         #    print(f'Warning! Metrics failed to record! See Logs status_code: {res.status_code} reason: {res.reason}')
         #    session.rollback()
 
