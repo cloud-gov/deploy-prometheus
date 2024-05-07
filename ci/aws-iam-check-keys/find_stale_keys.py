@@ -216,6 +216,7 @@ def send_alerts(cleared: bool, events: list[Event]):
         prometheus_url = f'http://{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
         print(alerts)
         for alert in alerts:
+            print(f'alert is: {alert}')
             res = requests.put(url=prometheus_url, data=alert, timeout=60)
             print(f'res is: {res.content} {res.status_code}')
         
