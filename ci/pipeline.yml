@@ -156,7 +156,7 @@ jobs:
     tags: [iaas]
     params:
       AWS_DEFAULT_REGION: ((aws-region))
-      GATEWAY_HOST: prometheus-staging.service.cf.internal
+      GATEWAY_HOST: prometheus-production.service.cf.internal
       VIOLATION_DAYS: ((aws-iam-violation-days))
   on_success:
     put: slack
