@@ -12,6 +12,7 @@ import time
 import yaml
 
 import boto3
+from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 import requests
 from sqlalchemy.orm import Session
 
@@ -161,6 +162,29 @@ def check_retention_for_key(access_key_last_rotated: str, access_key_num: int, u
         iam_user.check_key_in_db_and_update(user_row, access_key_num)
 
 
+def send_data_via_client(cleared: bool, events: list[Event]):
+    registry = CollectorRegistry()
+    for event in events:
+        event = event[0]
+        event_user = event.user
+        alert_type = event.event_type.event_type_name
+        access_key_num = event.access_key_num
+        scrubbed_arn = event_user.arn.split(':')[4][-4:]
+        user_string = event_user.iam_user + "-" + scrubbed_arn
+        cleared_int = 0 if cleared else 1
+
+        access_key = IAMKeys.akey_for_num(event_user, access_key_num)
+        access_key_last_rotated = access_key.access_key_last_rotated
+        
+        alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}", warn_date="{event.warning_delta}", violation_date="{event.violation_delta}"}} {cleared_int}\n\n'
+        if cleared:
+            g = Gauge(alert, 'current list of stale keys', registry=registry).dec()
+        else:
+            g = Gauge(alert, 'current list of stale keys', registry=registry).inc()
+        g.set_to_current_time()
+        g.push_to_gateway('localhost:9091',  job='find_stale_keys', registry=registry)
+
+
 def send_alerts(cleared: bool, events: list[Event]):
     alerts = ""
     env = Env()
@@ -180,7 +204,8 @@ def send_alerts(cleared: bool, events: list[Event]):
 
             # append the alert to the string of alerts to be sent to prometheus via the pushgateway
             if event.warning_delta and event.violation_delta:
-                alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}", warn_date="{event.warning_delta}", violation_date="{event.violation_delta}"}} {cleared_int}\n\n'
+                # alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}", warn_date="{event.warning_delta}", violation_date="{event.violation_delta}"}} {cleared_int}\n'
+                alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
 
             # Set the cleared and alert_sent attributes in the database,
             # subject to the metric making it through the gateway
@@ -213,8 +238,10 @@ def send_all_alerts():
     try:
         cleared_events = Event.all_cleared_events()
         uncleared_events = Event.all_uncleared_events()
-        send_alerts(False, uncleared_events)
-        send_alerts(True, cleared_events)
+        send_data_via_client(False, uncleared_events)
+        send_data_via_client(True, cleared_events)
+        #send_alerts(False, uncleared_events)
+        #send_alerts(True, cleared_events)
     except ValueError:
         print(f"{ValueError} an exception occurred while adding alerts to the database")
 
