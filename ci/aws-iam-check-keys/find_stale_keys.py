@@ -214,32 +214,33 @@ def send_alerts(cleared: bool, events: list[Event]):
             session.commit()
 
         print(alerts.strip())
-        prometheus_url = f'http://{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
-        for alert in alerts.split('\n'):
-            alert += '\n'
-            print(f'local alert is: {alert}')
-            res = requests.put(url=prometheus_url, data=alert, timeout=60)
-            print(f'res is: {res.content} {res.status_code}')
+        #prometheus_url = f'http://{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
+        #for alert in alerts.split('\n'):
+        #    alert += '\n'
+        #    print(f'local alert is: {alert}')
+        #    res = requests.put(url=prometheus_url, data=alert, timeout=60)
+        #    print(f'res is: {res.content} {res.status_code}')
         
         # Send alerts to prometheus to update alerts
-        # prometheus_url = f'http://{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
-        # try:
-        #     res = requests.put(url=prometheus_url,
-        #                       data=alerts.strip(),
-        #                       timeout=60)
-        #     print(f'res is: {res.content} {res.status_code}')
-        # except requests.exceptions.Timeout:
-        #     print("call timed out, see what's up with the server")
+        prometheus_url = f'http://{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
+        try:
+            res = requests.put(url=prometheus_url,
+                              data=alerts,
+                              headers={'Content-Type': 'application/octet-stream'}
+                              )
+            print(f'res is: {res.content} {res.status_code}')
+        except requests.exceptions.Timeout:
+            print("call timed out, see what's up with the server")
 
-        # res.raise_for_status()
-        # if res.status_code == 200:
-        #    # a_length = len(alerts.split("\n"))
-        #    print(f"response body is: {res.content}")
-        #    #print(f"in theory I sent {a_length} alerts")
-        #    session.commit()
-        # else:
-        #    print(f'Warning! Metrics failed to record! See Logs status_code: {res.status_code} reason: {res.reason}')
-        #    session.rollback()
+        res.raise_for_status()
+        if res.status_code == 200:
+           # a_length = len(alerts.split("\n"))
+           print(f"response body is: {res.content}")
+           #print(f"in theory I sent {a_length} alerts")
+           session.commit()
+        else:
+           print(f'Warning! Metrics failed to record! See Logs status_code: {res.status_code} reason: {res.reason}')
+           session.rollback()
 
 
 def send_all_alerts():
