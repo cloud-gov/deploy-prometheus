@@ -12,7 +12,8 @@ import time
 import yaml
 
 import boto3
-# from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
+from prometheus_client import CollectorRegistry, Gauge, pushadd_to_gateway
+
 import requests
 from sqlalchemy.orm import Session
 
@@ -161,99 +162,40 @@ def check_retention_for_key(access_key_last_rotated: str, access_key_num: int, u
     else:
         iam_user.check_key_in_db_and_update(user_row, access_key_num)
 
+def alert_for_event(event:Event):
+    event = event[0]
+    event_user = event.user
+    alert_type = event.event_type.event_type_name
+    access_key_num = event.access_key_num
+    scrubbed_arn = event_user.arn.split(':')[4][-4:]
+    user_string = event_user.iam_user + "-" + scrubbed_arn
+    access_key = IAMKeys.akey_for_num(event_user, access_key_num)
+    access_key_last_rotated = access_key.access_key_last_rotated
+    alert = {'user':user_string, 'alert_type':alert_type, 'key':access_key_num, 'last_rotated':access_key_last_rotated, 'warn_date':event.warning_delta, 'violation_date':event.violation_delta}
+    print(f"about to push alert: {alert}")
+    return alert
 
-def send_data_via_client(cleared: bool, events: list[Event]):
-    # registry = CollectorRegistry()
-    for event in events:
-        event = event[0]
-        event_user = event.user
-        alert_type = event.event_type.event_type_name
-        access_key_num = event.access_key_num
-        scrubbed_arn = event_user.arn.split(':')[4][-4:]
-        user_string = event_user.iam_user + "-" + scrubbed_arn
-        cleared_int = 0 if cleared else 1
+def send_data_via_client(uncleared_events: list[Event], cleared_events: list[Event]):
+    registry = CollectorRegistry()
+    GATEWAY = f'{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT")}'
 
-        access_key = IAMKeys.akey_for_num(event_user, access_key_num)
-        access_key_last_rotated = access_key.access_key_last_rotated
-        
-        # alert = f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}", warn_date="{event.warning_delta}", violation_date="{event.violation_delta}"}} {cleared_int}\n\n'
-        # if cleared:
-        #     g = Gauge(alert, 'current list of stale keys', registry=registry).dec()
-        # else:
-        #     g = Gauge(alert, 'current list of stale keys', registry=registry).inc()
-        # g.set_to_current_time()
-        # g.push_to_gateway('localhost:9091',  job='find_stale_keys', registry=registry)
+    
+    key_info = Gauge("stale_key_num","Stale key needs to be rotated (1) or not (0)", ['user', 'alert_type', 'key', 'last_rotated', 'warn_date', 'violation_date'], registry=registry)
+    for uncleared_event in uncleared_events:
+        alert = alert_for_event(uncleared_event)
+        key_info.labels(**alert).set(1)
+        pushadd_to_gateway(GATEWAY,  job='find_stale_keys', registry=registry)
 
-
-def send_alerts(cleared: bool, events: list[Event]):
-    alerts = ""
-    env = Env()
-    with Session(engine) as session:
-        for event in events:
-            # set up the attributes to be sent to prometheus
-            event = event[0]
-            event_user = event.user
-            alert_type = event.event_type.event_type_name
-            access_key_num = event.access_key_num
-            scrubbed_arn = event_user.arn.split(':')[4][-4:]
-            user_string = event_user.iam_user + "-" + scrubbed_arn
-            cleared_int = 0 if cleared else 1
-
-            access_key = IAMKeys.akey_for_num(event_user, access_key_num)
-            access_key_last_rotated = access_key.access_key_last_rotated
-
-            # append the alert to the string of alerts to be sent to prometheus via the pushgateway
-            if event.warning_delta and event.violation_delta:
-                alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}", warn_date="{event.warning_delta}", violation_date="{event.violation_delta}"}} {cleared_int}\n'
-                #alerts += f'stale_key_num{{user="{user_string}", alert_type="{alert_type}", key="{access_key_num}", last_rotated="{access_key_last_rotated}"}} {cleared_int}\n'
-
-            # Set the cleared and alert_sent attributes in the database,
-            # subject to the metric making it through the gateway
-            event.cleared = True if cleared else False
-            event.alert_sent = True
-            session.commit()
-
-        print(alerts.strip())
-        #prometheus_url = f'http://{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
-        #for alert in alerts.split('\n'):
-        #    alert += '\n'
-        #    print(f'local alert is: {alert}')
-        #    res = requests.put(url=prometheus_url, data=alert, timeout=60)
-        #    print(f'res is: {res.content} {res.status_code}')
-        
-        # Send alerts to prometheus to update alerts
-        prometheus_url = f'http://{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", "9091")}/metrics/job/find_stale_keys'
-        try:
-            res = requests.put(url=prometheus_url,
-                              data=alerts,
-                              headers={'Content-Type': 'application/octet-stream'}
-                              )
-            print(f'res is: {res.content} {res.status_code}')
-        except requests.exceptions.Timeout:
-            print("call timed out, see what's up with the server")
-
-        res.raise_for_status()
-        if res.status_code == 200:
-           # a_length = len(alerts.split("\n"))
-           print(f"response body is: {res.content}")
-           #print(f"in theory I sent {a_length} alerts")
-           session.commit()
-        else:
-           print(f'Warning! Metrics failed to record! See Logs status_code: {res.status_code} reason: {res.reason}')
-           session.rollback()
+    for cleared_event in cleared_events:
+        alert = alert_for_event(cleared_event)
+        key_info.labels(**alert).set(0)
+        pushadd_to_gateway(GATEWAY,  job='find_stale_keys', registry=registry)
 
 
 def send_all_alerts():
-    try:
-        cleared_events = Event.all_cleared_events()
-        uncleared_events = Event.all_uncleared_events()
-        send_data_via_client(False, uncleared_events)
-        # send_data_via_client(True, cleared_events)
-        send_alerts(False, uncleared_events)
-        send_alerts(True, cleared_events)
-    except ValueError:
-        print(f"{ValueError} an exception occurred while adding alerts to the database")
-
+    cleared_events = Event.all_cleared_events()
+    uncleared_events = Event.all_uncleared_events()
+    send_data_via_client(uncleared_events, cleared_events)
 
 def check_access_keys(user_row: dict, warn_days: int, violation_days: int, alert: bool):
     """
