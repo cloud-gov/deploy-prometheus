@@ -177,7 +177,7 @@ def alert_for_event(event:Event):
 
 def send_data_via_client(uncleared_events: list[Event], cleared_events: list[Event]):
     registry = CollectorRegistry()
-    GATEWAY = f'{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT")}'
+    GATEWAY = f'{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT","9091")}'
 
     
     key_info = Gauge("stale_key_num","Stale key needs to be rotated (1) or not (0)", ['user', 'alert_type', 'key', 'last_rotated', 'warn_date', 'violation_date'], registry=registry)
