@@ -14,12 +14,7 @@ import yaml
 import boto3
 from prometheus_client import CollectorRegistry, Gauge, pushadd_to_gateway
 
-import requests
-from sqlalchemy.orm import Session
-
-
 from keys_db_models import (
-    engine,
     IAMKeys,
     Event)
 import keys_db_models
@@ -420,7 +415,7 @@ if __name__ == "__main__":
     env = Env()
     try:
         env.str("GATEWAY_HOST")
-    except ValueError:
-        print(f"GATEWAY_HOST missing")
+    except ValueError as err:
+        print(f"GATEWAY_HOST missing: {err}")
         sys.exit(1)
     main()
