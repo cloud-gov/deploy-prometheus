@@ -167,7 +167,7 @@ def alert_for_event(event:Event):
     access_key = IAMKeys.akey_for_num(event_user, access_key_num)
     access_key_last_rotated = access_key.access_key_last_rotated
     alert = {'user':user_string, 'alert_type':alert_type, 'key':access_key_num, 'last_rotated':access_key_last_rotated, 'warn_date':event.warning_delta, 'violation_date':event.violation_delta}
-    print(f"about to push alert: {alert}")
+    print(f"alert: {alert}")
     return alert
 
 def send_data_via_client(uncleared_events: list[Event], cleared_events: list[Event]):
