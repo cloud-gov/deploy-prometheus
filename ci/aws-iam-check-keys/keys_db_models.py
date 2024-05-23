@@ -87,12 +87,31 @@ class IAM_Keys(BaseModel):
             account = arn_components[4]
         return account
 
+    # def clean_dict(cls, keys_dict):
+    #     for key in keys_dict:
+    #         if keys_dict[key] == 'N/A':
+    #             keys_dict[key] = None
+    #     return keys_dict
+    
     @classmethod
-    def clean_dict(cls, keys_dict):
-        for key in keys_dict:
-            if keys_dict[key] == 'N/A':
-                keys_dict[key] = None
+    def clean_dict(cls, keys_dict:dict):
+        for key,val in keys_dict.items():
+            val_type = type(val)
+            if val in ["N/A", "no_information", "not_supported"]:
+                if key == "password_enabled":
+                    keys_dict[key] = False
+                else:
+                    keys_dict[key] = None
+            elif isinstance(val, tuple):
+                keys_dict[key] = val[0]
+            if val and val_type is not bool:
+                if "false" in val:
+                    keys_dict[key] = False
+                elif "true" in val:
+                    keys_dict[key] = True
+
         return keys_dict
+
 
     @classmethod
     def user_from_dict(cls, keys_dict):
@@ -151,7 +170,7 @@ class IAM_Keys(BaseModel):
                 user.access_key_1_last_used_date=user_row['access_key_1_last_used_date'],
                 user.access_key_1_last_used_region=user_row['access_key_1_last_used_region'],
                 user.access_key_1_last_used_service=user_row['access_key_1_last_used_service']
-                events = Event.events_for_user(user)
+                events = Event.events_for_user(user, 1)
                 for event in events:
                     event.cleared = True
                     event.save()
@@ -174,7 +193,7 @@ class IAM_Keys(BaseModel):
                 user.access_key_2_last_used_date=user_row['access_key_2_last_used_date'],
                 user.access_key_2_last_used_region=user_row['access_key_2_last_used_region'],
                 user.access_key_2_last_used_service=user_row['access_key_2_last_used_service']
-                events = Event.events_for_user(user)
+                events = Event.events_for_user(user, 2)
                 for event in events:
                     event.cleared = True
                     event.save()
@@ -229,8 +248,8 @@ class Event(BaseModel):
         return events
     
     @classmethod
-    def events_for_user(cls, user):
-        events = Event.select().where(Event.user == user)
+    def events_for_user(cls, user, access_key_num):
+        events = Event.select().where(Event.user == user, Event.access_key_num == access_key_num)
         return events
 
 

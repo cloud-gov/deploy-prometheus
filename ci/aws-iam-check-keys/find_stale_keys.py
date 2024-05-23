@@ -1,32 +1,44 @@
 #!/usr/bin/env python
 
-import requests
-import boto3
+import argparse
 from copy import copy
 import csv
 from datetime import timedelta, datetime
 from dateutil.parser import parse
+from environs import Env
+import os
+from pathlib import Path
+import requests
+import sys
+import time
+import yaml
+
+import boto3
 from keys_db_models import (
     IAM_Keys,
     Event_Type,
     Event)
 import keys_db_models
-import os
-import sys
-import time
-import yaml
 
-def check_retention(warn_days, violation_days, key_date):
+VIOLATION = "violation"
+WARNING = "warning"
+OK = ""
+
+def check_retention(warn_days: int, violation_days: int, key_date: str) -> (str, datetime, datetime):
     """
     Returns violation when keys were last rotated more than :violation_days: ago and 
     warning when keys were last rotated :warn_days: ago if it is neither None is returned
     """
     key_date = parse(key_date, ignoretz=True)
-    if key_date + timedelta(days=int(violation_days)) <= datetime.now():
-        return "violation"
-    if key_date + timedelta(days=int(warn_days)) <= datetime.now():
-        return "warning"
-    return None
+    violation_days_delta = key_date + timedelta(days=violation_days)
+    warning_days_delta = key_date + timedelta(days=warn_days)
+    status = OK
+
+    if violation_days_delta <= datetime.now():
+        status = VIOLATION
+    elif warning_days_delta <= datetime.now():
+        status = WARNING
+    return status, warning_days_delta, violation_days_delta
 
 def find_known_user(report_user, all_users_dict):
     """
@@ -88,22 +100,23 @@ def update_event(event, alert_type):
         event.save()
 
 
-def check_retention_for_key(access_key_last_rotated, access_key_num, user_row,
-                            warn_days, violation_days, alert):
+def check_retention_for_key(access_key_last_rotated: str, access_key_num: int, user_row: dict, warn_days: int, violation_days: int, alert: bool):
 
-    if (access_key_last_rotated != "N/A"):
-        alert_type = check_retention(warn_days, violation_days,
-                                     access_key_last_rotated)
-        iam_user = IAM_Keys.user_from_dict(user_row)
-        if (alert_type):
-            events = iam_user.events
-            found_event = event_exists(events, access_key_num)
-            if found_event:
-                update_event(found_event, alert_type)
-            elif alert:
-                add_event_to_db(iam_user, alert_type, access_key_num)
-        else:
-            IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
+    alert_type = ""
+    warning_delta = None
+    violation_delta = None
+
+    if warn_days and violation_days and access_key_last_rotated != "N/A":
+        alert_type, warning_delta, violation_delta = check_retention(warn_days, violation_days, access_key_last_rotated)
+
+    iam_user = IAM_Keys.user_from_dict(user_row)
+    if alert_type and warning_delta and violation_delta:
+        events = iam_user.events
+        found_event = event_exists(events, access_key_num)
+        if found_event:
+            update_event(found_event, alert_type)
+        elif alert:
+            add_event_to_db(iam_user, alert_type, access_key_num)
     else:
         IAM_Keys.check_key_in_db_and_update(user_row, access_key_num)
 
@@ -353,14 +366,33 @@ def main():
     """
     # grab the state files, user files and outputs from cg-provision from the
     # s3 resources
-    base_dir = "../../.."
-    com_state_file = os.path.join(base_dir, "terraform-prod-com-yml/state.yml")
-    gov_state_file = os.path.join(base_dir, "terraform-prod-gov-yml/state.yml")
-    com_users_filename = os.path.join(base_dir, "aws-admin/stacks/gov/sso/users.yaml")
-    gov_users_filename = os.path.join(base_dir, "aws-admin/stacks/com/sso/users.yaml")
-    tf_state_filename = os.path.join(base_dir, "terraform-yaml-production/state.yml")
-    other_users_filename = os.path.join(base_dir, "other-iam-users-yml/other_iam_users.yml")
-    thresholds_filename = os.path.join(base_dir, "prometheus-config/ci/aws-iam-check-keys/thresholds.yml")
+    env = Env()
+    debug = False
+    base_dir = env.str("BASE_DIR", None)
+    if not base_dir:
+        base_dir = "../../.."
+    base_path = Path(base_dir)
+    parser = argparse.ArgumentParser(description='Arguments for find_stale_keys')
+    parser.add_argument('-c', '--create-tables', action="store_true", help='create tables WARNING: This is destructive')
+    parser.add_argument('-d', '--debug', action="store_true", help='debug mode no levels for now')
+    args = parser.parse_args()
+    if args.debug:
+        print("debug")
+        debug = True
+
+    # Debug code goes here
+    if debug:
+        thresholds_filename = "ci/aws-iam-check-keys/thresholds.yml"
+    else:
+        thresholds_filename = "thresholds.yml"
+
+    base_path = Path(base_dir)
+    com_state_file = base_path / "terraform-prod-com-yml/state.yml"
+    gov_state_file = base_path / "terraform-prod-gov-yml/state.yml"
+    com_users_filename = base_path / "aws-admin/stacks/gov/sso/users.yaml"
+    gov_users_filename = base_path / "aws-admin/stacks/com/sso/users.yaml"
+    tf_state_filename = base_path / "terraform-yaml-production/state.yml"
+    other_users_filename = base_path / "other-iam-users-yml/other_iam_users.yml"
 
     # AWS regions
     com_region = "us-east-1"
