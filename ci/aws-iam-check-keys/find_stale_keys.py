@@ -29,7 +29,6 @@ def check_retention(warn_days: int, violation_days: int, key_date: str) -> (str,
     warning when keys were last rotated :warn_days: ago if it is neither None is returned
     """
     key_date = parse(key_date, ignoretz=True)
-    print(f'key_date: {key_date}, violation_days: {violation_days}')
     violation_days_delta = key_date + timedelta(days=int(violation_days))
     warning_days_delta = key_date + timedelta(days=int(warn_days))
     status = OK
