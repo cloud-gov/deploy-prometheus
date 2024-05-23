@@ -5,7 +5,6 @@ from copy import copy
 import csv
 from datetime import timedelta, datetime
 from dateutil.parser import parse
-from environs import Env
 import os
 from pathlib import Path
 import requests
@@ -366,9 +365,8 @@ def main():
     """
     # grab the state files, user files and outputs from cg-provision from the
     # s3 resources
-    env = Env()
     debug = False
-    base_dir = env.str("BASE_DIR", None)
+    base_dir = os.environ.get("BASE_DIR")
     if not base_dir:
         base_dir = "../../.."
     base_path = Path(base_dir)
