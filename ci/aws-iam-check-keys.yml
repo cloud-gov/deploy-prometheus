@@ -24,6 +24,8 @@ run:
   - -c
   - |
     cd prometheus-config/ci/aws-iam-check-keys
+    # note: this installs into system python. This is ok in an ephemeral container
+    # but do not copy this locally!
     python3 -m pip install -r requirements.txt
     python3 find_stale_keys.py
 params:
