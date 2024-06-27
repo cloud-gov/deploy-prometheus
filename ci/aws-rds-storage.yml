@@ -1,11 +1,13 @@
 ---
 platform: linux
 image_resource:
-  type: registry-image
-  source:
-    repository: kennethreitz/pipenv
-    registry_mirror:
-      host: docker-registry-mirror.app.cloud.gov:443
+    type: registry-image
+    source:
+      aws_access_key_id: ((ecr_aws_key))
+      aws_secret_access_key: ((ecr_aws_secret))
+      repository: general-task
+      aws_region: us-gov-west-1
+      tag: latest
 
 inputs:
 - name: prometheus-config
@@ -16,8 +18,10 @@ run:
   - -c
   - |
     cd prometheus-config/ci/aws-rds-storage
-    pipenv install
-    pipenv run ./rds_disk_space.py
+    # note: this installs into system python. This is ok in an ephemeral container
+    # but do not copy this locally!
+    python3 -m pip install -r requirements.txt
+    ptython3 rds_disk_space.py
 
 params:
   AWS_DEFAULT_REGION:
