@@ -21,7 +21,7 @@ run:
     # note: this installs into system python. This is ok in an ephemeral container
     # but do not copy this locally!
     python3 -m pip install -r requirements.txt
-    ptython3 rds_disk_space.py
+    python3 rds_disk_space.py
 
 params:
   AWS_DEFAULT_REGION:
