@@ -624,7 +624,7 @@ resources:
       username: ((smtp-username))
       password: ((smtp-password))
       ca_cert: ((smtp-certificate))
-    from: no-reply@gsa.gov
+    from: cloud-gov-no-reply@gsa.gov
     to:
       - "cloud-gov-notifications@gsa.gov"
 
