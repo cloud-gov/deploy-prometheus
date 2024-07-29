@@ -610,7 +610,6 @@ resources:
 - name: iam-keys-check-timer
   type: time
   source:
-    days: [Tuesday]
     start: 8:00 PM
     stop: 9:00 PM
     location: America/New_York
