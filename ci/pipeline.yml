@@ -496,6 +496,7 @@ resources:
     bucket: ((prometheus-production-private-bucket))
     region_name: ((aws-region))
     versioned_file: master-bosh.crt
+    endpoint: s3-fips.((aws-region)).amazonaws.com
 
 - name: common-staging
   type: s3-iam
@@ -503,6 +504,7 @@ resources:
     region_name: ((prometheus-staging-private-region))
     bucket: ((prometheus-staging-private-bucket))
     versioned_file: staging-prometheus.yml
+    endpoint: s3-fips.((prometheus-staging-private-region)).amazonaws.com
 
 - name: common-production
   type: s3-iam
@@ -510,6 +512,7 @@ resources:
     region_name: ((prometheus-production-private-region))
     bucket: ((prometheus-production-private-bucket))
     versioned_file: production-prometheus.yml
+    endpoint: s3-fips.((prometheus-production-private-region)).amazonaws.com
 
 - name: prometheus-release
   type: github-release-alt
@@ -526,12 +529,14 @@ resources:
     bucket: ((s3-bosh-releases-bucket))
     regexp: oauth2-proxy-(.*).tgz
     region_name: ((aws-region))
+    endpoint: s3-fips.((aws-region)).amazonaws.com
 
 - name: secureproxy-release
   source:
     bucket: ((s3-bosh-releases-bucket))
     regexp: secureproxy-(.*).tgz
     region_name: ((aws-region))
+    endpoint: s3-fips.((aws-region)).amazonaws.com
   type: s3-iam
 
 - name: prometheus-config
@@ -606,6 +611,7 @@ resources:
     bucket: ((tf-state-bucket))
     versioned_file: ((tf-state-file-production))
     region_name: ((aws-region))
+    endpoint: s3-fips.((aws-region)).amazonaws.com
 
 - name: iam-keys-check-timer
   type: time
@@ -633,6 +639,7 @@ resources:
     region_name: ((prometheus-staging-private-region))
     bucket: terraform-state
     versioned_file: tooling/state.yml
+    endpoint: s3-fips.((prometheus-staging-private-region)).amazonaws.com
 
 - name: terraform-prod-yml
   type: s3-iam
@@ -640,6 +647,7 @@ resources:
     region_name: ((prometheus-production-private-region))
     bucket: terraform-state
     versioned_file: tooling/state.yml
+    endpoint: s3-fips.((prometheus-production-private-region)).amazonaws.com
 
 - name: terraform-prod-com-yml
   type: s3-iam
@@ -647,6 +655,7 @@ resources:
     region_name: ((prometheus-production-private-region))
     bucket: terraform-state
     versioned_file: aws-admin/com/state.yml
+    endpoint: s3-fips.((prometheus-production-private-region)).amazonaws.com
 
 - name: terraform-prod-gov-yml
   type: s3-iam
@@ -654,6 +663,7 @@ resources:
     region_name: ((prometheus-production-private-region))
     bucket: terraform-state
     versioned_file: aws-admin/gov/state.yml
+    endpoint: s3-fips.((prometheus-production-private-region)).amazonaws.com
 
 - name: other-iam-users-yml
   type: s3-iam
@@ -661,6 +671,7 @@ resources:
     region_name: ((prometheus-production-private-region))
     bucket: cloud-gov-varz
     versioned_file: other_iam_users.yml
+    endpoint: s3-fips.((prometheus-production-private-region)).amazonaws.com
 
 - name: general-task
   type: registry-image
