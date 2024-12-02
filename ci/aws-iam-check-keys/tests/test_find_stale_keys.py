@@ -1,12 +1,13 @@
-
-import datetime
 from datetime import datetime
 from unittest.mock import patch
 from unittest import TestCase
 
 from botocore.utils import datetime2timestamp
 
+<<<<<<< HEAD
 from alert import Alert
+=======
+>>>>>>> 4db53da (fixed tests)
 import find_stale_keys
 from threshold import Threshold
 
