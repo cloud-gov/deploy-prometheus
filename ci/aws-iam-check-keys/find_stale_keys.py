@@ -303,7 +303,7 @@ def send_key(key_dict: dict, severity: str):
     Send the key(s) to the pushgateway client to let it determine if they
     are stale
     """
-    gateway = f'{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", 9091)}'
+    gateway = f'{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", "9091")}'
     registry = CollectorRegistry()
     days_since_rotation = key_dict["days_since_rotation"]
     # user_type = key_dict["user_type"]
