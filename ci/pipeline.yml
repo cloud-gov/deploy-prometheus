@@ -134,13 +134,6 @@ jobs:
       PREFIX_DELIMITER: ((aws-iam-prefix-delimiter))
       WARN_DAYS: ((aws-iam-warn-days))
       VIOLATION_DAYS: ((aws-iam-violation-days))
-  on_success:
-    put: slack
-    params:
-      <<: *slack-success-params
-      text: |
-        :white_check_mark: Successfully ran IAM Check Keys in production
-        <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
   on_failure:
     put: slack
     params:
@@ -148,6 +141,9 @@ jobs:
       text: |
         :x: FAILED to deploy IAM Check Keys on production
         <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+      channel: "#cg-platform-news"
+      username: ((slack-username))
+      icon_url: ((slack-icon-url))
 
 - name: aws-mfa-check
   serial_groups: [production]
