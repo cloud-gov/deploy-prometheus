@@ -230,6 +230,7 @@ def search_for_keys(region_name: str, profile: dict, all_users: list[Threshold],
         aws_access_key_id=profile["id"],
         aws_secret_access_key=profile["secret"],
     )
+    print(f"about to check: {account}")
     iam = session.client("iam")
     # Generate credential report for the given profile
     # Generating the report is an async operation, so wait for it by sleeping
