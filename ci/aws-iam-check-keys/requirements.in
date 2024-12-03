@@ -1,7 +1,14 @@
 boto3
+<<<<<<< HEAD
 dataclasses
 environs
 requests
 python-dateutil
 PyYAML
 prometheus-client
+=======
+requests
+psycopg2-binary
+peewee
+PyYAML
+>>>>>>> main
