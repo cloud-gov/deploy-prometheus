@@ -332,11 +332,14 @@ def check_key(key_num: int, last_rotated_key: str, user: Threshold, row: dict, a
     days_since_rotation = calc_days_since_rotation(last_rotated_key)
     user_dict = {"user":row["user"], "key_num": key_num, "user_type": user.account_type, "account": account, "days_since_rotation": days_since_rotation, "last_rotated":last_rotated_key}
     if days_since_rotation >= user.violation and user.account_type:
+        print(f"about to send user: {user_dict['user']}")
         send_key(user_dict, "violation")
     elif days_since_rotation >= user.warn:
+        print(f"about to send user: {user_dict['user']}")
         send_key(user_dict, "warn")
     else:
         # print(f"about to send rotated for user: {user}")
+        print(f"about to del user: {user_dict['user']}")
         del_key(user_dict)
 
 
