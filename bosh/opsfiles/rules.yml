@@ -42,14 +42,35 @@
   value:
     name: aws-iam-check-keys
     rules:
-    - alert: AWSIAMCheckKeys
-      expr: stale_key_num > 0
+    - alert: OperatorsStaleKeyWarning
+      expr: last_rotated_days{user_type="Operator"} >= 75 and last_rotated_days{user_type="Operator"} < 90
       labels:
         service: aws-iam
         severity: warning
       annotations:
-        summary: AWS IAM user {{$labels.user}} has stale IAM Key(s)
-        description: Look up the procedures for rotating the access keys
+        summary: IAM key for {$labels.user} will be expired within the next 15 days
+        description: "For Operators if the expiration is within 15 days\n"
+    - alert: PlatformApplicationStaleKeyWarning
+      expr: last_rotated_days{user_type="Platform"} >= 80 and last_rotated_days{user_type="Platform"} < 165 or last_rotated_days{user_type="Application"} >= 80 and last_rotated_days{user_type="Application"} < 165
+      labels:
+        severity: warning
+      annotations:
+        summary: IAM key for Platform or Application {$labels.user} will be expired within the next 15 days
+        description: "For Platform or Applications if the expiration is within 85 days\n"
+    - alert: OperatorsStaleKeyViolation
+      expr: last_rotated_days{user_type="Operator"} >= 90
+      labels:
+        severity: critical
+      annotations:
+        summary: IAM key for {$labels.user} is now expired
+        description: "For Operators if the key is expired\n"
+    - alert: PlatformApplicationStaleKeyViolation
+      expr: last_rotated_days{user_type="Platform"} >= 165 or last_rotated_days{user_type="Application"} >= 165
+      labels:
+        severity: critical
+      annotations:
+        summary: IAM key for {$labels.user} is now expired
+        description: "For Platform or Applications if the key is expired\n"
 
 # CloudWatch logs alerts
 - type: replace
