@@ -288,7 +288,8 @@ def del_key(key_dict: dict):
     Send the key(s) to the pushgateway client to let it determine if they
     are stale
     """
-    gateway = f'{env.str("GATEWAY_HOST")}:{env.str("GATEWAY_PORT", 9091)}'
+    gateway = f'{env.str("GATEWAY_HOST")}:{env.int("GATEWAY_PORT", 9091)}'
+    print(f'gateway in del_key is: {gateway}')
     del key_dict["days_since_rotation"]
     del key_dict["last_rotated"]
     del key_dict["key_num"]
@@ -306,7 +307,7 @@ def send_key(key_dict: dict, severity: str):
     gateway = f"{env.str('GATEWAY_HOST')}:9091"
     #print(gateway_test)
     #gateway = f"{env.str('GATEWAY_HOST')}:{env.int('GATEWAY_PORT', 9091)}"
-    print(gateway)
+    print(f"gateway in send_key: {gateway}")
     registry = CollectorRegistry()
     days_since_rotation = key_dict["days_since_rotation"]
     # user_type = key_dict["user_type"]
