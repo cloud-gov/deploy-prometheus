@@ -75,7 +75,7 @@ instance_groups:
           email_configs:
           - to: ((cg-email-address))
         smtp:
-          from: cloud-gov-no-reply@gsa.gov
+          from: cloud-gov-no-reply@cloud.gov
           smarthost: ((terraform_outputs.production_smtp_private_ip)):25
           auth_username: ((smtp-username))
           auth_password: ((smtp-password))
