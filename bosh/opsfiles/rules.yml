@@ -43,29 +43,29 @@
     name: aws-iam-check-keys
     rules:
     - alert: OperatorsStaleKeyWarning
-      expr: last_rotated_days{user_type="Operator"} >= 75 and last_rotated_days{user_type="Operator"} < 90
+      expr: last_rotated_days{user_type="Operator"} >= 300 and last_rotated_days{user_type="Operator"} < 360
       labels:
         service: aws-iam
         severity: warning
       annotations:
-        summary: IAM key for {$labels.user} will be expired within the next 15 days
+        summary: IAM key for {$labels.user} will be expired within the next 60 days
         description: "For Operators if the expiration is within 15 days\n"
     - alert: PlatformApplicationStaleKeyWarning
-      expr: last_rotated_days{user_type="Platform"} >= 80 and last_rotated_days{user_type="Platform"} < 165 or last_rotated_days{user_type="Application"} >= 80 and last_rotated_days{user_type="Application"} < 165
+      expr: last_rotated_days{user_type="Platform"} >= 300 and last_rotated_days{user_type="Platform"} < 360 or last_rotated_days{user_type="Application"} >= 300 and last_rotated_days{user_type="Application"} < 360
       labels:
         severity: warning
       annotations:
-        summary: IAM key for Platform or Application {$labels.user} will be expired within the next 15 days
+        summary: IAM key for Platform or Application {$labels.user} will be expired within the next 60 days
         description: "For Platform or Applications if the expiration is within 85 days\n"
     - alert: OperatorsStaleKeyViolation
-      expr: last_rotated_days{user_type="Operator"} >= 90
+      expr: last_rotated_days{user_type="Operator"} >= 360
       labels:
         severity: critical
       annotations:
         summary: IAM key for {$labels.user} is now expired
         description: "For Operators if the key is expired\n"
     - alert: PlatformApplicationStaleKeyViolation
-      expr: last_rotated_days{user_type="Platform"} >= 165 or last_rotated_days{user_type="Application"} >= 165
+      expr: last_rotated_days{user_type="Platform"} >= 360 or last_rotated_days{user_type="Application"} >= 360
       labels:
         severity: critical
       annotations:
