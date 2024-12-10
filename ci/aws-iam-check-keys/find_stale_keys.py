@@ -230,7 +230,6 @@ def search_for_keys(region_name: str, profile: dict, all_users: list[Threshold],
         aws_access_key_id=profile["id"],
         aws_secret_access_key=profile["secret"],
     )
-    print(f"about to check: {account}")
     iam = session.client("iam")
     # Generate credential report for the given profile
     # Generating the report is an async operation, so wait for it by sleeping
@@ -250,8 +249,6 @@ def search_for_keys(region_name: str, profile: dict, all_users: list[Threshold],
     row: dict
     for row in csv_reader:
         user_name = row["user"]
-        if user_name == "ephraim.gross":
-            print(f"found ephraim: {row}")
         # Note: If the user is unknown, we aren't capturing it, but could here
         # in an else below
         aws_user = find_known_user(user_name, all_users)
@@ -331,15 +328,13 @@ def send_key(key_dict: dict, severity: str):
 def check_key(key_num: int, last_rotated_key: str, user: Threshold, row: dict, account: str):
     days_since_rotation = calc_days_since_rotation(last_rotated_key)
     user_dict = {"user":row["user"], "key_num": key_num, "user_type": user.account_type, "account": account, "days_since_rotation": days_since_rotation, "last_rotated":last_rotated_key}
+    print(f"user is either being sent or deleted: {user_dict}")
     if days_since_rotation >= user.violation and user.account_type:
-        print(f"about to send user: {user_dict['user']}")
         send_key(user_dict, "violation")
     elif days_since_rotation >= user.warn:
-        print(f"about to send user: {user_dict['user']}")
         send_key(user_dict, "warn")
     else:
-        # print(f"about to send rotated for user: {user}")
-        print(f"about to del user: {user_dict['user']}")
+        print("it was actually deleted")
         del_key(user_dict)
 
 
