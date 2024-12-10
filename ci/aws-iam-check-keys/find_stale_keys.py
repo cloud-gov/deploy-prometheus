@@ -65,6 +65,10 @@ def main():
     com_region = "us-east-1"
     gov_region = "us-gov-west-1"
 
+    # Note that the thresholds in both thresholds.yml and other_iam_users.yml are now set
+    # to default to a warning of 300 days and a violation at 360 days
+    # This was decided based on a discussion with compliance over
+    # the finding related to stale keys 
     thresholds = load_thresholds(thresholds_filename)
     com_users_list = load_system_users(com_users_filename, thresholds)
     gov_users_list = load_system_users(gov_users_filename, thresholds)
