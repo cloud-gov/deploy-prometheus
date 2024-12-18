@@ -34,7 +34,7 @@ update:
 instance_groups:
 - name: alertmanager
   instances: 1
-  vm_type: m5.large
+  vm_type: m6i.large
   persistent_disk_type: ((environment))-prometheus-small
   stemcell: default
   azs: ((azs))
@@ -85,7 +85,7 @@ instance_groups:
 
 - name: prometheus
   instances: 1
-  vm_type: m5.2xlarge
+  vm_type: m6i.2xlarge
   persistent_disk_type: ((environment))-prometheus-large
   stemcell: default
   azs: ((azs))
@@ -290,7 +290,7 @@ instance_groups:
 
 - name: grafana
   instances: 1
-  vm_type: m5.large
+  vm_type: m6i.large
   persistent_disk_type: ((environment))-prometheus-small
   stemcell: default
   azs: ((azs))
