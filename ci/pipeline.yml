@@ -9,7 +9,8 @@ groups:
     jobs:
       - set-self
       - awslogs-check
-      - aws-mfa-check
+      - aws-mfa-check-production
+      - aws-mfa-check-staging
       - aws-rds-storage-check
       - aws-iam-check-keys
       - cdn-broker-certs
@@ -145,7 +146,7 @@ jobs:
         username: ((slack-username))
         icon_url: ((slack-icon-url))
 
-  - name: aws-mfa-check
+  - name: aws-mfa-check-production
     serial_groups: [production]
     plan:
       - in_parallel:
@@ -167,14 +168,46 @@ jobs:
       params:
         <<: *slack-success-params
         text: |
-          :white_check_mark: Successfully ran AWS MFA check
+          :white_check_mark: Successfully ran AWS MFA check in production
           <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
     on_failure:
       put: slack
       params:
         <<: *slack-failure-params
         text: |
-          :x: FAILED to run AWS MFA check
+          :x: FAILED to run AWS MFA check in production
+          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+
+  - name: aws-mfa-check-staging
+    serial_groups: [staging]
+    plan:
+      - in_parallel:
+          - get: prometheus-check-timer
+            trigger: true
+          - get: prometheus-config
+            passed: [set-self]
+          - get: general-task
+      - task: aws-mfa
+        image: general-task
+        file: prometheus-config/ci/aws-mfa.yml
+        tags: [iaas]
+        params:
+          AWS_DEFAULT_REGION: ((aws-region))
+          GATEWAY_HOST: prometheus-staging.service.cf.internal
+          VIOLATION_DAYS: ((aws-iam-violation-days))
+    on_success:
+      put: slack
+      params:
+        <<: *slack-success-params
+        text: |
+          :white_check_mark: Successfully ran AWS MFA check in staging
+          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+    on_failure:
+      put: slack
+      params:
+        <<: *slack-failure-params
+        text: |
+          :x: FAILED to run AWS MFA check in staging
           <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
 
   - name: cdn-broker-certs
