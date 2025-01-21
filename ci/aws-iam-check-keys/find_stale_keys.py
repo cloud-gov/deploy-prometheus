@@ -235,7 +235,6 @@ def search_for_keys(region_name: str, profile: dict, all_users: list[Threshold],
         aws_secret_access_key=profile["secret"],
     )
     iam = session.client("iam")
-    print(f'session: {session}')
     # Generate credential report for the given profile
     # Generating the report is an async operation, so wait for it by sleeping
     # If Python has async await type of construct it would be good to use here
