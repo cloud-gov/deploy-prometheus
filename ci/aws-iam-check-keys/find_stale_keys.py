@@ -235,6 +235,7 @@ def search_for_keys(region_name: str, profile: dict, all_users: list[Threshold],
         aws_secret_access_key=profile["secret"],
     )
     iam = session.client("iam")
+    print(f'session: {session}')
     # Generate credential report for the given profile
     # Generating the report is an async operation, so wait for it by sleeping
     # If Python has async await type of construct it would be good to use here
@@ -291,9 +292,9 @@ def del_key(key_dict: dict):
     are stale
     """
     gateway = f'{env.str("GATEWAY_HOST")}:{env.int("GATEWAY_PORT", 9091)}'
-    del key_dict["days_since_rotation"]
-    del key_dict["last_rotated"]
-    del key_dict["key_num"]
+    # del key_dict["days_since_rotation"]
+    # del key_dict["last_rotated"]
+    # del key_dict["key_num"]
 
     delete_from_gateway(
         gateway, job="find_stale_keys", grouping_key=key_dict
@@ -323,13 +324,19 @@ def send_key(key_dict: dict, severity: str):
         ],
         registry=registry,
     )
-    
+
     key_info.labels(**key_dict).set(days_since_rotation)
     pushadd_to_gateway(
         gateway, job="find_stale_keys", registry=registry, grouping_key=key_dict
     )
 
-def check_key(key_num: int, last_rotated_key: str, user: Threshold, row: dict, account: str):
+
+def check_key(key_num: int, last_rotated_key: str, user: Threshold, row: dict,
+              account: str):
+    """
+    Where the real work happens, check for the date last rotated for both
+    violation and warning thresholds
+    """
     days_since_rotation = calc_days_since_rotation(last_rotated_key)
     user_dict = {"user":row["user"], "key_num": key_num, "user_type": user.account_type, "account": account, "days_since_rotation": days_since_rotation, "last_rotated":last_rotated_key}
     print(f"user is either being sent or deleted: {user_dict}")
