@@ -43,7 +43,8 @@ def main():
     # Parse the CLI for any arguments
     # Note that the default value of 1 is following to allow for levels
     # or other info to be passed later if needed
-    parser = argparse.ArgumentParser(description="Arguments for find_stale_keys")
+    parser = argparse.ArgumentParser(
+        description="Arguments for find_stale_keys")
     parser.add_argument(
         "-d", "--debug", action="store_true", help="debug mode no levels for now"
     )
@@ -80,14 +81,17 @@ def main():
     tf_users = load_tf_users(tf_state_filename, thresholds)
     other_users = load_other_users(other_users_filename)
 
-    (com_state_dict, gov_state_dict) = load_profiles(com_state_file, gov_state_file)
+    (com_state_dict, gov_state_dict) = load_profiles(
+        com_state_file, gov_state_file)
 
     for com_key in com_state_dict:
         all_com_users = com_users_list + tf_users + other_users
-        search_for_keys(com_region, com_state_dict[com_key], all_com_users, com_key)
+        search_for_keys(
+            com_region, com_state_dict[com_key], all_com_users, com_key)
     for gov_key in gov_state_dict:
         all_gov_users = gov_users_list + tf_users + other_users
-        search_for_keys(gov_region, gov_state_dict[gov_key], all_gov_users, gov_key)
+        search_for_keys(
+            gov_region, gov_state_dict[gov_key], all_gov_users, gov_key)
 
 
 def load_thresholds(filename: str) -> list[Threshold]:
@@ -120,7 +124,8 @@ def format_user_dicts(
     """
     augmented_user_list = []
     for key in users_list:
-        found_user_threshold = get_platform_thresholds(thresholds, account_type)
+        found_user_threshold = get_platform_thresholds(
+            thresholds, account_type)
         if found_user_threshold:
             found_user_threshold.user = key
         augmented_user_list.append(found_user_threshold)
@@ -161,7 +166,8 @@ def load_tf_users(tf_filename: Path, thresholds: list[Threshold]) -> list[Thresh
     outputs = tf_yaml["terraform_outputs"]
     for key in list(outputs):
         if "username" in key:
-            found_user_threshold = get_platform_thresholds(thresholds, "Platform")
+            found_user_threshold = get_platform_thresholds(
+                thresholds, "Platform")
             found_user_threshold.user = outputs[key]
             tf_users.append(found_user_threshold)
     return tf_users
@@ -231,11 +237,6 @@ def search_for_keys(
     The user info and the days since rotation is sent to Prometheus for it to use internal rules to determine
     what is alerted on. Note that some of that is configurable in the thresholds.
     """
-
-    local_env = Env()
-    print(f"profile id: {profile['id']}\n profile access key: {profile['secret']}")
-
-    # Assume role with arn: arn:aws-us-gov:iam::135676904304:role/bosh-passed/tooling-concourse-iaas-worker
 
     # First let's get a session based on the user access key,
     # so we can get all the users for a given account via the Python boto3 lib
