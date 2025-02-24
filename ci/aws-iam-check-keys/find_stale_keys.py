@@ -7,7 +7,13 @@ import csv
 from threshold import Threshold
 
 # from alert import Alert
-from prometheus_client import CollectorRegistry, Gauge, pushadd_to_gateway, delete_from_gateway
+from prometheus_client import (
+    CollectorRegistry,
+    Gauge,
+    pushadd_to_gateway,
+    delete_from_gateway,
+    REGISTRY,
+)
 import boto3
 import yaml
 import time
@@ -19,12 +25,12 @@ from dateutil.parser import parse
 
 from datetime import datetime
 
+
 def main():
     """
     This is where the loading of the various files for reference occurs. This also kicks off the process
     to find the stale keys and then push any alerts out as well.
     """
-
     # grab the state files, user files and outputs from cg-provision from the
     # s3 buckets for com and gov users
     local_env = Env()
@@ -37,8 +43,7 @@ def main():
     # Parse the CLI for any arguments
     # Note that the default value of 1 is following to allow for levels
     # or other info to be passed later if needed
-    parser = argparse.ArgumentParser(
-        description="Arguments for find_stale_keys")
+    parser = argparse.ArgumentParser(description="Arguments for find_stale_keys")
     parser.add_argument(
         "-d", "--debug", action="store_true", help="debug mode no levels for now"
     )
@@ -68,15 +73,14 @@ def main():
     # Note that the thresholds in both thresholds.yml and other_iam_users.yml are now set
     # to default to a warning of 300 days and a violation at 360 days
     # This was decided based on a discussion with compliance over
-    # the finding related to stale keys 
+    # the finding related to stale keys
     thresholds = load_thresholds(thresholds_filename)
     com_users_list = load_system_users(com_users_filename, thresholds)
     gov_users_list = load_system_users(gov_users_filename, thresholds)
     tf_users = load_tf_users(tf_state_filename, thresholds)
     other_users = load_other_users(other_users_filename)
 
-    (com_state_dict, gov_state_dict) = load_profiles(
-        com_state_file, gov_state_file)
+    (com_state_dict, gov_state_dict) = load_profiles(com_state_file, gov_state_file)
 
     for com_key in com_state_dict:
         all_com_users = com_users_list + tf_users + other_users
@@ -84,6 +88,7 @@ def main():
     for gov_key in gov_state_dict:
         all_gov_users = gov_users_list + tf_users + other_users
         search_for_keys(gov_region, gov_state_dict[gov_key], all_gov_users, gov_key)
+
 
 def load_thresholds(filename: str) -> list[Threshold]:
     """
@@ -115,8 +120,7 @@ def format_user_dicts(
     """
     augmented_user_list = []
     for key in users_list:
-        found_user_threshold = get_platform_thresholds(
-            thresholds, account_type)
+        found_user_threshold = get_platform_thresholds(thresholds, account_type)
         if found_user_threshold:
             found_user_threshold.user = key
         augmented_user_list.append(found_user_threshold)
@@ -157,8 +161,7 @@ def load_tf_users(tf_filename: Path, thresholds: list[Threshold]) -> list[Thresh
     outputs = tf_yaml["terraform_outputs"]
     for key in list(outputs):
         if "username" in key:
-            found_user_threshold = get_platform_thresholds(
-                thresholds, "Platform")
+            found_user_threshold = get_platform_thresholds(thresholds, "Platform")
             found_user_threshold.user = outputs[key]
             tf_users.append(found_user_threshold)
     return tf_users
@@ -218,7 +221,9 @@ def load_profiles(com_state_file: Path, gov_state_file: Path):
     return com_state_dict, gov_state_dict
 
 
-def search_for_keys(region_name: str, profile: dict, all_users: list[Threshold], account: str):
+def search_for_keys(
+    region_name: str, profile: dict, all_users: list[Threshold], account: str
+):
     """
     The main search function that reaches out to AWS IAM to grab the
     credentials report as csv and load it into a list of dictionaries.
@@ -226,6 +231,11 @@ def search_for_keys(region_name: str, profile: dict, all_users: list[Threshold],
     The user info and the days since rotation is sent to Prometheus for it to use internal rules to determine
     what is alerted on. Note that some of that is configurable in the thresholds.
     """
+
+    local_env = Env()
+    print(f"profile id: {profile['id']}\n profile access key: {profile['secret']}")
+
+    # Assume role with arn: arn:aws-us-gov:iam::135676904304:role/bosh-passed/tooling-concourse-iaas-worker
 
     # First let's get a session based on the user access key,
     # so we can get all the users for a given account via the Python boto3 lib
@@ -290,14 +300,13 @@ def del_key(key_dict: dict):
     Send the key(s) to the pushgateway client to let it determine if they
     are stale
     """
-    gateway = f'{env.str("GATEWAY_HOST")}:{env.int("GATEWAY_PORT", 9091)}'
-    # del key_dict["days_since_rotation"]
+    gateway = f"{env.str('GATEWAY_HOST')}:{env.int('GATEWAY_PORT', 9091)}"
+    print(f"key dict in del is: {key_dict}")
+    del key_dict["days_since_rotation"]
     # del key_dict["last_rotated"]
     # del key_dict["key_num"]
 
-    delete_from_gateway(
-        gateway, job="find_stale_keys", grouping_key=key_dict
-    )
+    delete_from_gateway(gateway, job="find_stale_keys", grouping_key=key_dict)
 
 
 def send_key(key_dict: dict, severity: str):
@@ -314,13 +323,7 @@ def send_key(key_dict: dict, severity: str):
         "last_rotated_days",
         "Send to the pushgateway to see ifaccess key is \
         stale, let it alert if so",
-        [
-            "user",
-            "key_num",
-            "user_type",
-            "account",
-            "last_rotated"
-        ],
+        ["user", "key_num", "user_type", "account", "last_rotated"],
         registry=registry,
     )
 
@@ -330,22 +333,30 @@ def send_key(key_dict: dict, severity: str):
     )
 
 
-def check_key(key_num: int, last_rotated_key: str, user: Threshold, row: dict,
-              account: str):
+def check_key(
+    key_num: int, last_rotated_key: str, user: Threshold, row: dict, account: str
+):
     """
     Where the real work happens, check for the date last rotated for both
     violation and warning thresholds
     """
     days_since_rotation = calc_days_since_rotation(last_rotated_key)
-    user_dict = {"user":row["user"], "key_num": key_num, "user_type": user.account_type, "account": account, "days_since_rotation": days_since_rotation, "last_rotated":last_rotated_key}
+    user_dict = {
+        "user": row["user"],
+        "key_num": key_num,
+        "user_type": user.account_type,
+        "account": account,
+        "days_since_rotation": days_since_rotation,
+        "last_rotated": last_rotated_key,
+    }
     print(f"user is either being sent or deleted: {user_dict}")
     if days_since_rotation >= user.violation and user.account_type:
         send_key(user_dict, "violation")
     elif days_since_rotation >= user.warn:
         send_key(user_dict, "warn")
     else:
-        print("it was actually deleted")
         del_key(user_dict)
+        print("it was actually deleted")
 
 
 def check_keys(user: Threshold, row: dict, account: str):
