@@ -250,6 +250,7 @@ def search_for_keys(
     # Generating the report is an async operation, so wait for it by sleeping
     # If Python has async await type of construct it would be good to use here
     w_time = 0
+    
     while iam.generate_credential_report()["State"] != "COMPLETE":
         w_time = w_time + 5
         print("Waiting...{}".format(w_time))
@@ -267,6 +268,7 @@ def search_for_keys(
         # Note: If the user is unknown, we aren't capturing it, but could here
         # in an else below
         aws_user = find_known_user(user_name, all_users)
+        print(f"about to check user: {aws_user}")
         if len(aws_user.account_type) > 0:
             check_keys(aws_user, row, account)
 
@@ -295,30 +297,8 @@ def calc_days_since_rotation(last_rotated: str) -> int:
     last_rotated_days = delta.days
     return last_rotated_days
 
-
-def del_key(key_dict: dict):
-    """
-    Send the key(s) to the pushgateway client to let it determine if they
-    are stale
-    """
-    gateway = f"{env.str('GATEWAY_HOST')}:{env.int('GATEWAY_PORT', 9091)}"
-    print(f"key dict in del is: {key_dict}")
-    del key_dict["days_since_rotation"]
-    # del key_dict["last_rotated"]
-    # del key_dict["key_num"]
-
-    delete_from_gateway(gateway, job="find_stale_keys", grouping_key=key_dict)
-
-
-def send_key(key_dict: dict, severity: str):
-    """
-    Send the key(s) to the pushgateway client to let it determine if they
-    are stale
-    """
-    gateway = f"{env.str('GATEWAY_HOST')}:{env.int('GATEWAY_PORT', 9091)}"
+def key_info_for_keydict(key_dict: dict) -> (Gauge, CollectorRegistry):
     registry = CollectorRegistry()
-    days_since_rotation = key_dict["days_since_rotation"]
-    del key_dict["days_since_rotation"]
 
     key_info = Gauge(
         "last_rotated_days",
@@ -327,11 +307,60 @@ def send_key(key_dict: dict, severity: str):
         ["user", "key_num", "user_type", "account", "last_rotated"],
         registry=registry,
     )
+    return key_info, registry
 
+
+def send_key(key_dict: dict, severity: str, delete_metric: bool):
+    """
+    Send the key(s) to the pushgateway client to let it determine if they
+    are stale
+    """
+    gateway = f"{env.str('GATEWAY_HOST')}:{env.int('GATEWAY_PORT', 9091)}"
+    days_since_rotation = key_dict["days_since_rotation"]
+    del key_dict["days_since_rotation"]
+
+    key_info, registry = key_info_for_keydict(key_dict) 
     key_info.labels(**key_dict).set(days_since_rotation)
-    pushadd_to_gateway(
-        gateway, job="find_stale_keys", registry=registry, grouping_key=key_dict
-    )
+    if delete_metric:
+        print(f"key dict in del is: {key_dict}")
+        delete_from_gateway(gateway, job="find_stale_keys", grouping_key=key_dict)
+    else:
+        pushadd_to_gateway(
+            gateway, job="find_stale_keys", registry=registry, grouping_key=key_dict
+        )
+
+
+# def del_key(key_dict: dict):
+#     """
+#     Send the key(s) to the pushgateway client to let it determine if they
+#     are stale
+#     """
+#     gateway = f"{env.str('GATEWAY_HOST')}:{env.int('GATEWAY_PORT', 9091)}"
+#     print(f"key dict in del is: {key_dict}")
+#     days_since_rotation = key_dict["days_since_rotation"]
+#     del key_dict["days_since_rotation"]
+#     # del key_dict["last_rotated"]
+#     # del key_dict["key_num"]
+#     key_info, registry = key_info_for_keydict(key_dict) 
+#     key_info.labels(**key_dict).set(days_since_rotation)
+#     delete_from_gateway(gateway, job="find_stale_keys", grouping_key=key_dict)
+
+
+# def send_key(key_dict: dict, severity: str):
+#     """
+#     Send the key(s) to the pushgateway client to let it determine if they
+#     are stale
+#     """
+#     gateway = f"{env.str('GATEWAY_HOST')}:{env.int('GATEWAY_PORT', 9091)}"
+#     days_since_rotation = key_dict["days_since_rotation"]
+#     del key_dict["days_since_rotation"]
+
+#     key_info, registry = key_info_for_keydict(key_dict) 
+
+#     key_info.labels(**key_dict).set(days_since_rotation)
+#     pushadd_to_gateway(
+#         gateway, job="find_stale_keys", registry=registry, grouping_key=key_dict
+#     )
 
 
 def check_key(
@@ -352,11 +381,11 @@ def check_key(
     }
     print(f"user is either being sent or deleted: {user_dict}")
     if days_since_rotation >= user.violation and user.account_type:
-        send_key(user_dict, "violation")
+        send_key(user_dict, "violation", False)
     elif days_since_rotation >= user.warn:
-        send_key(user_dict, "warn")
+        send_key(user_dict, "warn", False)
     else:
-        del_key(user_dict)
+        send_key(user_dict, None, True)
         print("it was actually deleted")
 
 
