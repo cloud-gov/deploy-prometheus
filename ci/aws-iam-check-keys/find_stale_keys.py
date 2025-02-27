@@ -12,7 +12,6 @@ from prometheus_client import (
     Gauge,
     pushadd_to_gateway,
     delete_from_gateway,
-    REGISTRY,
 )
 import boto3
 import yaml
@@ -244,13 +243,15 @@ def search_for_keys(
         region_name=region_name,
         aws_access_key_id=profile["id"],
         aws_secret_access_key=profile["secret"],
+        aws_session_token=""
     )
     iam = session.client("iam")
+
     # Generate credential report for the given profile
     # Generating the report is an async operation, so wait for it by sleeping
     # If Python has async await type of construct it would be good to use here
     w_time = 0
-    
+
     while iam.generate_credential_report()["State"] != "COMPLETE":
         w_time = w_time + 5
         print("Waiting...{}".format(w_time))
@@ -309,6 +310,17 @@ def key_info_for_keydict(key_dict: dict) -> (Gauge, CollectorRegistry):
     )
     return key_info, registry
 
+def delete_raw_metric(key_dict: dict, gateway: str):
+
+    account = key_dict["account"]
+    key_num = key_dict["key_num"]
+    last_rotated = key_dict["last_rotated"]
+    user = key_dict["user"]
+    platform = key_dict["platform"]
+    curl_arg=f'http://{gateway}/api/v1/admin/tsdb/delete_series?match[]=last_rotated_days{{account="{account}",\
+        job="find_stale_keys", key_num="{key_num}", last_rotated="{last_rotated}", user="{user}", user_type="{platform}"}}'
+    
+
 
 def send_key(key_dict: dict, severity: str, delete_metric: bool):
     """
@@ -323,6 +335,7 @@ def send_key(key_dict: dict, severity: str, delete_metric: bool):
     key_info.labels(**key_dict).set(days_since_rotation)
     if delete_metric:
         print(f"key dict in del is: {key_dict}")
+        key_info.labels(**key_dict).set(0)
         delete_from_gateway(gateway, job="find_stale_keys", grouping_key=key_dict)
     else:
         pushadd_to_gateway(
