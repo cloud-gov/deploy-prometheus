@@ -242,8 +242,7 @@ def search_for_keys(
     session = boto3.Session(
         region_name=region_name,
         aws_access_key_id=profile["id"],
-        aws_secret_access_key=profile["secret"],
-        aws_session_token=""
+        aws_secret_access_key=profile["secret"]
     )
     iam = session.client("iam")
 
@@ -309,18 +308,6 @@ def key_info_for_keydict(key_dict: dict) -> (Gauge, CollectorRegistry):
         registry=registry,
     )
     return key_info, registry
-
-def delete_raw_metric(key_dict: dict, gateway: str):
-
-    account = key_dict["account"]
-    key_num = key_dict["key_num"]
-    last_rotated = key_dict["last_rotated"]
-    user = key_dict["user"]
-    platform = key_dict["platform"]
-    curl_arg=f'http://{gateway}/api/v1/admin/tsdb/delete_series?match[]=last_rotated_days{{account="{account}",\
-        job="find_stale_keys", key_num="{key_num}", last_rotated="{last_rotated}", user="{user}", user_type="{platform}"}}'
-    
-
 
 def send_key(key_dict: dict, severity: str, delete_metric: bool):
     """
