@@ -41,8 +41,8 @@ def get_free_space(db_instance):
     try:
         free_space = min([(lambda x: x['Average'])(datapoint) for datapoint in cloudtrail_response['Datapoints']])
     except:
-        # Probably a new born db, could not pull cloudwatch metrics, setting value to 100000000
-        free_space = 100000000
+        # Probably a new born db, could not pull cloudwatch metrics, setting value to 10000000000 (10GB) as minimum size is 20GB
+        free_space = 10000000000
         
     return free_space
 
