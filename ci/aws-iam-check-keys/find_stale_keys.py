@@ -12,7 +12,6 @@ from prometheus_client import (
     CollectorRegistry,
     Gauge,
     pushadd_to_gateway
-    # delete_from_gateway,
 )
 import boto3
 import yaml
