@@ -123,7 +123,7 @@ jobs:
         file: prometheus-config/ci/aws-iam-check-keys.yml
         tags: [iaas]
         params:
-          GATEWAY_HOST: prometheus-staging.service.cf.internal
+          GATEWAY_HOST: prometheus-production.service.cf.internal
     on_failure:
       put: slack
       params:
