@@ -271,6 +271,7 @@ def search_for_keys(
         print(f"about to check user: {aws_user}")
         if len(aws_user.account_type) > 0:
             check_keys(aws_user, row, account)
+            print(f'found user has row: {row}')
 
 
 def find_known_user(report_user: str, aws_users: list[Threshold]) -> Threshold:
@@ -321,8 +322,8 @@ def send_key(key_dict: dict, severity: str, delete_metric: bool):
     key_info, registry = key_info_for_keydict(key_dict) 
     key_info.labels(**key_dict).set(days_since_rotation)
     if delete_metric:
-        print(f"key dict in del is: {key_dict}")
         key_info.labels(**key_dict).set(0)
+        print(f"key dict in del is: {key_dict}\nAnd key_info is: {key_info}\n")
         delete_from_gateway(gateway, job="find_stale_keys", grouping_key=key_dict)
     else:
         pushadd_to_gateway(
