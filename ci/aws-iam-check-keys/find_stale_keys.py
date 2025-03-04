@@ -30,8 +30,8 @@ def main():
     This is where the loading of the various files for reference occurs. This also kicks off the process
     to find the stale keys and then push any alerts out as well.
     """
-    # grab the state files, user files and outputs from cg-provision from the
-    # s3 buckets for com and gov users
+
+    # First check to see if we're debugging, and set up paths accordingly
     local_env = Env()
     debug = False
     base_dir = local_env.str("BASE_DIR", None)
@@ -39,9 +39,7 @@ def main():
         base_dir = "../../.."
     base_path = Path(base_dir)
 
-    # Parse the CLI for any arguments
-    # Note that the default value of 1 is following to allow for levels
-    # or other info to be passed later if needed
+    # Parse the CLI for any arguments, look for debug flag
     parser = argparse.ArgumentParser(
         description="Arguments for find_stale_keys")
     parser.add_argument(
@@ -51,7 +49,7 @@ def main():
     if args.debug:
         debug = True
 
-    # Debug code goes here
+    # more debug setup
     if debug:
         thresholds_filename = "ci/aws-iam-check-keys/thresholds.yml"
         base_dir = ".."
@@ -59,6 +57,8 @@ def main():
     else:
         thresholds_filename = "thresholds.yml"
 
+    # grab the state files, user files and outputs from cg-provision from the
+    # s3 buckets for com and gov users
     com_state_file = base_path / "terraform-prod-com-yml/state.yml"
     gov_state_file = base_path / "terraform-prod-gov-yml/state.yml"
     com_users_filename = base_path / "aws-admin/stacks/gov/sso/users.yaml"
@@ -70,10 +70,11 @@ def main():
     com_region = "us-east-1"
     gov_region = "us-gov-west-1"
 
-    # Note that the thresholds in both thresholds.yml and other_iam_users.yml are now set
-    # to default to a warning of 300 days and a violation at 360 days
-    # This was decided based on a discussion with compliance over
-    # the finding related to stale keys
+    """
+    Note that the thresholds in both thresholds.yml and other_iam_users.yml are now set to default 
+    to a warning of 300 days and a violation at 360 days This was decided based on a discussion with 
+    compliance over the finding related to stale keys
+    """
     thresholds = load_thresholds(thresholds_filename)
     com_users_list = load_system_users(com_users_filename, thresholds)
     gov_users_list = load_system_users(gov_users_filename, thresholds)
@@ -96,7 +97,8 @@ def main():
 def load_thresholds(filename: str) -> list[Threshold]:
     """
     This is the file that holds all the threshold information to be added to
-    the user list dictionaries.
+    the user list dictionaries. This might be changed later to include what type of user
+    as the threshold limits are now coded in the rules for alertmanager
     """
     with open(filename) as f:
         thresholds_yaml = yaml.safe_load(f)
@@ -153,8 +155,8 @@ def load_tf_users(tf_filename: Path, thresholds: list[Threshold]) -> list[Thresh
       account_type:"Platform",
       is_wildcard: True|False,
       alert: True|False,
-      warn: 165, -- the threshold for warning
-      violation: 180 -- the threshold for violations
+      warn: 165, -- the threshold for warning - CURRENTLY IGNORED
+      violation: 180 -- the threshold for violations - CURRENTLY IGNORED
     }
     Note that all values are hardcoded except the username
     This file is scraped for more users to search for stale keys
@@ -231,7 +233,7 @@ def search_for_keys(
 ):
     """
     The main search function that reaches out to AWS IAM to grab the
-    credentials report as csv and load it into a list of dictionaries.
+    credentials report as csv and transform into a list of dictionaries.
     This list is then used to determine the number of days since rotation of the users active key(s)
     The user info and the days since rotation is sent to Prometheus for it to use internal rules to determine
     what is alerted on. Note that some of that is configurable in the thresholds.
@@ -259,14 +261,12 @@ def search_for_keys(
     content = report["Content"].decode("utf-8")
     content_lines = content.split("\n")
 
-    # Initiate the reader, convert the csv contents to a list and turn each row
-    # into a dictionary to use for the credentials check
+    # Convert the csv contents to a list and turn each row into a dictionary to use for the credentials check
     csv_reader = csv.DictReader(content_lines, delimiter=",")
     row: dict
     for row in csv_reader:
         user_name = row["user"]
-        # Note: If the user is unknown, we aren't capturing it, but could here
-        # in an else below
+        # Note: If the user is unknown, we aren't capturing it, but could we could in an else below
         aws_user = find_known_user(user_name, all_users)
         print(f"about to check user: {aws_user}")
         if len(aws_user.account_type) > 0:
@@ -290,7 +290,6 @@ def find_known_user(report_user: str, aws_users: list[Threshold]) -> Threshold:
 
 
 def calc_days_since_rotation(last_rotated: str) -> int:
-    last_rotated_days = 0
     last_rotated_date = parse(last_rotated, ignoretz=True)
     today = datetime.today()
     delta = today.date() - last_rotated_date.date()
@@ -298,15 +297,16 @@ def calc_days_since_rotation(last_rotated: str) -> int:
     return last_rotated_days
 
 
-def key_info_for_keydict(key_dict: dict) -> (Gauge, CollectorRegistry):
+def key_info_template() -> (Gauge, CollectorRegistry):
+    """
+    This is where we create the Gauge to be used by the pushgateway to record the metrics
+    """
     registry = CollectorRegistry()
 
     key_info = Gauge(
         "last_rotated_days",
-        "Send to the pushgateway to see ifaccess key is \
-        stale, let it alert if so",
+        "Send to the pushgateway to see if the access key is stale, let it alert if so",
         ["user", "key_num", "user_type", "account"],
-        ##["user", "key_num", "user_type", "account", "last_rotated"],
         registry=registry,
     )
     return key_info, registry
@@ -314,14 +314,13 @@ def key_info_for_keydict(key_dict: dict) -> (Gauge, CollectorRegistry):
 
 def send_key(key_dict: dict):
     """
-    Send the key(s) to the pushgateway client to let it determine if they
-    are stale
+    Send the key(s) to the pushgateway client to later have the alertmanager determine if they are stale
     """
     gateway = f"{env.str('GATEWAY_HOST')}:{env.int('GATEWAY_PORT', 9091)}"
     days_since_rotation = key_dict["days_since_rotation"]
     del key_dict["days_since_rotation"]
 
-    key_info, registry = key_info_for_keydict(key_dict) 
+    key_info, registry = key_info_template()
 
     key_info.labels(**key_dict).set(days_since_rotation)
     pushadd_to_gateway(
@@ -333,8 +332,7 @@ def check_key(
     key_num: int, last_rotated_key: str, user: Threshold, row: dict, account: str
 ):
     """
-    Where the real work happens, check for the date last rotated for both
-    violation and warning thresholds
+    Where the real work happens, check for the date last rotated for both violation and warning thresholds
     """
     days_since_rotation = calc_days_since_rotation(last_rotated_key)
     user_dict = {
@@ -349,6 +347,9 @@ def check_key(
 
 
 def check_keys(user: Threshold, row: dict, account: str):
+    """
+    Pull apart the row to get to each of the access keys to check for days since rotation
+    """
     last_rotated_key1 = row["access_key_1_last_rotated"]
     last_rotated_key2 = row["access_key_2_last_rotated"]
 
