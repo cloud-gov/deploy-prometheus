@@ -342,7 +342,7 @@ def check_key(
         "key_num": key_num,
         "user_type": user.account_type,
         "account": account,
-        "days_since_rotation": days_since_rotation,
+        "days_since_rotation": days_since_rotation
     }
     print(f"user is either being sent or deleted: {user_dict}")
     send_key(user_dict)
