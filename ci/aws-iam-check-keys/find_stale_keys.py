@@ -271,7 +271,6 @@ def search_for_keys(
         print(f"about to check user: {aws_user}")
         if len(aws_user.account_type) > 0:
             check_keys(aws_user, row, account)
-            print(f'found user has row: {row}')
 
 
 def find_known_user(report_user: str, aws_users: list[Threshold]) -> Threshold:
@@ -306,7 +305,8 @@ def key_info_for_keydict(key_dict: dict) -> (Gauge, CollectorRegistry):
         "last_rotated_days",
         "Send to the pushgateway to see ifaccess key is \
         stale, let it alert if so",
-        ["user", "key_num", "user_type", "account", "last_rotated"],
+        ["user", "key_num", "user_type", "account"],
+        ##["user", "key_num", "user_type", "account", "last_rotated"],
         registry=registry,
     )
     return key_info, registry
@@ -343,7 +343,6 @@ def check_key(
         "user_type": user.account_type,
         "account": account,
         "days_since_rotation": days_since_rotation,
-        "last_rotated": last_rotated_key,
     }
     print(f"user is either being sent or deleted: {user_dict}")
     send_key(user_dict)
