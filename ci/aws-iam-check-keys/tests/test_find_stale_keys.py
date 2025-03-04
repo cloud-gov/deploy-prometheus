@@ -148,4 +148,8 @@ class Test(TestCase):
         )
         self.assertEqual(actual, expected)
 
+    def test_send_data_via_client(self):
+        find_stale_keys.send_data_via_client()
+        
+
     

@@ -5,17 +5,14 @@ import argparse
 from copy import copy
 import csv
 
-import requests
-from requests import Response
-
 from threshold import Threshold
 
 # from alert import Alert
 from prometheus_client import (
     CollectorRegistry,
     Gauge,
-    pushadd_to_gateway,
-    delete_from_gateway,
+    pushadd_to_gateway
+    # delete_from_gateway,
 )
 import boto3
 import yaml
@@ -302,6 +299,7 @@ def calc_days_since_rotation(last_rotated: str) -> int:
     last_rotated_days = delta.days
     return last_rotated_days
 
+
 def key_info_for_keydict(key_dict: dict) -> (Gauge, CollectorRegistry):
     registry = CollectorRegistry()
 
@@ -314,7 +312,8 @@ def key_info_for_keydict(key_dict: dict) -> (Gauge, CollectorRegistry):
     )
     return key_info, registry
 
-def send_key(key_dict: dict, severity: str, delete_metric: bool):
+
+def send_key(key_dict: dict):
     """
     Send the key(s) to the pushgateway client to let it determine if they
     are stale
@@ -324,82 +323,11 @@ def send_key(key_dict: dict, severity: str, delete_metric: bool):
     del key_dict["days_since_rotation"]
 
     key_info, registry = key_info_for_keydict(key_dict) 
+
     key_info.labels(**key_dict).set(days_since_rotation)
-    if delete_metric:
-        # print(f"key dict in del is: {key_dict}\nAnd key_info is: {key_info}\n")
-        print(f"about to delete: {key_dict}")
-        delete_metric_from_pushgateway(gateway, "find_stale_keys", None, key_dict, "last_rotated_days")
-        # delete_from_gateway(gateway, job="find_stale_keys", grouping_key=key_dict)
-    else:
-        pushadd_to_gateway(
-            gateway, job="find_stale_keys", registry=registry, grouping_key=key_dict
-        )
-
-def delete_metric_from_pushgateway(pushgateway_url, job_name, instance=None, grouping_labels=None, metric_name=None):
-    """
-    Deletes a metric from the Prometheus Pushgateway.
-
-    Args:
-        pushgateway_url: The URL of the Pushgateway (e.g., "http://localhost:9091").
-        job_name: The job name associated with the metric.
-        instance: (Optional) The instance label value.
-        grouping_labels: (Optional) A dictionary of additional grouping labels.
-        metric_name: (Optional) The name of the metric to delete. If None, deletes all metrics for the job/instance.
-    """
-    response: Response = None
-    url = f"{pushgateway_url}/metrics/job/{job_name}"
-
-    if instance:
-        url += f"/instance/{instance}"
-
-    if grouping_labels:
-        for label, value in grouping_labels.items():
-            url += f"/{label}/{value}"
-
-    if metric_name:
-        url += f"/{metric_name}"
-
-    try:
-        response = requests.delete(url)
-        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
-        print(f"Metric(s) deleted successfully from {url}")
-
-    except requests.exceptions.RequestException as e:
-        print(f"Error deleting metric(s): {e}")
-        if response is not None:
-             print(f"Response code: {response.status_code}, response text: {response.text}")
-
-# def del_key(key_dict: dict):
-#     """
-#     Send the key(s) to the pushgateway client to let it determine if they
-#     are stale
-#     """
-#     gateway = f"{env.str('GATEWAY_HOST')}:{env.int('GATEWAY_PORT', 9091)}"
-#     print(f"key dict in del is: {key_dict}")
-#     days_since_rotation = key_dict["days_since_rotation"]
-#     del key_dict["days_since_rotation"]
-#     # del key_dict["last_rotated"]
-#     # del key_dict["key_num"]
-#     key_info, registry = key_info_for_keydict(key_dict) 
-#     key_info.labels(**key_dict).set(days_since_rotation)
-#     delete_from_gateway(gateway, job="find_stale_keys", grouping_key=key_dict)
-
-
-# def send_key(key_dict: dict, severity: str):
-#     """
-#     Send the key(s) to the pushgateway client to let it determine if they
-#     are stale
-#     """
-#     gateway = f"{env.str('GATEWAY_HOST')}:{env.int('GATEWAY_PORT', 9091)}"
-#     days_since_rotation = key_dict["days_since_rotation"]
-#     del key_dict["days_since_rotation"]
-
-#     key_info, registry = key_info_for_keydict(key_dict) 
-
-#     key_info.labels(**key_dict).set(days_since_rotation)
-#     pushadd_to_gateway(
-#         gateway, job="find_stale_keys", registry=registry, grouping_key=key_dict
-#     )
+    pushadd_to_gateway(
+        gateway, job="find_stale_keys", registry=registry, grouping_key=key_dict
+    )
 
 
 def check_key(
@@ -419,13 +347,7 @@ def check_key(
         "last_rotated": last_rotated_key,
     }
     print(f"user is either being sent or deleted: {user_dict}")
-    if days_since_rotation >= user.violation and user.account_type:
-        send_key(user_dict, "violation", False)
-    elif days_since_rotation >= user.warn:
-        send_key(user_dict, "warn", False)
-    else:
-        send_key(user_dict, None, True)
-        print("it was actually deleted")
+    send_key(user_dict)
 
 
 def check_keys(user: Threshold, row: dict, account: str):
