@@ -398,7 +398,7 @@ jobs:
           cert: master-bosh-root-cert/master-bosh.crt
           manifest: prometheus-config/bosh/manifest.yml
           releases:
-            - prometheus-release/*.tgz
+            - prometheus-release/*.*gz*
             - oauth2-proxy-release/*.tgz
             - secureproxy-release/*.tgz
           stemcells:
