@@ -447,3 +447,28 @@
       annotations:
         summary: Uptime check failed (non-200 response) for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}
         description: Uptime check failed (non-200 response) for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}. Runbook - https://github.com/cloud-gov/internal-docs/blob/main/docs/runbooks/Metrics-and-Alerting/uptime-monitoring.md#uptimemonitorfailed
+
+# opensearch disk alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: opensearch
+    rules:
+    - alert: opensearch_disk_critical
+      expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-opensearch"} > 82
+      for: 30m
+      labels:
+        service: opensearch
+        severity: critical
+      annotations:
+        summary: "opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 85% used"
+        description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
+    - alert: opensearch_disk_warning
+      expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-opensearch"} > 85
+      for: 5m
+      labels:
+        service: opensearch
+        severity: warning
+      annotations:
+        summary: "opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 88% used"
+        description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
