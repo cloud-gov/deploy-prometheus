@@ -455,7 +455,7 @@
     name: opensearch
     rules:
     - alert: opensearch_disk_critical
-      expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-opensearch"} > 85
+      expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-opensearch"} > 82
       for: 30m
       labels:
         service: opensearch
@@ -464,7 +464,7 @@
         summary: "opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 85% used"
         description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
     - alert: opensearch_disk_warning
-      expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-opensearch"} > 88
+      expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-opensearch"} > 85
       for: 5m
       labels:
         service: opensearch
