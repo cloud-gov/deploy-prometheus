@@ -38,7 +38,7 @@ python-dotenv==1.0.1
     # via environs
 pyyaml==6.0.1
     # via -r requirements.in
-requests==2.32.3
+requests==2.32.4
     # via -r requirements.in
 s3transfer==0.10.2
     # via boto3
