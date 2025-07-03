@@ -45,15 +45,6 @@ jobs:
           AWS_DEFAULT_REGION: ((aws-region))
           GATEWAY_HOST: prometheus-production.service.cf.internal
           HEARTBEAT_GROUP: /var/log/syslog
-    on_success:
-      put: slack
-      params: &slack-success-params
-        text: |
-          :white_check_mark: Successfully checked whether EC2 instances are shipping logs to CloudWatch
-          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
-        channel: ((slack-channel-success))
-        username: ((slack-username))
-        icon_url: ((slack-icon-url))
     on_failure:
       put: slack
       params: &slack-failure-params
@@ -81,13 +72,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ((aws-rds-access-key-id))
           AWS_SECRET_ACCESS_KEY: ((aws-rds-secret-access-key))
           GATEWAY_HOST: http://prometheus-production.service.cf.internal
-    on_success:
-      put: slack
-      params:
-        <<: *slack-success-params
-        text: |
-          :white_check_mark: Successfully checked remaining storage on AWS RDS instances
-          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
     on_failure:
       put: slack
       params:
@@ -152,13 +136,6 @@ jobs:
           AWS_DEFAULT_REGION: ((aws-region))
           GATEWAY_HOST: prometheus-production.service.cf.internal
           VIOLATION_DAYS: ((aws-iam-violation-days))
-    on_success:
-      put: slack
-      params:
-        <<: *slack-success-params
-        text: |
-          :white_check_mark: Successfully ran AWS MFA check
-          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
     on_failure:
       put: slack
       params:
@@ -186,13 +163,6 @@ jobs:
               AWS_SECRET_ACCESS_KEY: ((aws-external-secret-access-key))
               ENVIRONMENT: production
               GATEWAY_HOST: prometheus-production.service.cf.internal
-    on_success:
-      put: slack
-      params:
-        <<: *slack-success-params
-        text: |
-          :white_check_mark: Successfully updated Prometheus with metrics for CDN broker certificates
-          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
     on_failure:
       put: slack
       params:
@@ -238,13 +208,6 @@ jobs:
               ENVIRONMENT: production
               GATEWAY_HOST: prometheus-production.service.cf.internal
               AWS_DEFAULT_REGION: ((aws-region))
-    on_success:
-      put: slack
-      params:
-        <<: *slack-success-params
-        text: |
-          :white_check_mark: Successfully updated Prometheus with metrics for domain-broker certificates
-          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
     on_failure:
       put: slack
       params:
@@ -268,13 +231,6 @@ jobs:
         params:
           CONCOURSE_URIS: "https://ci.fr-stage.cloud.gov https://ci.fr.cloud.gov"
           GATEWAY_HOST: prometheus-production.service.cf.internal
-    on_success:
-      put: slack
-      params:
-        <<: *slack-success-params
-        text: |
-          :white_check_mark: Successfully updated Prometheus with metrics about Concourse auth
-          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
     on_failure:
       put: slack
       params:
@@ -312,13 +268,6 @@ jobs:
               params:
                 subject: email/subject.txt
                 body: email/body.txt
-    on_success:
-      put: slack
-      params:
-        <<: *slack-success-params
-        text: |
-          :white_check_mark: Check for whether Prometheus is up in production succeeded
-          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
     on_failure:
       put: slack
       params:
@@ -356,13 +305,6 @@ jobs:
               params:
                 subject: email/subject.txt
                 body: email/body.txt
-    on_success:
-      put: slack
-      params:
-        <<: *slack-success-params
-        text: |
-          :white_check_mark: Check for whether Prometheus is up in staging succeeded
-          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
     on_failure:
       put: slack
       params:
@@ -410,13 +352,6 @@ jobs:
             - prometheus-config/bosh/varsfiles/staging.yml
             - common-staging/staging-prometheus.yml
             - terraform-staging-yml/state.yml
-    on_success:
-      put: slack
-      params:
-        <<: *slack-success-params
-        text: |
-          :white_check_mark: Successfully deployed prometheus on staging
-          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
     on_failure:
       put: slack
       params:
@@ -460,13 +395,6 @@ jobs:
             - prometheus-config/bosh/varsfiles/production.yml
             - common-production/production-prometheus.yml
             - terraform-prod-yml/state.yml
-    on_success:
-      put: slack
-      params:
-        <<: *slack-success-params
-        text: |
-          :white_check_mark: Successfully deployed prometheus on production
-          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
     on_failure:
       put: slack
       params:
