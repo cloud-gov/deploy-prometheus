@@ -3,6 +3,7 @@ groups:
   - name: deployment
     jobs:
       - set-self
+      - deploy-prometheus-opensearch-development
       - deploy-prometheus-staging
       - deploy-prometheus-production
   - name: checks
@@ -371,6 +372,38 @@ jobs:
           :x: Check for whether Prometheus is up in staging FAILED
           <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
 
+  - name: deploy-prometheus-opensearch-development
+    serial: true
+    plan:
+      - in_parallel:
+          - get: master-bosh-root-cert
+          - get: prometheus-config
+          - get: common-opensearch-development
+          - get: prometheus-release
+          - get: prometheus-release-src
+          - get: prometheus-stemcell-jammy
+            trigger: true
+          - get: secureproxy-release
+          - get: pipeline-tasks
+          - get: terraform-development-yml
+      - put: prometheus-opensearch-development-deployment
+        params:
+          cert: master-bosh-root-cert/master-bosh.crt
+          manifest: prometheus-config/bosh/opensearch-manifest.yml
+          releases:
+            - prometheus-release/*.*gz*
+            - oauth2-proxy-release/*.tgz
+            - secureproxy-release/*.tgz
+          stemcells:
+            - prometheus-stemcell-jammy/*.tgz
+          ops_files:
+            - prometheus-config/bosh/opsfiles/rules.yml
+            - prometheus-config/bosh/opsfiles/staging.yml
+          vars_files:
+            - prometheus-config/bosh/varsfiles/development.yml
+            - common-opensearch-development/development-prometheus-opensearch.yml
+            - terraform-development-yml/state.yml
+
   - name: deploy-prometheus-staging
     serial: true
     plan:
@@ -482,6 +515,13 @@ resources:
       bucket: ((prometheus-production-private-bucket))
       region_name: ((aws-region))
       versioned_file: master-bosh.crt
+
+  - name: common-opensearch-development
+    type: s3-iam
+    source:
+      region_name: ((prometheus-development-private-region))
+      bucket: ((prometheus-development-private-bucket))
+      versioned_file: development-prometheus-opensearch.yml
 
   - name: common-staging
     type: s3-iam
@@ -611,6 +651,13 @@ resources:
       from: cloud-gov-no-reply@cloud.gov
       to:
         - "cloud-gov-notifications@gsa.gov"
+
+  - name: terraform-development-yml
+    type: s3-iam
+    source:
+      region_name: ((prometheus-development-private-region))
+      bucket: terraform-state
+      versioned_file: development/state.yml
 
   - name: terraform-staging-yml
     type: s3-iam
