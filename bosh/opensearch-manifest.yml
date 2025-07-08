@@ -89,13 +89,13 @@ instance_groups:
 - name: nginx
   instances: 1
   vm_type: t3.large
-  persistent_disk_type: ((environment))-prometheus-small
+  persistent_disk_type: logs_opensearch_redis #((environment))-prometheus-small
   vm_extensions:
   - ((environment))-prometheus-lb
   stemcell: default
   azs: ((azs))
   networks:
-  - name: ((environment))-monitoring
+  - name: services #((environment))-monitoring
   jobs:
   - name: nginx
     release: prometheus
