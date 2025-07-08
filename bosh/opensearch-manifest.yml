@@ -1,4 +1,4 @@
-name: prometheus-((environment))-opensearch
+name: prometheus-opensearch-((environment))
 
 addons:
 - include:
