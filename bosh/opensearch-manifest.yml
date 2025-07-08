@@ -37,7 +37,7 @@ instance_groups:
   stemcell: default
   azs: ((azs))
   networks:
-  - name: ((environment))-bosh # was environmnet-monitoring
+  - name: services # was environmnet-monitoring
   env:
     persistent_disk_fs: xfs
   jobs:
