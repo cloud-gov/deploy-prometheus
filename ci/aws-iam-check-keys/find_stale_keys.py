@@ -71,8 +71,8 @@ def main():
     gov_region = "us-gov-west-1"
 
     """
-    Note that the thresholds in both thresholds.yml and other_iam_users.yml are now set to default 
-    to a warning of 300 days and a violation at 360 days This was decided based on a discussion with 
+    Note that the thresholds in both thresholds.yml and other_iam_users.yml are now set to default
+    to a warning of 300 days and a violation at 360 days This was decided based on a discussion with
     compliance over the finding related to stale keys
     """
     thresholds = load_thresholds(thresholds_filename)
@@ -200,13 +200,14 @@ def state_file_to_dict(all_outputs: dict):
     """
     output_dict = {}
     for key, value in all_outputs.items():
-        new_key = re.sub("_.*", "", key)
-        if new_key not in output_dict:
-            output_dict[new_key] = {}
-        if "id" in key:
-            output_dict[new_key]["id"] = value
-        if "secret" in key:
-            output_dict[new_key]["secret"] = value
+        if key.endswith("stalekey"):
+            new_key = re.sub("_.*", "", key)
+            if new_key not in output_dict:
+                output_dict[new_key] = {}
+            if "id" in key:
+                output_dict[new_key]["id"] = value
+            if "secret" in key:
+                output_dict[new_key]["secret"] = value
 
     return output_dict
 
