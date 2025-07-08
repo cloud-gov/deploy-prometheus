@@ -90,8 +90,8 @@ instance_groups:
   instances: 1
   vm_type: t3.large
   persistent_disk_type: logs_opensearch_redis #((environment))-prometheus-small
-  vm_extensions:
-  - ((environment))-prometheus-lb
+  #vm_extensions:
+  #- ((environment))-prometheus-lb
   stemcell: default
   azs: ((azs))
   networks:
