@@ -51,14 +51,14 @@ instance_groups:
               time: 365d
         web:
           external_url: https://prometheus.((domain))
-        rule_files:
-        - /var/vcap/jobs/bosh_alerts/*.alerts.yml
-        - /var/vcap/jobs/cloudfoundry_alerts-attic/cf_cells.alerts.yml
-        - /var/vcap/jobs/cloudfoundry_alerts-attic/cf_diego.alerts.yml
-        - /var/vcap/jobs/cloudfoundry_alerts-attic/cf_doppler.alerts.yml
-        - /var/vcap/jobs/cloudfoundry_alerts-attic/cf_routers.alerts.yml
-        - /var/vcap/jobs/cloudfoundry_alerts-attic/prometheus_cf_exporter.alerts.yml
-        - /var/vcap/jobs/prometheus_alerts/*.alerts.yml
+        # rule_files:
+        # - /var/vcap/jobs/bosh_alerts/*.alerts.yml
+        # - /var/vcap/jobs/cloudfoundry_alerts-attic/cf_cells.alerts.yml
+        # - /var/vcap/jobs/cloudfoundry_alerts-attic/cf_diego.alerts.yml
+        # - /var/vcap/jobs/cloudfoundry_alerts-attic/cf_doppler.alerts.yml
+        # - /var/vcap/jobs/cloudfoundry_alerts-attic/cf_routers.alerts.yml
+        # - /var/vcap/jobs/cloudfoundry_alerts-attic/prometheus_cf_exporter.alerts.yml
+        # - /var/vcap/jobs/prometheus_alerts/*.alerts.yml
         scrape_configs:
         - job_name: prometheus
           static_configs:
