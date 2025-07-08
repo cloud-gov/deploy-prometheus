@@ -119,9 +119,3 @@ instance_groups:
 variables:
 - name: promethues_password
   type: password
-- name: oauth-proxy-client-secret
-  type: password
-- name: oauth-proxy-cookie-secret
-  type: password
-- name: oauth-proxy-oicd-issuer-url
-  type: value
