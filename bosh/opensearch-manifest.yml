@@ -33,7 +33,7 @@ instance_groups:
 - name: prometheus
   instances: 1
   vm_type: m6i.large
-  persistent_disk_type: ((environment))-prometheus-large
+  persistent_disk_type: logs_opensearch_redis ##Change in future
   stemcell: default
   azs: ((azs))
   networks:
