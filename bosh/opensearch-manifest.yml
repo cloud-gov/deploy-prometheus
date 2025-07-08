@@ -12,7 +12,6 @@ addons:
 
 releases:
 - {name: prometheus, version: latest}
-- {name: oauth2-proxy, version: latest}
 - {name: cron, version: latest}
 - {name: bosh-dns-aliases, version: latest}
 - {name: secureproxy, version: latest}
@@ -59,7 +58,6 @@ instance_groups:
         - /var/vcap/jobs/cloudfoundry_alerts-attic/cf_doppler.alerts.yml
         - /var/vcap/jobs/cloudfoundry_alerts-attic/cf_routers.alerts.yml
         - /var/vcap/jobs/cloudfoundry_alerts-attic/prometheus_cf_exporter.alerts.yml
-        - /var/vcap/jobs/cloudfoundry_alerts-attic/prometheus_firehose_exporter.alerts.yml
         - /var/vcap/jobs/prometheus_alerts/*.alerts.yml
         scrape_configs:
         - job_name: prometheus
@@ -72,12 +70,6 @@ instance_groups:
           static_configs:
           - targets:
             - localhost:9193
-        - job_name: firehose
-          scrape_interval: 2m
-          scrape_timeout: 100s
-          static_configs:
-          - targets:
-            - localhost:9186
   - name: cf_exporter
     release: prometheus
     properties:
@@ -91,23 +83,6 @@ instance_groups:
           deployment_name: cf-((environment))
         metrics:
           environment: ((environment))
-  - name: firehose_exporter-attic
-    release: prometheus
-    properties:
-      firehose_exporter:
-        uaa:
-          url: https://login.((domain))
-          client_id: ((firehose-client-id))
-          client_secret: ((firehose-client-secret))
-        doppler:
-          subscription_id: prometheus
-        metrics:
-          environment: ((environment))
-        logging:
-          url: wss://doppler.((domain)):443
-          use_legacy_firehose: true
-  - name: cloudfoundry_alerts-attic
-    release: prometheus
   - name: prometheus_alerts
     release: prometheus
 
