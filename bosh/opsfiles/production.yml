@@ -22,7 +22,7 @@
     name: prometheus-tooling
     instances: 1
     vm_type: ((environment))-prometheus-large
-    persistent_disk_type: ((environment))-prometheus-large
+    persistent_disk_type: ((environment))-prometheus-tooling
     stemcell: default
     azs: ((azs))
     networks:
