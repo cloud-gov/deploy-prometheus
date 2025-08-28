@@ -18,7 +18,6 @@ blackbox-targets:
 - https://test-php.app.cloud.gov
 - https://test-ruby-padrino.app.cloud.gov
 - https://test-ruby-sinatra.app.cloud.gov
-- https://www.fdic.gov
 - https://www.fec.gov
 - https://api.data.gov
 - https://fire.airnow.gov
