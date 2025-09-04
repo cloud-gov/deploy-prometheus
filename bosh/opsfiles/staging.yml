@@ -30,7 +30,7 @@
 
     # Map UAA groups to Grafana roles based on .admin or .support suffix 
     # Do not make this a multiline string, grafana.ini errors reading it, values MUST be in single quotes or the mapping silently fails
-    role_attribute_path: contains(scope[*], 'grafana_platform.admin') && 'GrafanaAdmin' || contains(scope[*], 'grafana_pages.admin') && 'Admin' || contains(scope[*], 'grafana_workshop.admin') && 'Admin' || contains(scope[*], 'grafana_notify.admin') && 'Admin' || contains(scope[*], 'grafana_platform.support') && 'Viewer' || contains(scope[*], 'grafana_pages.support') && 'Viewer' || contains(scope[*], 'grafana_workshop.support') && 'Viewer' || contains(scope[*], 'grafana_notify.support') && 'Viewer' || 'Viewer'
+    role_attribute_path: contains(scope[*], 'grafana_platform.admin') && 'GrafanaAdmin' || contains(scope[*], 'grafana_pages.admin') && 'Editor' || contains(scope[*], 'grafana_workshop.admin') && 'Editor' || contains(scope[*], 'grafana_notify.admin') && 'Editor' || contains(scope[*], 'grafana_platform.support') && 'Viewer' || contains(scope[*], 'grafana_pages.support') && 'Viewer' || contains(scope[*], 'grafana_workshop.support') && 'Viewer' || contains(scope[*], 'grafana_notify.support') && 'Viewer' || 'Viewer'
 
     # This list must be inclusive of all the UAA groups that you want to map, if not, role_attribute_path will map everyone as a Viewer
     # This is the same list of scopes that has to be defined on the prometheus-staging UAA client, otherwise you will get a "failed to login" in grafana
