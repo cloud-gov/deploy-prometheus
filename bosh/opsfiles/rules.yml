@@ -96,28 +96,29 @@
         description: EC2 instance {{$labels.instance_id}} is not logging
 
 # BOSH unknown instance alerts
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
-  value:
-    name: bosh-unknown-instances
-    rules:
-    - alert: BoshUnknownInstanceCheckExpired
-      expr: time() - push_time_seconds{job="bosh_unknown_instance"} > 7200
-      labels:
-        service: bosh-unknown-iaas-instance
-        severity: critical
-      annotations:
-        summary: Bosh Unknown Instance Check for VPC {{$labels.instance}} has not run in two hours
-        description: Check bosh director {{$labels.instance}} for errors
-    - alert: BoshUnknownInstanceExpired
-      expr: bosh_unknown_iaas_instance > 0
-      for: 5m
-      labels:
-        service: bosh-unknown-iaas-instance
-        severity: critical
-      annotations:
-        summary: Bosh found unknown IaaS instance {{$labels.iaas_id}} in VPC {{$labels.vpc_name}}
-        description: Unknown IaaS instance {{$labels.iaas_id}} with bosh id {{$labels.bosh_id}} found in VPC {{$labels.vpc_name}}
+# Replaced with cloudtrail alerts so don't need this
+#- type: replace
+#  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+#  value:
+#    name: bosh-unknown-instances
+#    rules:
+#    - alert: BoshUnknownInstanceCheckExpired
+#      expr: time() - push_time_seconds{job="bosh_unknown_instance"} > 7200
+#      labels:
+#        service: bosh-unknown-iaas-instance
+#        severity: critical
+#      annotations:
+#        summary: Bosh Unknown Instance Check for VPC {{$labels.instance}} has not run in two hours
+#        description: Check bosh director {{$labels.instance}} for errors
+#    - alert: BoshUnknownInstanceExpired
+#      expr: bosh_unknown_iaas_instance > 0
+#      for: 5m
+#      labels:
+#        service: bosh-unknown-iaas-instance
+#        severity: critical
+#      annotations:
+#        summary: Bosh found unknown IaaS instance {{$labels.iaas_id}} in VPC {{$labels.vpc_name}}
+#        description: Unknown IaaS instance {{$labels.iaas_id}} with bosh id {{$labels.bosh_id}} found in VPC {{$labels.vpc_name}}
 
 # Logsearch backup alerts
 - type: replace
