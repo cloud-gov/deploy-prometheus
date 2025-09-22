@@ -72,53 +72,6 @@
         summary: IAM key for {$labels.user} is now expired
         description: "For Platform or Applications if the key is expired\n"
 
-# CloudWatch logs alerts
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
-  value:
-    name: aws-logs
-    rules:
-    - alert: AWSLogsCheckNotRunning
-      expr: time() - push_time_seconds{job=~"^awslogs_instance"} > 7200
-      labels:
-        service: aws-logs
-        severity: critical
-      annotations:
-        summary: AWS Log Checker has not run in two hours
-        description: Check https://ci.fr.cloud.gov/teams/main/pipelines/deploy-prometheus?groups=checks for failures
-    - alert: AWSLogsInstanceExpired
-      expr: awslogs_instance_not_logging > 0
-      labels:
-        service: aws-logs
-        severity: warning
-      annotations:
-        summary: EC2 instance {{$labels.instance_id}} is not logging
-        description: EC2 instance {{$labels.instance_id}} is not logging
-
-# BOSH unknown instance alerts
-# Replaced with cloudtrail alerts so don't need this
-#- type: replace
-#  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
-#  value:
-#    name: bosh-unknown-instances
-#    rules:
-#    - alert: BoshUnknownInstanceCheckExpired
-#      expr: time() - push_time_seconds{job="bosh_unknown_instance"} > 7200
-#      labels:
-#        service: bosh-unknown-iaas-instance
-#        severity: critical
-#      annotations:
-#        summary: Bosh Unknown Instance Check for VPC {{$labels.instance}} has not run in two hours
-#        description: Check bosh director {{$labels.instance}} for errors
-#    - alert: BoshUnknownInstanceExpired
-#      expr: bosh_unknown_iaas_instance > 0
-#      for: 5m
-#      labels:
-#        service: bosh-unknown-iaas-instance
-#        severity: critical
-#      annotations:
-#        summary: Bosh found unknown IaaS instance {{$labels.iaas_id}} in VPC {{$labels.vpc_name}}
-#        description: Unknown IaaS instance {{$labels.iaas_id}} with bosh id {{$labels.bosh_id}} found in VPC {{$labels.vpc_name}}
 
 # Logsearch backup alerts
 - type: replace
