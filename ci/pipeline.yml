@@ -8,7 +8,6 @@ groups:
   - name: checks
     jobs:
       - set-self
-      - awslogs-check
       - aws-mfa-check
       - aws-rds-storage-check
       - aws-iam-check-keys
@@ -28,32 +27,6 @@ jobs:
         var_files:
           - prometheus-config/ci/config.yml
 
-  - name: awslogs-check
-    serial_groups: [production]
-    plan:
-      - in_parallel:
-          - get: prometheus-check-timer
-            trigger: true
-          - get: prometheus-config
-            passed: [set-self]
-          - get: general-task
-      - task: awslogs
-        image: general-task
-        file: prometheus-config/ci/awslogs.yml
-        tags: [iaas]
-        params:
-          AWS_DEFAULT_REGION: ((aws-region))
-          GATEWAY_HOST: prometheus-production.service.cf.internal
-          HEARTBEAT_GROUP: /var/log/syslog
-    on_failure:
-      put: slack
-      params: &slack-failure-params
-        text: |
-          :x: FAILED to check whether EC2 instances are shipping logs to CloudWatch
-          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
-        channel: ((slack-channel-failure))
-        username: ((slack-username))
-        icon_url: ((slack-icon-url))
 
   - name: aws-rds-storage-check
     serial_groups: [production]

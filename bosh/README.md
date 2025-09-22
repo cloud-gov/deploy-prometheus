@@ -4,14 +4,6 @@ alerts for cloud.gov prometheus deployment
 # Reviewing cloud.gov alerts (prometheus)
 This document contains notes for reviewing each type of alert fired in PagerDuty. It is not meant to be an exhaustive playbook, but to give initial guidance for how to configure and triage each type.
 
-## AWSLogsCheckNotRunning
-### Source data:
-https://github.com/18F/cg-deploy-prometheus/blob/master/ci/awslogs.sh
-### Rule body:
-https://github.com/18F/cg-deploy-prometheus/blob/master/bosh/alerts/awslogs.alerts
-### Guidance:
-The concourse job to run awslogs-check is not running and no longer emitting logs to prometheus. Check recent builds of awslogs-check in https://ci.fr.cloud.gov/teams/main/pipelines/deploy-prometheus?groups=checks for more details.
-
 ## AWSMFADisabled
 ### Source data:
 https://github.com/18F/cg-deploy-prometheus/blob/master/ci/aws-mfa.sh
@@ -83,16 +75,6 @@ https://github.com/bosh-prometheus/prometheus-boshrelease/tree/master/jobs/bosh_
 A bosh managed AWS instance is in an unhealthy state. Check service health on the instance indicated and the relevant logs for each service.
 
 Bosh health alerts are often related to long running deploys or issues in the deploy when changes have been made. Check recent build logs in concourse for more details.
-
-## BoshUnknownInstanceExpired
-### Source data:
-https://github.com/18F/cg-deploy-bosh/blob/master/cronjobs/unknown-vms.sh
-### Rule body:
-https://github.com/bosh-prometheus/prometheus-boshrelease/tree/master/jobs/bosh_alerts/templates
-### Guidance:
-An AWS instance which the relevant bosh director doesn’t know about has been detected. This can happen when non-bosh-managed infrastructure (ELBs) are reprovisioned and change IPs, or during bosh deployments when actual AWS instances are slightly out of sync from bosh inventory. Review the indicated instance in the AWS console and whitelist if necessary.
-
-If you cannot identify the AWS instance flagged follow the security incident response guide.
 
 ## NessusManagerLicenseInvalid
 ### Source data:
