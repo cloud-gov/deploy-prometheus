@@ -1,5 +1,5 @@
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=alertmanager/properties/alertmanager/receivers?/-
+  path: /instance_groups/name=prometheus/jobs/name=alertmanager/properties/alertmanager/receivers?
   value:
     - name: email-notifications
       email_configs:
@@ -9,7 +9,7 @@
       - channel: '((notification-slack-channel))'
 
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=alertmanager/properties/alertmanager/route?/-
+  path: /instance_groups/name=prometheus/jobs/name=alertmanager/properties/alertmanager/route?
   value:
     receiver: email-notifications
     group_by: ['alertname', 'cluster', 'service']
@@ -22,6 +22,6 @@
       receiver: slack-notifications
 
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=alertmanager/properties/alertmanager/slack?/-
+  path: /instance_groups/name=prometheus/jobs/name=alertmanager/properties/alertmanager/slack?
   value:
     api_url: ((slack-webhook))
