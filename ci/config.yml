@@ -1,4 +1,4 @@
-cg-deploy-prometheus-git-branch: main
+cg-deploy-prometheus-git-branch: workshop
 cg-deploy-prometheus-git-url: https://github.com/cloud-gov/cg-deploy-prometheus.git
 
 prometheus-release-git-branch: master
