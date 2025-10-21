@@ -1,4 +1,4 @@
-azs: [z2]
+azs: [z1]
 environment: workshop
 domain: fr.cloud.gov
 blackbox-targets:
