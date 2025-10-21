@@ -410,6 +410,7 @@ jobs:
           ops_files:
             - prometheus-config/bosh/workshop/rules.yml
             - prometheus-config/bosh/workshop/alerting.yml
+            - prometheus-config/bosh/workshop/scrapers.yml
           vars_files:
             - prometheus-config/bosh/workshop/workshop-vars.yml
             - common-production/production-prometheus.yml
