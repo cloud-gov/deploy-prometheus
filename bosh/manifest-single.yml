@@ -123,6 +123,9 @@ instance_groups:
     release: prometheus
   - name: prometheus2
     release: prometheus
+    provides:
+      prometheus:
+         as: prometheus-primary
     properties:
       prometheus:
         storage:
@@ -222,8 +225,6 @@ instance_groups:
     release: prometheus
   - name: elasticsearch_alerts
     release: prometheus
-  - name: concourse_alerts
-    release: prometheus
   - name: prometheus_alerts
     release: prometheus
 
@@ -240,6 +241,9 @@ instance_groups:
   jobs:
   - name: nginx
     release: prometheus
+    consumes:
+      prometheus:
+        from: prometheus-primary
     properties:
       nginx:
         prometheus:
