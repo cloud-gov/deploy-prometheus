@@ -5,10 +5,10 @@ groups:
       - set-self
       - deploy-prometheus-staging
       - deploy-prometheus-production
+      - deploy-prometheus-workshop
   - name: checks
     jobs:
       - set-self
-      - awslogs-check
       - aws-mfa-check
       - aws-rds-storage-check
       - aws-iam-check-keys
@@ -27,33 +27,6 @@ jobs:
         file: prometheus-config/ci/pipeline.yml
         var_files:
           - prometheus-config/ci/config.yml
-
-  - name: awslogs-check
-    serial_groups: [production]
-    plan:
-      - in_parallel:
-          - get: prometheus-check-timer
-            trigger: true
-          - get: prometheus-config
-            passed: [set-self]
-          - get: general-task
-      - task: awslogs
-        image: general-task
-        file: prometheus-config/ci/awslogs.yml
-        tags: [iaas]
-        params:
-          AWS_DEFAULT_REGION: ((aws-region))
-          GATEWAY_HOST: prometheus-production.service.cf.internal
-          HEARTBEAT_GROUP: /var/log/syslog
-    on_failure:
-      put: slack
-      params: &slack-failure-params
-        text: |
-          :x: FAILED to check whether EC2 instances are shipping logs to CloudWatch
-          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
-        channel: ((slack-channel-failure))
-        username: ((slack-username))
-        icon_url: ((slack-icon-url))
 
   - name: aws-rds-storage-check
     serial_groups: [production]
@@ -74,11 +47,13 @@ jobs:
           GATEWAY_HOST: http://prometheus-production.service.cf.internal
     on_failure:
       put: slack
-      params:
-        <<: *slack-failure-params
+      params: &slack-failure-params
         text: |
           :x: FAILED to check remaining storage on AWS RDS instances
           <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+        channel: ((slack-channel-failure))
+        username: ((slack-username))
+        icon_url: ((slack-icon-url))
 
   - name: aws-iam-check-keys
     serial_groups: [production]
@@ -428,7 +403,7 @@ jobs:
             trigger: true
           - get: pipeline-tasks
           - get: terraform-prod-yml
-      - put: prometheus-production-workshop
+      - put: prometheus-workshop-deployment
         params:
           <<: *deploy-params
           manifest: prometheus-config/bosh/manifest-single.yml
@@ -522,6 +497,15 @@ resources:
       client_secret: ((tooling_bosh_uaa_ci_client_secret))
       ca_cert: ((common_ca_cert))
       deployment: prometheus-staging
+
+  - name: prometheus-workshop-deployment
+    type: bosh-deployment
+    source:
+      target: ((prometheus-workshop-deployment-bosh-target))
+      client: ci
+      client_secret: ((tooling_bosh_uaa_ci_client_secret))
+      ca_cert: ((common_ca_cert))
+      deployment: prometheus-workshop
 
   - name: prometheus-production-deployment
     type: bosh-deployment
