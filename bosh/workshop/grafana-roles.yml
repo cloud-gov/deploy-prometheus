@@ -1,7 +1,7 @@
 
 # Configure Grafana to use UAA authentication
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=grafana/properties/grafana/auth/generic_oauth?
+  path: /instance_groups/name=prometheus/jobs/name=grafana/properties/grafana/auth/generic_oauth/?
   value:
     # Map UAA groups to Grafana roles based on .admin or .support suffix
     # Do not make this a multiline string, grafana.ini errors reading it, values MUST be in single quotes or the mapping silently fails
