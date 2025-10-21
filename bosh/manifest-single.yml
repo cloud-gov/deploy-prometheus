@@ -79,6 +79,9 @@ instance_groups:
           external_url: https://alertmanager-((environment)).((domain))
   - name: grafana
     release: prometheus
+    consumes:
+      prometheus:
+        from: prometheus-primary
     properties:
       grafana:
         server:
@@ -194,7 +197,7 @@ instance_groups:
           password: ((cf-exporter-service-account-password))
           deployment_name: cf-production
         metrics:
-          environment: ((environment))
+          environment: production-((environment))
   - name: firehose_exporter-attic
     release: prometheus
     properties:
@@ -206,9 +209,9 @@ instance_groups:
         doppler:
           subscription_id: prometheus
         filter:
-          environment: cf-production
+          deployments: cf-production
         metrics:
-          environment: ((environment))
+          environment: production-((environment))
         logging:
           url: wss://doppler.((domain)):443
           use_legacy_firehose: true
@@ -226,6 +229,8 @@ instance_groups:
   - name: cloudfoundry_alerts-attic
     release: prometheus
   - name: prometheus_alerts
+    release: prometheus
+  - name: probe_alerts
     release: prometheus
 
 - name: nginx
