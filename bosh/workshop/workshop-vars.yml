@@ -1,0 +1,5 @@
+azs: [z2]
+environment: workshop
+domain: fr.cloud.gov
+blackbox-targets:
+- https://workshop.cloud.gov
