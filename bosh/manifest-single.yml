@@ -34,7 +34,7 @@ update:
 instance_groups:
 - name: prometheus
   instances: 1
-  vm_type: m6i.2xlarge
+  vm_type: m6i.large
   persistent_disk_type: ((environment))-prometheus-large
   stemcell: default
   azs: ((azs))
@@ -190,9 +190,9 @@ instance_groups:
       cf_exporter:
         cf:
           api_url: https://api.((domain))
-          client_id: ((cf-exporter-client-id))
-          client_secret: ((cf-exporter-client-secret))
-          deployment_name: cf-((environment))
+          username: ((cf-exporter-service-account-username))
+          password: ((cf-exporter-service-account-password))
+          deployment_name: cf-production
         metrics:
           environment: ((environment))
   - name: firehose_exporter-attic
@@ -205,6 +205,8 @@ instance_groups:
           client_secret: ((firehose-client-secret))
         doppler:
           subscription_id: prometheus
+        filter:
+          environment: cf-production
         metrics:
           environment: ((environment))
         logging:
@@ -222,8 +224,6 @@ instance_groups:
               http:
                 preferred_ip_protocol: ip4
   - name: cloudfoundry_alerts-attic
-    release: prometheus
-  - name: elasticsearch_alerts
     release: prometheus
   - name: prometheus_alerts
     release: prometheus
