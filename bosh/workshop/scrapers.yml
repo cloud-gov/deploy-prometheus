@@ -9,4 +9,4 @@
     - labels:
         name: GitLab
       targets:
-      - ((blackbox-targets))
+      - ((gitlab-target))
