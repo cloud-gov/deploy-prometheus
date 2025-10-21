@@ -411,6 +411,7 @@ jobs:
             - prometheus-config/bosh/workshop/rules.yml
             - prometheus-config/bosh/workshop/alerting.yml
             - prometheus-config/bosh/workshop/scrapers.yml
+            - prometheus-config/bosh/workshop/grafana-roles.yml
           vars_files:
             - prometheus-config/bosh/workshop/workshop-vars.yml
             - common-production/production-prometheus.yml

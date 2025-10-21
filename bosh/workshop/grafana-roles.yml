@@ -1,0 +1,30 @@
+
+# Configure Grafana to use UAA authentication
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=grafana/properties/grafana/auth/generic_oauth?/
+  value:
+    # Map UAA groups to Grafana roles based on .admin or .support suffix
+    # Do not make this a multiline string, grafana.ini errors reading it, values MUST be in single quotes or the mapping silently fails
+    role_attribute_path: contains(scope[*], 'grafana_platform.admin') && 'GrafanaAdmin' || contains(scope[*], 'grafana_workshop.admin') && 'Editor' || contains(scope[*], 'grafana_platform.support') && 'Viewer' || contains(scope[*], 'grafana_workshop.support') && 'Viewer'
+    # This list must be inclusive of all the UAA groups that you want to map, if not, role_attribute_path will map everyone as a Viewer
+    # This is the same list of scopes that has to be defined on the prometheus-staging UAA client, otherwise you will get a "failed to login" in grafana
+    scopes: openid profile email grafana_platform.admin grafana_platform.support grafana_workshop.admin grafana_workshop.support
+
+    # This is the name of the array field in the id_token/access_token to map to.
+    groups_attribute_path: scope
+
+    # Needed for the role of GrafanaAdmin to be assigned
+    allow_assign_grafana_admin: true
+
+    # Match order is id_token, userinfo, access_token.  This overrides to force the access_token which has the scopes, to be first.  The scope in id_token only has "openid", the scope in access_token has all the group memberships so the access_token is the desired one.
+    id_token_attribute_name: access_token
+
+# Enable users auto-assignment
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=grafana/properties/grafana/users?/auto_assign_org
+  value: true
+
+# There is only 1 org
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=grafana/properties/grafana/users?/auto_assign_org_id
+  value: 1
