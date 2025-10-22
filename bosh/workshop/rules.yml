@@ -1,0 +1,40 @@
+### Blackbox
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: blackbox
+    rules:
+    - alert: SSLCertExpiringSoon
+      expr: probe_ssl_earliest_cert_expiry{job="blackbox"} - time() < 86400 * 25
+      for: 10m
+      labels:
+        service: blackbox
+        severity: warning
+      annotations:
+        summary: SSL certificate for {{$labels.instance}} is expiring within 25d
+        description: Renew SSL certificate for {{$labels.instance}}
+    - alert: ProbeFailing
+      expr: probe_success{job="blackbox"} < 1
+      for: 5m
+      labels:
+        service: blackbox
+        severity: warning
+      annotations:
+        summary: Probe failing for {{$labels.instance}} for 5m
+        description: Check health of {{$labels.instance}}
+
+# HTTPS uptime alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  value:
+    name: uptime-monitor
+    rules:
+    - alert: UptimeMonitorFailed
+      expr: probe_http_status_code{job="blackbox"} != 200
+      for: 5m
+      labels:
+        service: uptime
+        severity: warning
+      annotations:
+        summary: Uptime check failed (non-200 response) for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}
+        description: Uptime check failed (non-200 response) for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}. Runbook - https://github.com/cloud-gov/internal-docs/blob/main/docs/runbooks/Metrics-and-Alerting/uptime-monitoring.md#uptimemonitorfailed

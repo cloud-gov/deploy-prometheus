@@ -1,0 +1,6 @@
+azs: [z1]
+environment: workshop
+domain: fr.cloud.gov
+gitlab-target: workshop.cloud.gov
+blackbox-targets:
+- https://workshop.cloud.gov

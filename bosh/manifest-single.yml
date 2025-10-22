@@ -1,0 +1,292 @@
+name: prometheus-((environment))
+
+addons:
+- include:
+    stemcell:
+    - os: ubuntu-bionic
+    - os: ubuntu-jammy
+  jobs:
+  - name: bpm
+    release: bpm
+  name: bpm
+
+
+releases:
+- {name: prometheus, version: latest}
+- {name: oauth2-proxy, version: latest}
+- {name: cron, version: latest}
+- {name: bosh-dns-aliases, version: latest}
+- {name: secureproxy, version: latest}
+- {name: bpm, version: latest}
+
+stemcells:
+- alias: default
+  os: ubuntu-jammy
+  version: latest
+
+update:
+  canaries: 1
+  max_in_flight: 32
+  canary_watch_time: 1000-600000
+  update_watch_time: 1000-600000
+  serial: false
+
+instance_groups:
+- name: prometheus
+  instances: 1
+  vm_type: m6i.large
+  persistent_disk_type: ((environment))-prometheus-large
+  stemcell: default
+  azs: ((azs))
+  networks:
+  - name: production-monitoring
+  env:
+    persistent_disk_fs: xfs
+  jobs:
+  - name: cron
+    release: cron
+    properties:
+      cron:
+        entries:
+        - script:
+            name: update-certificates.sh
+            contents: |
+              #!/bin/bash
+              OUTDIR=/usr/local/share/ca-certificates/postfix
+              mkdir -p ${OUTDIR}
+              echo "((/toolingbosh/postfix-production/postfix_ssl.ca))" > ${OUTDIR}/server.crt
+              /usr/sbin/update-ca-certificates
+              /var/vcap/bosh/bin/monit restart alertmanager
+          minute: '*/30'
+          hour: '*'
+          day: '*'
+          month: '*'
+          wday: '*'
+          user: root
+  - name: alertmanager
+    release: prometheus
+    properties:
+      alertmanager:
+        data:
+          retention: 720h
+        smtp:
+          from: cloud-gov-no-reply@cloud.gov
+          smarthost: ((terraform_outputs.production_smtp_private_ip)):25
+          auth_username: ((smtp-username))
+          auth_password: ((smtp-password))
+          require_tls: true
+        web:
+          external_url: https://alertmanager-((environment)).((domain))
+  - name: grafana
+    release: prometheus
+    consumes:
+      prometheus:
+        from: prometheus-primary
+    properties:
+      grafana:
+        server:
+          root_url: https://grafana-((environment)).((domain))
+        security:
+          allow_embedding: true
+          admin_password: ((grafana-admin-password))
+        session:
+          cookie_secure: "true"
+        auth:
+          generic_oauth:
+            name: Cloud.gov Operator Opslogin
+            enabled: true
+            allow_sign_up: true
+            auto_login: true
+            client_id: ((oauth-proxy-client-id))
+            client_secret: ((oauth-proxy-client-secret))
+            scopes: openid
+            auth_url: https://opslogin.fr.cloud.gov/oauth/authorize
+            token_url: https://opslogin.fr.cloud.gov/oauth/token
+            api_url: https://opslogin.fr.cloud.gov/userinfo
+            tls_client_ca: "((/toolingbosh/prometheus-production/lets_encrypt_ca.certificate))"
+            tls_client_cert: "((/toolingbosh/opsuaa/uaa_ssl.certificate))"
+            tls_client_key: "((/toolingbosh/opsuaa/uaa_ssl.private_key))"
+            tls_skip_verify_insecure: false
+          basic:
+            enabled: false
+        dashboards:
+          json:
+            enabled: true
+        prometheus:
+          use_external_url: false
+          dashboard_files:
+          - /var/vcap/jobs/cloudfoundry_dashboards-attic/cf_apps*.json
+          - /var/vcap/jobs/probe_dashboards/*.json
+          - /var/vcap/jobs/prometheus_dashboards/*.json
+  - name: cloudfoundry_dashboards-attic
+    release: prometheus
+  - name: probe_dashboards
+    release: prometheus
+  - name: prometheus_dashboards
+    release: prometheus
+  - name: prometheus2
+    release: prometheus
+    provides:
+      prometheus:
+         as: prometheus-primary
+    properties:
+      prometheus:
+        storage:
+          tsdb:
+            retention:
+              time: 365d
+        web:
+          external_url: https://prometheus-((environment)).((domain))
+        rule_files:
+        - /var/vcap/jobs/cloudfoundry_alerts-attic/prometheus_cf_exporter.alerts.yml
+        - /var/vcap/jobs/cloudfoundry_alerts-attic/prometheus_firehose_exporter.alerts.yml
+        - /var/vcap/jobs/prometheus_alerts/*.alerts.yml
+        scrape_configs:
+        - job_name: prometheus
+          static_configs:
+          - targets:
+            - localhost:9090
+        - job_name: pushgateway
+          honor_labels: true
+          static_configs:
+          - targets:
+            - localhost:9091
+        - job_name: cf
+          scrape_interval: 2m
+          scrape_timeout: 100s
+          static_configs:
+          - targets:
+            - localhost:9193
+        - job_name: firehose
+          scrape_interval: 2m
+          scrape_timeout: 100s
+          static_configs:
+          - targets:
+            - localhost:9186
+        - job_name: blackbox
+          metrics_path: /probe
+          params:
+            module:
+            - http
+          static_configs:
+          - targets: ((blackbox-targets))
+          relabel_configs:
+          - source_labels: [__address__]
+            regex: (.*)
+            target_label: __param_target
+            replacement: ${1}
+          - source_labels: [__param_target]
+            regex: (.*)
+            target_label: instance
+            replacement: ${1}
+          - source_labels: []
+            regex: .*
+            target_label: __address__
+            replacement: localhost:9115
+  - name: pushgateway
+    release: prometheus
+  - name: cf_exporter
+    release: prometheus
+    properties:
+      bpm:
+        enabled: true
+      cf_exporter:
+        cf:
+          api_url: https://api.((domain))
+          username: ((cf-exporter-service-account-username))
+          password: ((cf-exporter-service-account-password))
+          deployment_name: cf-production
+        metrics:
+          environment: production-((environment))
+  - name: firehose_exporter-attic
+    release: prometheus
+    properties:
+      firehose_exporter:
+        uaa:
+          url: https://login.((domain))
+          client_id: ((firehose-client-id))
+          client_secret: ((firehose-client-secret))
+        doppler:
+          subscription_id: prometheus
+        filter:
+          deployments: cf-production
+          events: ContainerMetric, CounterEvent, ValueMetric
+        metrics:
+          environment: production-((environment))
+        logging:
+          url: wss://doppler.((domain)):443
+          use_legacy_firehose: true
+  - name: blackbox_exporter
+    release: prometheus
+    properties:
+      blackbox_exporter:
+        config:
+          modules:
+            http:
+              prober: http
+              timeout: 5s
+              http:
+                preferred_ip_protocol: ip4
+  - name: cloudfoundry_alerts-attic
+    release: prometheus
+  - name: prometheus_alerts
+    release: prometheus
+  - name: probe_alerts
+    release: prometheus
+
+- name: nginx
+  instances: 1
+  vm_type: t3.large
+  persistent_disk_type: production-prometheus-small
+  vm_extensions:
+  - ((environment))-prometheus-lb
+  stemcell: default
+  azs: ((azs))
+  networks:
+  - name: production-monitoring
+  jobs:
+  - name: nginx
+    release: prometheus
+    consumes:
+      prometheus:
+        from: prometheus-primary
+    properties:
+      nginx:
+        prometheus:
+          http_port: 8082
+          server_name: prometheus-((environment)).((domain))
+          headers: &security-headers
+            X-Frame-Options: DENY
+            Strict-Transport-Security: "max-age=31536000; preload"
+        alertmanager:
+          http_port: 8082
+          server_name: alertmanager-((environment)).((domain))
+          headers: *security-headers
+        grafana:
+          http_port: 8082
+          server_name: grafana-((environment)).((domain))
+          headers: *security-headers
+  - name: oauth2-proxy
+    release: oauth2-proxy
+    properties:
+      address: http://0.0.0.0:8081
+      upstream: http://127.0.0.1:8082
+      provider: oidc
+      client_id: ((oauth-proxy-client-id))
+      client_secret: ((oauth-proxy-client-secret))
+      cookie_secret: ((oauth-proxy-cookie-secret))
+      oidc_issuer_url: ((oauth-proxy-oidc-issuer-url))
+      email_domain: gsa.gov
+      browser_xss_filter: True
+      content_type_nosniff: True
+  - name: secureproxy
+    properties:
+      secureproxy:
+        listen_port: 8080
+        proxy_port: 8081
+    release: secureproxy
+variables:
+- name: grafana-admin-password
+  type: password
+- name: oauth-proxy-cookie-secret
+  type: password

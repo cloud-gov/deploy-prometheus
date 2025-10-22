@@ -5,6 +5,7 @@ groups:
       - set-self
       - deploy-prometheus-staging
       - deploy-prometheus-production
+      - deploy-prometheus-workshop
   - name: checks
     jobs:
       - set-self
@@ -378,6 +379,51 @@ jobs:
           :x: FAILED to deploy prometheus on production
           <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
 
+  - name: deploy-prometheus-workshop
+    serial: true
+    serial_groups: [production]
+    plan:
+      - in_parallel:
+          - get: master-bosh-root-cert
+          - get: prometheus-config
+            passed: [deploy-prometheus-staging]
+            trigger: true
+          - get: common-production
+            trigger: true
+          - get: prometheus-release
+            passed: [deploy-prometheus-staging]
+            trigger: true
+          - get: oauth2-proxy-release
+            passed: [deploy-prometheus-staging]
+            trigger: true
+          - get: prometheus-stemcell-jammy
+            passed: [deploy-prometheus-staging]
+            trigger: true
+          - get: secureproxy-release
+            passed: [deploy-prometheus-staging]
+            trigger: true
+          - get: pipeline-tasks
+          - get: terraform-prod-yml
+      - put: prometheus-workshop-deployment
+        params:
+          <<: *deploy-params
+          manifest: prometheus-config/bosh/manifest-single.yml
+          ops_files:
+            - prometheus-config/bosh/workshop/rules.yml
+            - prometheus-config/bosh/workshop/alerting.yml
+            - prometheus-config/bosh/workshop/scrapers.yml
+            - prometheus-config/bosh/workshop/grafana-roles.yml
+          vars_files:
+            - prometheus-config/bosh/workshop/workshop-vars.yml
+            - terraform-prod-yml/state.yml
+    on_failure:
+      put: slack
+      params:
+        <<: *slack-failure-params
+        text: |
+          :x: FAILED to deploy GAP for Workshop on production
+          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+
 resources:
   - name: master-bosh-root-cert
     type: s3-iam
@@ -453,6 +499,15 @@ resources:
       client_secret: ((tooling_bosh_uaa_ci_client_secret))
       ca_cert: ((common_ca_cert))
       deployment: prometheus-staging
+
+  - name: prometheus-workshop-deployment
+    type: bosh-deployment
+    source:
+      target: ((prometheus-workshop-deployment-bosh-target))
+      client: ci
+      client_secret: ((tooling_bosh_uaa_ci_client_secret))
+      ca_cert: ((common_ca_cert))
+      deployment: prometheus-workshop
 
   - name: prometheus-production-deployment
     type: bosh-deployment

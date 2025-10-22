@@ -1,2 +1,3 @@
 * @cloud-gov/platform-ops
 
+/bosh/workshop/* @cloud-gov/devtools
