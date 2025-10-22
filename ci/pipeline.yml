@@ -414,7 +414,6 @@ jobs:
             - prometheus-config/bosh/workshop/grafana-roles.yml
           vars_files:
             - prometheus-config/bosh/workshop/workshop-vars.yml
-            - common-production/production-prometheus.yml
             - terraform-prod-yml/state.yml
     on_failure:
       put: slack
