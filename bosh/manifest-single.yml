@@ -54,7 +54,7 @@ instance_groups:
               #!/bin/bash
               OUTDIR=/usr/local/share/ca-certificates/postfix
               mkdir -p ${OUTDIR}
-              echo "((smtp-certificate))" > ${OUTDIR}/server.crt
+              echo "((/toolingbosh/postfix-production/postfix_ssl.ca))" > ${OUTDIR}/server.crt
               /usr/sbin/update-ca-certificates
               /var/vcap/bosh/bin/monit restart alertmanager
           minute: '*/30'
