@@ -210,7 +210,7 @@ instance_groups:
           subscription_id: prometheus
         filter:
           deployments: cf-production
-          events: ContainerMetric, CounterEvent, Http, ValueMetric
+          events: ContainerMetric, CounterEvent, ValueMetric
         metrics:
           environment: production-((environment))
         logging:
