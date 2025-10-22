@@ -287,9 +287,5 @@ instance_groups:
 variables:
 - name: grafana-admin-password
   type: password
-- name: oauth-proxy-client-secret
-  type: password
 - name: oauth-proxy-cookie-secret
   type: password
-- name: oauth-proxy-oicd-issuer-url
-  type: value
