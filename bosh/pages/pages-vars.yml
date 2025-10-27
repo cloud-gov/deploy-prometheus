@@ -1,0 +1,8 @@
+azs: [z1]
+environment: pages
+domain: fr.cloud.gov
+blackbox-targets:
+- https://pages.cloud.gov
+- https://pages-staging.cloud.gov
+- https://admin.pages.cloud.gov
+- https://admin.pages-staging.cloud.gov
