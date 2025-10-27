@@ -6,6 +6,7 @@ groups:
       - deploy-prometheus-staging
       - deploy-prometheus-production
       - deploy-prometheus-workshop
+      - deploy-prometheus-pages
   - name: checks
     jobs:
       - set-self
