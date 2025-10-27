@@ -14,12 +14,12 @@
     receiver: email-notifications
     group_by: ['alertname', 'cluster', 'service']
     routes:
-#    - continue: true
-#      group_wait: 10s
-#      receiver: email-notifications
     - continue: true
       group_wait: 10s
-      receiver: slack-notifications
+      receiver: email-notifications
+#    - continue: true
+#      group_wait: 10s
+#      receiver: slack-notifications
 
 #- type: replace
 #  path: /instance_groups/name=prometheus/jobs/name=alertmanager/properties/alertmanager/slack?
