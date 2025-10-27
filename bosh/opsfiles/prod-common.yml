@@ -10,7 +10,7 @@
       - '{__name__=~"bosh_.*"}'
       - '{__name__=~"node_.*"}'
       - '{__name__=~"nessus_.*"}'
-      - '{__name__=~"concourse.*"}'
+      - '{__name__=~"aide_.*"}'
     static_configs:
     - targets:
       - prometheus-tooling.service.cf.internal:9090
