@@ -290,3 +290,5 @@ variables:
   type: password
 - name: oauth-proxy-cookie-secret
   type: password
+  options:
+    length: 32
