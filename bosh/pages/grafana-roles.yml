@@ -1,0 +1,31 @@
+
+# Configure Grafana to use UAA authentication
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=grafana/properties/grafana/auth/generic_oauth/role_attribute_path?
+  value: contains(scope[*], 'grafana_platform.admin') && 'GrafanaAdmin' || contains(scope[*], 'grafana_pages.admin') && 'Editor' || contains(scope[*], 'grafana_platform.support') && 'Viewer' || contains(scope[*], 'grafana_pages.support') && 'Viewer'
+
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=grafana/properties/grafana/auth/generic_oauth/scopes?
+  value: openid profile email grafana_platform.admin grafana_platform.support grafana_pages.admin grafana_pages.support
+
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=grafana/properties/grafana/auth/generic_oauth/groups_attribute_path?
+  value: scope
+
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=grafana/properties/grafana/auth/generic_oauth/allow_assign_grafana_admin?
+  value: true
+
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=grafana/properties/grafana/auth/generic_oauth/id_token_attribute_name?
+  value: access_token
+
+# Enable users auto-assignment
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=grafana/properties/grafana/users?/auto_assign_org
+  value: true
+
+# There is only 1 org
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=grafana/properties/grafana/users?/auto_assign_org_id
+  value: 1

@@ -1,3 +1,4 @@
 * @cloud-gov/platform-ops
 
 /bosh/workshop/* @cloud-gov/devtools
+/bosh/pages/* @cloud-gov/pages-ops
