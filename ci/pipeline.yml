@@ -420,7 +420,7 @@ jobs:
           vars_files:
             - prometheus-config/bosh/workshop/workshop-vars.yml
             - terraform-prod-yml/state.yml
-            - terraform-prod-workshop/workshop_credentials.yaml
+            - terraform-prod-workshop/workshop_credentials.yml
     on_failure:
       put: slack
       params:
@@ -670,7 +670,7 @@ resources:
     source:
       region_name: ((prometheus-production-private-region))
       bucket: ((prometheus-workshop-bucket))
-      versioned_file: workshop_credentials.yaml
+      versioned_file: workshop_credentials.yml
 
   - name: general-task
     type: registry-image
