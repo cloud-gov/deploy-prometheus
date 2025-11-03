@@ -405,6 +405,9 @@ jobs:
             trigger: true
           - get: pipeline-tasks
           - get: terraform-prod-yml
+          - get: terraform-prod-workshop
+            tags: [iaas]
+            trigger: true
       - put: prometheus-workshop-deployment
         params:
           <<: *deploy-params
@@ -417,6 +420,7 @@ jobs:
           vars_files:
             - prometheus-config/bosh/workshop/workshop-vars.yml
             - terraform-prod-yml/state.yml
+            - terraform-prod-workshop/workshop_credentials.yml
     on_failure:
       put: slack
       params:
@@ -659,6 +663,14 @@ resources:
       region_name: ((prometheus-production-private-region))
       bucket: cloud-gov-varz
       versioned_file: other_iam_users.yml
+
+  - name: terraform-prod-workshop
+    type: s3-iam
+    tags: [iaas]
+    source:
+      region_name: ((prometheus-production-private-region))
+      bucket: ((prometheus-workshop-bucket))
+      versioned_file: workshop_credentials.yml
 
   - name: general-task
     type: registry-image
