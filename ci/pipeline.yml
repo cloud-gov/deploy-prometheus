@@ -407,6 +407,7 @@ jobs:
           - get: terraform-prod-yml
           - get: terraform-prod-workshop
       - put: prometheus-workshop-deployment
+        tags: [iaas]
         params:
           <<: *deploy-params
           manifest: prometheus-config/bosh/manifest-single.yml
