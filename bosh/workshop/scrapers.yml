@@ -10,3 +10,10 @@
 #        name: GitLab
 #      targets:
 #      - ((gitlab-target))
+
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=cf_exporter/properties/cf_exporter/cf/username
+  value: ((terraform_outputs.prometheus_username))
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=cf_exporter/properties/cf_exporter/cf/password
+  value: ((terraform_outputs.prometheus_password))
