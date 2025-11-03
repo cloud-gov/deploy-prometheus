@@ -406,6 +406,8 @@ jobs:
           - get: pipeline-tasks
           - get: terraform-prod-yml
           - get: terraform-prod-workshop
+            tags: [iaas]
+            trigger: true
       - put: prometheus-workshop-deployment
         params:
           <<: *deploy-params
