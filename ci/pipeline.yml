@@ -407,7 +407,6 @@ jobs:
           - get: terraform-prod-yml
           - get: terraform-prod-workshop
       - put: prometheus-workshop-deployment
-        tags: [iaas]
         params:
           <<: *deploy-params
           manifest: prometheus-config/bosh/manifest-single.yml
@@ -665,6 +664,7 @@ resources:
 
   - name: terraform-prod-workshop
     type: s3-iam
+    tags: [iaas]
     source:
       region_name: ((prometheus-production-private-region))
       bucket: ((prometheus-workshop-bucket))
