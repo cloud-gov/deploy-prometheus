@@ -30,10 +30,10 @@ jobs:
     plan:
       - get: prometheus-config
         trigger: true
-#      - set_pipeline: self
-#        file: prometheus-config/ci/pipeline.yml
-#        var_files:
-#          - prometheus-config/ci/config.yml
+      - set_pipeline: self
+        file: prometheus-config/ci/pipeline.yml
+        var_files:
+          - prometheus-config/ci/config.yml
 
 
   - name: aws-rds-storage-check
@@ -611,7 +611,7 @@ resources:
     type: git
     source:
       uri: ((cg-deploy-prometheus-git-url))
-      branch: aide #((cg-deploy-prometheus-git-branch))
+      branch: ((cg-deploy-prometheus-git-branch))
       commit_verification_keys: ((cloud-gov-pgp-keys))
 
   - name: prometheus-release-src
