@@ -478,6 +478,7 @@ jobs:
           :x: FAILED to deploy GAP for Pages on production
           <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
 
+  # There is a cron job for alertmanager that loads the postfix certs into the vm cert store.  The first time this runs on a new stemcell the aide check detects this as drift and needs to be reinitialized.
   - name: reset-aide-prometheus-staging
     serial: true
     serial_groups: [reset-aide]
@@ -485,9 +486,6 @@ jobs:
     - in_parallel:
       - get: general-task
       - get: prometheus-config
-#        trigger: true
-#        passed:
-#        - deploy-prometheus-staging
     - task: reset-aide
       image: general-task
       file: prometheus-config/ci/reset-aide.yml
@@ -498,7 +496,68 @@ jobs:
         BOSH_CLIENT_SECRET: ((tooling_bosh_uaa_ci_client_secret))
         BOSH_ENV_NAME: tooling
         BOSH_DEPLOYMENT_NAME: prometheus-staging
-        BOSH_INSTANCE_NAME: alertmanager    #small deployments use `prometheus`
+        BOSH_INSTANCE_NAME: alertmanager
+
+  # There is a cron job for alertmanager that loads the postfix certs into the vm cert store.  The first time this runs on a new stemcell the aide check detects this as drift and needs to be reinitialized.
+  - name: reset-aide-prometheus-production
+    serial: true
+    serial_groups: [reset-aide]
+    plan:
+    - in_parallel:
+      - get: general-task
+      - get: prometheus-config
+    - task: reset-aide
+      image: general-task
+      file: prometheus-config/ci/reset-aide.yml
+      params:
+        BOSH_CA_CERT: ((common_ca_cert))    
+        BOSH_ENVIRONMENT: ((prometheus-production-deployment-bosh-target))
+        BOSH_CLIENT: ci
+        BOSH_CLIENT_SECRET: ((tooling_bosh_uaa_ci_client_secret))
+        BOSH_ENV_NAME: tooling
+        BOSH_DEPLOYMENT_NAME: prometheus-production
+        BOSH_INSTANCE_NAME: alertmanager
+
+  # There is a cron job for alertmanager that loads the postfix certs into the vm cert store.  The first time this runs on a new stemcell the aide check detects this as drift and needs to be reinitialized.
+  - name: reset-aide-prometheus-pages
+    serial: true
+    serial_groups: [reset-aide]
+    plan:
+    - in_parallel:
+      - get: general-task
+      - get: prometheus-config
+    - task: reset-aide
+      image: general-task
+      file: prometheus-config/ci/reset-aide.yml
+      params:
+        BOSH_CA_CERT: ((common_ca_cert))    
+        BOSH_ENVIRONMENT: ((prometheus-pages-deployment-bosh-target))
+        BOSH_CLIENT: ci
+        BOSH_CLIENT_SECRET: ((tooling_bosh_uaa_ci_client_secret))
+        BOSH_ENV_NAME: tooling
+        BOSH_DEPLOYMENT_NAME: prometheus-pages
+        BOSH_INSTANCE_NAME: alertmanager
+
+  # There is a cron job for alertmanager that loads the postfix certs into the vm cert store.  The first time this runs on a new stemcell the aide check detects this as drift and needs to be reinitialized.
+  - name: reset-aide-prometheus-workshop
+    serial: true
+    serial_groups: [reset-aide]
+    plan:
+    - in_parallel:
+      - get: general-task
+      - get: prometheus-config
+    - task: reset-aide
+      image: general-task
+      file: prometheus-config/ci/reset-aide.yml
+      params:
+        BOSH_CA_CERT: ((common_ca_cert))    
+        BOSH_ENVIRONMENT: ((prometheus-workshop-deployment-bosh-target))
+        BOSH_CLIENT: ci
+        BOSH_CLIENT_SECRET: ((tooling_bosh_uaa_ci_client_secret))
+        BOSH_ENV_NAME: tooling
+        BOSH_DEPLOYMENT_NAME: prometheus-workshop
+        BOSH_INSTANCE_NAME: alertmanager
+
 
 resources:
   - name: master-bosh-root-cert
