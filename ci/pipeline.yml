@@ -18,16 +18,20 @@ groups:
       - concourse-has-auth-check
       - prometheus-down-check-staging
       - prometheus-down-check-production
+  - name: reset-aide
+    jobs:
+      - reset-aide-prometheus-staging
+
 
 jobs:
   - name: set-self
     plan:
       - get: prometheus-config
         trigger: true
-      - set_pipeline: self
-        file: prometheus-config/ci/pipeline.yml
-        var_files:
-          - prometheus-config/ci/config.yml
+#      - set_pipeline: self
+#        file: prometheus-config/ci/pipeline.yml
+#        var_files:
+#          - prometheus-config/ci/config.yml
 
 
   - name: aws-rds-storage-check
@@ -474,6 +478,27 @@ jobs:
           :x: FAILED to deploy GAP for Pages on production
           <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
 
+  - name: reset-aide-prometheus-staging
+    serial: true
+    serial_groups: [reset-aide]
+    plan:
+    - in_parallel:
+      - get: prometheus-config
+        trigger: true
+        passed:
+        - deploy-prometheus-staging
+    - task: reset-aide
+      image: general-task
+      file: prometheus-config/ci/reset-aide.yml
+      params:
+        BOSH_CA_CERT: ((common_ca_cert))    
+        BOSH_ENVIRONMENT: ((prometheus-staging-deployment-bosh-target))
+        BOSH_CLIENT: ci
+        BOSH_CLIENT_SECRET: ((tooling_bosh_uaa_ci_client_secret))
+        BOSH_ENV_NAME: tooling
+        BOSH_DEPLOYMENT_NAME: prometheus-staging
+        BOSH_INSTANCE_NAME: alertmanager    #small deployments use `prometheus`
+
 resources:
   - name: master-bosh-root-cert
     type: s3-iam
@@ -524,7 +549,7 @@ resources:
     type: git
     source:
       uri: ((cg-deploy-prometheus-git-url))
-      branch: ((cg-deploy-prometheus-git-branch))
+      branch: aide #((cg-deploy-prometheus-git-branch))
       commit_verification_keys: ((cloud-gov-pgp-keys))
 
   - name: prometheus-release-src

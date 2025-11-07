@@ -1,0 +1,18 @@
+---
+platform: linux
+
+inputs:
+  - { name: bosh-config }
+
+
+run:
+  path: prometheus-config/ci/reset-aide.sh
+
+params:
+  BOSH_CA_CERT:
+  BOSH_ENVIRONMENT:
+  BOSH_CLIENT:
+  BOSH_CLIENT_SECRET:
+  BOSH_ENV_NAME:
+  BOSH_DEPLOYMENT_NAME:
+  BOSH_INSTANCE_NAME:
