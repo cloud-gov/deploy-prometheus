@@ -484,9 +484,9 @@ jobs:
     plan:
     - in_parallel:
       - get: prometheus-config
-        trigger: true
-        passed:
-        - deploy-prometheus-staging
+#        trigger: true
+#        passed:
+#        - deploy-prometheus-staging
     - task: reset-aide
       image: general-task
       file: prometheus-config/ci/reset-aide.yml
