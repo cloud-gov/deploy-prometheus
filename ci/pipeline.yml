@@ -538,7 +538,7 @@ jobs:
         BOSH_CLIENT_SECRET: ((tooling_bosh_uaa_ci_client_secret))
         BOSH_ENV_NAME: tooling
         BOSH_DEPLOYMENT_NAME: prometheus-pages
-        BOSH_INSTANCE_NAME: alertmanager
+        BOSH_INSTANCE_NAME: prometheus
 
   # There is a cron job for alertmanager that loads the postfix certs into the vm cert store.  The first time this runs on a new stemcell the aide check detects this as drift and needs to be reinitialized.
   - name: reset-aide-prometheus-workshop
@@ -558,7 +558,7 @@ jobs:
         BOSH_CLIENT_SECRET: ((tooling_bosh_uaa_ci_client_secret))
         BOSH_ENV_NAME: tooling
         BOSH_DEPLOYMENT_NAME: prometheus-workshop
-        BOSH_INSTANCE_NAME: alertmanager
+        BOSH_INSTANCE_NAME: prometheus
 
 
 resources:
