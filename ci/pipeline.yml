@@ -483,6 +483,7 @@ jobs:
     serial_groups: [reset-aide]
     plan:
     - in_parallel:
+      - get: general-task
       - get: prometheus-config
 #        trigger: true
 #        passed:
