@@ -21,7 +21,9 @@ groups:
   - name: reset-aide
     jobs:
       - reset-aide-prometheus-staging
-
+      - reset-aide-prometheus-production
+      - reset-aide-prometheus-pages
+      - reset-aide-prometheus-workshop
 
 jobs:
   - name: set-self
