@@ -207,7 +207,7 @@ instance_groups:
           client_id: ((firehose-client-id))
           client_secret: ((firehose-client-secret))
         doppler:
-          subscription_id: prometheus
+          subscription_id: prometheus-((environment))
         filter:
           deployments: cf-production
           events: ContainerMetric, CounterEvent, ValueMetric
