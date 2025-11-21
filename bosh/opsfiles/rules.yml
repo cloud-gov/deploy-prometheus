@@ -431,7 +431,7 @@
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
   value:
-    name: opensearch
+    name: logsearch
     rules:
     - alert: logsearch_platform_disk_critical
       expr: bosh_job_persistent_disk_percent{bosh_deployment="logsearch-platform"} > 80
