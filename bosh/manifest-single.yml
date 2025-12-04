@@ -139,6 +139,7 @@ instance_groups:
           external_url: https://prometheus-((environment)).((domain))
         rule_files:
         - /var/vcap/jobs/cloudfoundry_alerts-attic/prometheus_cf_exporter.alerts.yml
+        - /var/vcap/jobs/cloudfoundry_dashboards-attic/cf_organization_summary.json
         - /var/vcap/jobs/cloudfoundry_alerts-attic/prometheus_firehose_exporter.alerts.yml
         - /var/vcap/jobs/prometheus_alerts/*.alerts.yml
         scrape_configs:
