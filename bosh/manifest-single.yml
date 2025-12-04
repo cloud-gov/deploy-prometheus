@@ -116,6 +116,7 @@ instance_groups:
           use_external_url: false
           dashboard_files:
           - /var/vcap/jobs/cloudfoundry_dashboards-attic/cf_apps*.json
+          - /var/vcap/jobs/cloudfoundry_dashboards-attic/cf_organization_summary.json
           - /var/vcap/jobs/probe_dashboards/*.json
           - /var/vcap/jobs/prometheus_dashboards/*.json
   - name: cloudfoundry_dashboards-attic
@@ -139,7 +140,6 @@ instance_groups:
           external_url: https://prometheus-((environment)).((domain))
         rule_files:
         - /var/vcap/jobs/cloudfoundry_alerts-attic/prometheus_cf_exporter.alerts.yml
-        - /var/vcap/jobs/cloudfoundry_dashboards-attic/cf_organization_summary.json
         - /var/vcap/jobs/cloudfoundry_alerts-attic/prometheus_firehose_exporter.alerts.yml
         - /var/vcap/jobs/prometheus_alerts/*.alerts.yml
         scrape_configs:
