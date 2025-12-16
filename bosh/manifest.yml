@@ -126,7 +126,7 @@ instance_groups:
           - targets:
             - localhost:9091
         - job_name: bosh
-          scrape_interval: 1m
+          scrape_interval: 2m
           scrape_timeout: 1m
           static_configs:
           - targets:
