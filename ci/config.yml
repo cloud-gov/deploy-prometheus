@@ -1,8 +1,8 @@
-cg-deploy-prometheus-git-branch: main
+cg-deploy-prometheus-git-branch: v31 #main
 cg-deploy-prometheus-git-url: https://github.com/cloud-gov/cg-deploy-prometheus.git
 
 prometheus-release-git-branch: master
-prometheus-release-version-filter: v30.*
+prometheus-release-version-filter: v31.*
 prometheus-release-git-url: https://github.com/bosh-prometheus/prometheus-boshrelease
 
 pipeline-tasks-git-branch: main
