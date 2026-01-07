@@ -1,6 +1,6 @@
 # AWS IAM MFA alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: aws-mfa
     rules:
@@ -23,7 +23,7 @@
 
 # AWS RDS storage alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: aws-rds-storage
     rules:
@@ -38,7 +38,7 @@
 
 # AWS IAM Stale Key alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: aws-iam-check-keys
     rules:
@@ -75,7 +75,7 @@
 
 # Logsearch backup alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: logsearch-backup
     rules:
@@ -119,7 +119,7 @@
 
 # Nessus alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: nessus
     rules:
@@ -150,7 +150,7 @@
 
 # UAA Client Audit alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: uaa-client-audit
     rules:
@@ -175,7 +175,7 @@
 
 # UAA Monitor Account Creation alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: uaa-monitor-account-creation
     rules:
@@ -191,7 +191,7 @@
 
 # Concourse alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: concourse
     rules:
@@ -215,7 +215,7 @@
 
 # Domain broker alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: domain-broker
     rules:
@@ -245,7 +245,7 @@
         description: "There are multiple certificates for the given service instance."
 
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: blackbox
     rules:
@@ -270,7 +270,7 @@
 
 # CF Core - non-customer stuff.
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: cg-operators
     rules:
@@ -294,7 +294,7 @@
 
 # Network watchers
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: networker
     rules:
@@ -314,7 +314,7 @@
         description: "The platform has seen a very large burst in incoming network traffic, please review this dashboard: https://grafana.fr.cloud.gov/d/cf_router/cf-router"
 
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: aide
     rules:
@@ -328,7 +328,7 @@
         description: Review AIDE report in logs-platform - if changes are expected, update AIDE database on alerting VM
 
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: alb-certificate-expiration
     rules:
@@ -343,7 +343,7 @@
         description: Find out why the certificate is not renewing. The service instance ID is probably in the certificate name.
 
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: cdn-certificate-expiration
     rules:
@@ -358,7 +358,7 @@
 
 # ClamAV Alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: clamav
     rules:
@@ -373,7 +373,7 @@
 
 # Snort Alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: snort
     rules:
@@ -388,7 +388,7 @@
 
 # HTTPS uptime alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: uptime-monitor
     rules:
@@ -404,7 +404,7 @@
 
 # opensearch disk alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: opensearch
     rules:
@@ -429,7 +429,7 @@
 
 # logsearch-platform disk alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: logsearch
     rules:

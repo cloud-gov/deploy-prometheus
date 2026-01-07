@@ -1,6 +1,6 @@
 ### Blackbox
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: blackbox
     rules:
@@ -25,7 +25,7 @@
 
 # HTTPS uptime alerts
 - type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus2/properties/prometheus/custom_rules?/-
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
   value:
     name: uptime-monitor
     rules:
