@@ -125,7 +125,7 @@ instance_groups:
     release: prometheus
   - name: prometheus_dashboards
     release: prometheus
-  - name: prometheus2
+  - name: prometheus
     release: prometheus
     provides:
       prometheus:

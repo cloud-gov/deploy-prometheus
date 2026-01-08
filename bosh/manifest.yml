@@ -94,7 +94,7 @@ instance_groups:
   env:
     persistent_disk_fs: xfs
   jobs:
-  - name: prometheus2
+  - name: prometheus
     release: prometheus
     properties:
       prometheus:
