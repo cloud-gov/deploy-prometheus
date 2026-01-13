@@ -331,6 +331,7 @@ jobs:
           ops_files:
             - prometheus-config/bosh/opsfiles/rules.yml
             - prometheus-config/bosh/opsfiles/staging.yml
+            - prometheus-config/bosh/opsfiles/cf_exporter.yml
           vars_files:
             - prometheus-config/bosh/varsfiles/staging.yml
             - common-staging/staging-prometheus.yml
@@ -374,6 +375,7 @@ jobs:
           ops_files:
             - prometheus-config/bosh/opsfiles/rules.yml
             - prometheus-config/bosh/opsfiles/production.yml
+            - prometheus-config/bosh/opsfiles/cf_exporter.yml
           vars_files:
             - prometheus-config/bosh/varsfiles/production.yml
             - common-production/production-prometheus.yml
@@ -423,6 +425,7 @@ jobs:
             - prometheus-config/bosh/workshop/alerting.yml
             - prometheus-config/bosh/workshop/scrapers.yml
             - prometheus-config/bosh/workshop/grafana-roles.yml
+            - prometheus-config/bosh/opsfiles/cf_exporter.yml
           vars_files:
             - prometheus-config/bosh/workshop/workshop-vars.yml
             - terraform-prod-yml/state.yml
@@ -469,6 +472,7 @@ jobs:
             - prometheus-config/bosh/pages/alerting.yml
             - prometheus-config/bosh/pages/scrapers.yml
             - prometheus-config/bosh/pages/grafana-roles.yml
+            - prometheus-config/bosh/opsfiles/cf_exporter.yml
           vars_files:
             - prometheus-config/bosh/pages/pages-vars.yml
             - terraform-prod-yml/state.yml

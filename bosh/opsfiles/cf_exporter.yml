@@ -1,0 +1,9 @@
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=cf_exporter/properties/cf_exporter?/bbs?
+  value: 
+    api_url: ((diego_bbs_api_url))
+    ca: ((diego_bbs_client.ca))
+    cert: ((diego_bbs_client.certificate))
+    key: ((diego_bbs_client.private_key))
+    skip_ssl_verify: true
+    timeout: 55
