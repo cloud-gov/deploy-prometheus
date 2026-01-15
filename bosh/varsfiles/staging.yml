@@ -14,3 +14,4 @@ blackbox-targets:
 - https://dashboard.fr-stage.cloud.gov
 - https://test-cdn.fr-stage.cloud.gov
 opsgenie-url: https://api.opsgenie.com
+diego_bbs_api_url: https://diego-api-bbs.fr-stage.cloud.gov:8889

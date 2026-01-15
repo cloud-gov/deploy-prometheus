@@ -4,3 +4,4 @@ domain: fr.cloud.gov
 gitlab-target: workshop.cloud.gov
 blackbox-targets:
 - https://workshop.cloud.gov
+diego_bbs_api_url: https://diego-api-bbs.fr.cloud.gov:8889

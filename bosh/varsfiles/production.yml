@@ -32,3 +32,4 @@ blackbox-targets:
 - https://admin.pages-staging.cloud.gov
 - https://admin.pages.cloud.gov
 - https://test-cdn.fr.cloud.gov
+diego_bbs_api_url: https://diego-api-bbs.fr.cloud.gov:8889
