@@ -451,3 +451,18 @@
       annotations:
         summary: "logsearch-platform node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 83% used"
         description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
+
+# cf_exporter watcher
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  value:
+    name: cf_exporter
+    rules:
+    - alert: NoRunningApplicationInstances
+      expr: (absent(cf_application_instances_running) == 1) or (sum(cf_application_instances_running) == 0)
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "The cf_exporter is not scraping BBS metrics"
+        description: "The metric cf_application_instances_running is completely absent, indicating no application instances are being monitored.  This likely means the cf_exporter on the prometheus vm has stopped collecting information.  'monit restart cf_exporter' on the 'prometheus' vm in this deployment to restart the CF and BBS exporter jobs.  This controls the number of 'running application instances' reported in CF dashboards."
