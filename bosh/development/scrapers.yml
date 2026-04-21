@@ -1,0 +1,6 @@
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=cf_exporter/properties/cf_exporter/cf/username
+  value: ((development_outputs.prometheus_username))
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=cf_exporter/properties/cf_exporter/cf/password
+  value: ((development_outputs.prometheus_password))

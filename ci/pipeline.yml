@@ -297,24 +297,81 @@ jobs:
           :x: Check for whether Prometheus is up in staging FAILED
           <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
 
-  - name: deploy-prometheus-staging
+#TODO: check me over 3 times please
+  - name: deploy-prometheus-development
     serial: true
+    serial_groups: [development]
     plan:
       - in_parallel:
           - get: master-bosh-root-cert
           - get: prometheus-config
             passed: [set-self]
             trigger: true
-          - get: common-staging
+          - get: common-development
             trigger: true
           - get: prometheus-release
-            trigger: true
-          - get: prometheus-release-src
             trigger: true
           - get: oauth2-proxy-release
             trigger: true
           - get: prometheus-stemcell-jammy
             trigger: true
+          - get: secureproxy-release
+            trigger: true
+          - get: pipeline-tasks
+# TODO: get the right TF files below
+          - get: terraform-dev-yml # ???
+          - get: terraform-dev # ???
+            tags: [iaas]
+            trigger: true
+      - put: prometheus-development-deployment
+        params:
+          manifest: prometheus-config/bosh/manifest-single.yml
+          releases:
+            - prometheus-release/*.*gz*
+            - oauth2-proxy-release/*.tgz
+            - secureproxy-release/*.tgz
+          stemcells:
+            - prometheus-stemcell-jammy/*.tgz
+          ops_files:
+            - prometheus-config/bosh/development/rules.yml
+            - prometheus-config/bosh/development/alerting.yml
+            - prometheus-config/bosh/development/scrapers.yml
+            - prometheus-config/bosh/development/grafana-roles.yml
+            - prometheus-config/bosh/opsfiles/cf_exporter.yml
+          vars_files:
+            - prometheus-config/bosh/varsfiles/development.yml
+            - common-development/development-prometheus.yml
+            - terraform-staging-yml/state.yml
+    on_failure:
+      put: slack
+      params:
+        <<: *slack-failure-params
+        text: |
+          :x: FAILED to deploy GAP for development
+          <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+  
+  - name: deploy-prometheus-staging
+    serial: true
+    plan:
+      - in_parallel:
+          - get: master-bosh-root-cert
+          - get: prometheus-config
+            passed: deploy-prometheus-development
+            trigger: true
+          - get: common-staging
+            trigger: true
+          - get: prometheus-release
+            trigger: true
+            passed: deploy-prometheus-development
+          - get: prometheus-release-src
+            trigger: true
+            passed: deploy-prometheus-development
+          - get: oauth2-proxy-release
+            trigger: true
+            passed: deploy-prometheus-development
+          - get: prometheus-stemcell-jammy
+            trigger: true
+            passed: deploy-prometheus-development
           - get: secureproxy-release
             trigger: true
           - get: pipeline-tasks
@@ -574,6 +631,14 @@ resources:
       region_name: ((aws-region))
       versioned_file: master-bosh.crt
 
+  - name: common-development
+    type: s3-iam
+    source:
+# TODO: make these credhub varz & file in s3
+      region_name: ((prometheus-development-private-region))
+      bucket: ((prometheus-development-private-bucket))
+      versioned_file: development-prometheus.yml
+
   - name: common-staging
     type: s3-iam
     source:
@@ -720,6 +785,14 @@ resources:
       from: cloud-gov-no-reply@cloud.gov
       to:
         - "cloud-gov-notifications@gsa.gov"
+
+# TODO: make credhub var & file in s3
+  - name: terraform-development-yml
+    type: s3-iam
+    source:
+      region_name: ((prometheus-development-private-region))
+      bucket: terraform-state
+      versioned_file: tooling/state.yml
 
   - name: terraform-staging-yml
     type: s3-iam

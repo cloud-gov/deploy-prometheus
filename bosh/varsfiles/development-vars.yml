@@ -1,0 +1,5 @@
+azs: [z1]
+environment: development
+domain: dev.us-gov-west-1.aws-us-gov.cloud.gov
+blackbox-targets:
+- https://login.dev.us-gov-west-1.aws-us-gov.cloud.gov
