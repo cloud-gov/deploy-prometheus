@@ -241,6 +241,8 @@ instance_groups:
   persistent_disk_type: production-prometheus-small
   vm_extensions:
   - ((environment))-prometheus-lb
+  - 10GB_ephemeral_disk
+  - 10GB_root_disk
   stemcell: default
   azs: ((azs))
   networks:
