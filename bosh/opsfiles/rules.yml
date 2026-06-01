@@ -394,7 +394,7 @@
     rules:
     - alert: UptimeMonitorFailed
       expr: probe_http_status_code{job="blackbox"} != 200
-      for: 5m
+      for: 30s
       labels:
         service: uptime
         severity: warning
