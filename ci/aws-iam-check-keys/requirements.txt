@@ -4,10 +4,6 @@
 #
 #    pip-compile --output-file=-
 #
---trusted-host pypi.python.org
---trusted-host pypi.org
---trusted-host files.pythonhosted.org
-
 boto3==1.39.3
     # via -r requirements.in
 botocore==1.39.3
@@ -46,7 +42,7 @@ s3transfer==0.13.0
     # via boto3
 six==1.17.0
     # via python-dateutil
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   botocore
     #   requests
