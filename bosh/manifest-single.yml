@@ -36,6 +36,8 @@ instance_groups:
   instances: 1
   vm_type: m6i.large
   persistent_disk_type: ((environment))-prometheus-large
+  vm_extensions:
+  - 10GB_ephemeral_disk
   stemcell: default
   azs: ((azs))
   networks:
