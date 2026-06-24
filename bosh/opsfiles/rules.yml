@@ -427,6 +427,31 @@
         summary: "opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 88% used"
         description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
 
+# platform opensearch disk alerts
+- type: replace
+  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+  value:
+    name: platform-opensearch
+    rules:
+    - alert: platform_opensearch_disk_critical
+      expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-platform"} > 82
+      for: 30m
+      labels:
+        service: platform-opensearch
+        severity: critical
+      annotations:
+        summary: "platform opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 85% used"
+        description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
+    - alert: platform_opensearch_disk_warning
+      expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-platform"} > 85
+      for: 5m
+      labels:
+        service: platform-opensearch
+        severity: warning
+      annotations:
+        summary: "platform opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 88% used"
+        description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
+
 # logsearch-platform disk alerts
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
