@@ -72,53 +72,6 @@
         summary: IAM key for {$labels.user} is now expired
         description: "For Platform or Applications if the key is expired\n"
 
-
-# OpenSearch backup alerts
-# TEMPORARILY DISABLED during the logsearch/elasticsearch -> opensearch migration.
-# Re-enable once the opensearch_* metrics are confirmed to be emitted.
-# - type: replace
-#   path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
-#   value:
-#     name: opensearch-backup
-#     rules:
-#     - alert: OpensearchBackupFileSize
-#       expr: opensearch_backup_file_size < ((opensearch_file_size_threshold))
-#       for: 30m
-#       labels:
-#         service: opensearch-backup
-#         severity: warning
-#       annotations:
-#         summary: OpenSearch backup file size on environment {{$labels.environment}} is too low
-#         description: OpenSearch backup file size on environment {{$labels.environment}} has been too low for 30m.  This indicates that the log archival process to s3 may be broken.  See the archiver instances in the opensearch deployment.
-#     - alert: OpensearchBackupLogCount
-#       expr: opensearch_backup_log_count < ((opensearch_log_count_threshold))
-#       for: 30m
-#       labels:
-#         service: opensearch-backup
-#         severity: warning
-#       annotations:
-#         summary: OpenSearch log count on environment {{$labels.environment}} is too low
-#         description: OpenSearch log count on environment {{$labels.environment}} has been too low for 30m.  This indicates that we may have a logging outage.  See the ingestor processes on the ingestor instances in the opensearch deployment.  They may need restarting.
-#     - alert: OpensearchBackupRatio
-#       expr: opensearch_backup_file_size / opensearch_backup_log_count < ((opensearch_ratio_threshold))
-#       for: 30m
-#       labels:
-#         service: opensearch-backup
-#         severity: warning
-#       annotations:
-#         summary: OpenSearch archive to index ratio on environment {{$labels.environment}} is too low
-#         description: OpenSearch archive to index ratio on environment {{$labels.environment}} has been too low for 30m.  The S3 archival process or the OpenSearch ingest process may not be working.  See the archival and ingestor instances in the opensearch deployment in case any of their components need restarting.
-#     - alert: OpensearchBackupExpired
-#       # TODO: get the backup checks running on better time, then change this back to 60 * 30
-#       expr: time() - max(opensearch_backup_timestamp) > 60 * 45
-#       for: 5m
-#       labels:
-#         service: opensearch-backup
-#         severity: warning
-#       annotations:
-#         summary: OpenSearch timestamp on environment {{$labels.environment}} is too old
-#         description: OpenSearch timestamp on environment {{$labels.environment}} has been too old for 5m.  This indicates that the opensearch backup checks have not run recently, so we do not have good data to alert on.
-
 # Nessus alerts
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-

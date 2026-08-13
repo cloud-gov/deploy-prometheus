@@ -1,11 +1,6 @@
 azs: [z1]
 environment: production
 domain: fr.cloud.gov
-# TEMPORARILY DISABLED during the logsearch/elasticsearch -> opensearch migration.
-# Re-enable once confimed for opensearch
-opensearch_file_size_threshold: 3000000
-opensearch_log_count_threshold: 30000
-opensearch_ratio_threshold: 50
 blackbox-targets:
 - https://dashboard.fr.cloud.gov
 - https://login.fr.cloud.gov
