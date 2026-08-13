@@ -112,7 +112,8 @@ instance_groups:
         - /var/vcap/jobs/cloudfoundry_alerts-attic/cf_routers.alerts.yml
         - /var/vcap/jobs/cloudfoundry_alerts-attic/prometheus_cf_exporter.alerts.yml
         - /var/vcap/jobs/cloudfoundry_alerts-attic/prometheus_firehose_exporter.alerts.yml
-        - /var/vcap/jobs/elasticsearch_alerts/*.alerts.yml
+        # TEMPORARILY DISABLED during the logsearch/elasticsearch -> opensearch migration.
+        # - /var/vcap/jobs/elasticsearch_alerts/*.alerts.yml
         - /var/vcap/jobs/concourse_alerts/*.alerts.yml
         - /var/vcap/jobs/prometheus_alerts/*.alerts.yml
         scrape_configs:
@@ -143,18 +144,21 @@ instance_groups:
           static_configs:
           - targets:
             - localhost:9186
-        - job_name: elasticsearch_exporter
-          file_sd_configs:
-          - files:
-            - /var/vcap/store/bosh_exporter/bosh_target_groups.json
-          relabel_configs:
-          - source_labels: [__meta_bosh_job_process_name]
-            regex: elasticsearch_exporter
-            action: keep
-          - source_labels: [__address__]
-            regex: "(.*)"
-            target_label: __address__
-            replacement: "${1}:9114"
+        # NOTE: The prometheus BOSH release only ships an elasticsearch_exporter
+        # job (no opensearch_* equivalent). Will have to test if works and make the change if not
+        # TEMPORARILY DISABLED during the logsearch/elasticsearch -> opensearch migration.
+        # - job_name: elasticsearch_exporter
+        #   file_sd_configs:
+        #   - files:
+        #     - /var/vcap/store/bosh_exporter/bosh_target_groups.json
+        #   relabel_configs:
+        #   - source_labels: [__meta_bosh_job_process_name]
+        #     regex: elasticsearch_exporter
+        #     action: keep
+        #   - source_labels: [__address__]
+        #     regex: "(.*)"
+        #     target_label: __address__
+        #     replacement: "${1}:9114"
         - job_name: blackbox
           metrics_path: /probe
           params:
@@ -281,8 +285,9 @@ instance_groups:
 
   - name: cloudfoundry_alerts-attic
     release: prometheus
-  - name: elasticsearch_alerts
-    release: prometheus
+  # TEMPORARILY DISABLED during the logsearch/elasticsearch -> opensearch migration.
+  # - name: elasticsearch_alerts
+  #   release: prometheus
   - name: concourse_alerts
     release: prometheus
   - name: prometheus_alerts
@@ -336,7 +341,8 @@ instance_groups:
           - /var/vcap/jobs/system_dashboards/*.json
           - /var/vcap/jobs/cloudfoundry_dashboards-attic/*.json
           - /var/vcap/jobs/probe_dashboards/*.json
-          - /var/vcap/jobs/elasticsearch_dashboards/*.json
+          # TEMPORARILY DISABLED during the logsearch/elasticsearch -> opensearch migration.
+          # - /var/vcap/jobs/elasticsearch_dashboards/*.json
           - /var/vcap/jobs/concourse_dashboards/*.json
           - /var/vcap/jobs/prometheus_dashboards/*.json
   - name: bosh_dashboards
@@ -347,8 +353,9 @@ instance_groups:
     release: prometheus
   - name: probe_dashboards
     release: prometheus
-  - name: elasticsearch_dashboards
-    release: prometheus
+  # TEMPORARILY DISABLED during the logsearch/elasticsearch -> opensearch migration.
+  # - name: elasticsearch_dashboards
+  #   release: prometheus
   - name: concourse_dashboards
     release: prometheus
   - name: prometheus_dashboards

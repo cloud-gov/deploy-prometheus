@@ -73,49 +73,51 @@
         description: "For Platform or Applications if the key is expired\n"
 
 
-# Logsearch backup alerts
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
-  value:
-    name: logsearch-backup
-    rules:
-    - alert: LogsearchBackupFileSize
-      expr: logsearch_backup_file_size < ((logsearch_file_size_threshold))
-      for: 30m
-      labels:
-        service: logsearch-backup
-        severity: warning
-      annotations:
-        summary: Logsearch backup file size on environment {{$labels.environment}} is too low
-        description: Logsearch backup file size on environment {{$labels.environment}} has been too low for 30m.  This indicates that the log archival process to s3 may be broken.  See the archiver instances in the logsearch deployment.
-    - alert: LogsearchBackupLogCount
-      expr: logsearch_backup_log_count < ((logsearch_log_count_threshold))
-      for: 30m
-      labels:
-        service: logsearch-backup
-        severity: warning
-      annotations:
-        summary: Logsearch log count on environment {{$labels.environment}} is too low
-        description: Logsearch log count on environment {{$labels.environment}} has been too low for 30m.  This indicates that we may have a logging outage.  See the ingestor processes on the ingestor instances in the logsearch deployment.  They may need restarting.
-    - alert: LogsearchBackupRatio
-      expr: logsearch_backup_file_size / logsearch_backup_log_count < ((logsearch_ratio_threshold))
-      for: 30m
-      labels:
-        service: logsearch-backup
-        severity: warning
-      annotations:
-        summary: Logsearch archive to index ratio on environment {{$labels.environment}} is too low
-        description: Logsearch archive to index ratio on environment {{$labels.environment}} has been too low for 30m.  The S3 archival process or the ES ingest process may not be working.  See the archival and ingestor instances in the logsearch deployment in case any of their components need restarting.
-    - alert: LogsearchBackupExpired
-      # TODO: get the backup checks running on better time, then change this back to 60 * 30
-      expr: time() - max(logsearch_backup_timestamp) > 60 * 45
-      for: 5m
-      labels:
-        service: logsearch-backup
-        severity: warning
-      annotations:
-        summary: Logsearch timestamp on environment {{$labels.environment}} is too old
-        description: Logsearch timestamp on environment {{$labels.environment}} has been too old for 5m.  This indicates that the logsearch checks in https://github.com/cloud-gov/cg-deploy-logsearch/blob/main/ci/check-backup.sh have not run recently, so we do not have good data to alert on.
+# OpenSearch backup alerts
+# TEMPORARILY DISABLED during the logsearch/elasticsearch -> opensearch migration.
+# Re-enable once the opensearch_* metrics are confirmed to be emitted.
+# - type: replace
+#   path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+#   value:
+#     name: opensearch-backup
+#     rules:
+#     - alert: OpensearchBackupFileSize
+#       expr: opensearch_backup_file_size < ((opensearch_file_size_threshold))
+#       for: 30m
+#       labels:
+#         service: opensearch-backup
+#         severity: warning
+#       annotations:
+#         summary: OpenSearch backup file size on environment {{$labels.environment}} is too low
+#         description: OpenSearch backup file size on environment {{$labels.environment}} has been too low for 30m.  This indicates that the log archival process to s3 may be broken.  See the archiver instances in the opensearch deployment.
+#     - alert: OpensearchBackupLogCount
+#       expr: opensearch_backup_log_count < ((opensearch_log_count_threshold))
+#       for: 30m
+#       labels:
+#         service: opensearch-backup
+#         severity: warning
+#       annotations:
+#         summary: OpenSearch log count on environment {{$labels.environment}} is too low
+#         description: OpenSearch log count on environment {{$labels.environment}} has been too low for 30m.  This indicates that we may have a logging outage.  See the ingestor processes on the ingestor instances in the opensearch deployment.  They may need restarting.
+#     - alert: OpensearchBackupRatio
+#       expr: opensearch_backup_file_size / opensearch_backup_log_count < ((opensearch_ratio_threshold))
+#       for: 30m
+#       labels:
+#         service: opensearch-backup
+#         severity: warning
+#       annotations:
+#         summary: OpenSearch archive to index ratio on environment {{$labels.environment}} is too low
+#         description: OpenSearch archive to index ratio on environment {{$labels.environment}} has been too low for 30m.  The S3 archival process or the OpenSearch ingest process may not be working.  See the archival and ingestor instances in the opensearch deployment in case any of their components need restarting.
+#     - alert: OpensearchBackupExpired
+#       # TODO: get the backup checks running on better time, then change this back to 60 * 30
+#       expr: time() - max(opensearch_backup_timestamp) > 60 * 45
+#       for: 5m
+#       labels:
+#         service: opensearch-backup
+#         severity: warning
+#       annotations:
+#         summary: OpenSearch timestamp on environment {{$labels.environment}} is too old
+#         description: OpenSearch timestamp on environment {{$labels.environment}} has been too old for 5m.  This indicates that the opensearch backup checks have not run recently, so we do not have good data to alert on.
 
 # Nessus alerts
 - type: replace
@@ -403,79 +405,58 @@
         description: Uptime check failed (non-200 response) for {{$labels.instance}} in {{$labels.environment}}/{{$labels.deployment}}. Runbook - https://github.com/cloud-gov/internal-docs/blob/main/docs/runbooks/Metrics-and-Alerting/uptime-monitoring.md#uptimemonitorfailed
 
 # opensearch disk alerts
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
-  value:
-    name: opensearch
-    rules:
-    - alert: opensearch_disk_critical
-      expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-opensearch"} > 82
-      for: 30m
-      labels:
-        service: opensearch
-        severity: critical
-      annotations:
-        summary: "opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 85% used"
-        description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
-    - alert: opensearch_disk_warning
-      expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-opensearch"} > 85
-      for: 5m
-      labels:
-        service: opensearch
-        severity: warning
-      annotations:
-        summary: "opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 88% used"
-        description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
+# TEMPORARILY DISABLED during the logsearch/elasticsearch -> opensearch migration.
+# Re-enable once the logs-opensearch deployment name and metrics are confirmed.
+# - type: replace
+#   path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+#   value:
+#     name: opensearch
+#     rules:
+#     - alert: opensearch_disk_critical
+#       expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-opensearch"} > 82
+#       for: 30m
+#       labels:
+#         service: opensearch
+#         severity: critical
+#       annotations:
+#         summary: "opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 85% used"
+#         description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
+#     - alert: opensearch_disk_warning
+#       expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-opensearch"} > 85
+#       for: 5m
+#       labels:
+#         service: opensearch
+#         severity: warning
+#       annotations:
+#         summary: "opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 88% used"
+#         description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
 
 # platform opensearch disk alerts
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
-  value:
-    name: platform-opensearch
-    rules:
-    - alert: platform_opensearch_disk_critical
-      expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-platform"} > 82
-      for: 30m
-      labels:
-        service: platform-opensearch
-        severity: critical
-      annotations:
-        summary: "platform opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 85% used"
-        description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
-    - alert: platform_opensearch_disk_warning
-      expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-platform"} > 85
-      for: 5m
-      labels:
-        service: platform-opensearch
-        severity: warning
-      annotations:
-        summary: "platform opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 88% used"
-        description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
-
-# logsearch-platform disk alerts
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
-  value:
-    name: logsearch
-    rules:
-    - alert: logsearch_platform_disk_critical
-      expr: bosh_job_persistent_disk_percent{bosh_deployment="logsearch-platform"} > 80
-      for: 30m
-      labels:
-        service: logsearch-platform
-        severity: critical
-      annotations:
-        summary: "logsearch-platform node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 80% used"
-        description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
-    - alert: logsearch_platform_disk_warning
-      expr: bosh_job_persistent_disk_percent{bosh_deployment="logsearch-platform"} > 83
-      for: 5m
-      labels:
-        service: logsearch-platform
-        severity: warning
-      annotations:
-        summary: "logsearch-platform node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 83% used"
-        description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
+# TEMPORARILY DISABLED during the logsearch/elasticsearch -> opensearch migration.
+# Re-enable once the logs-platform deployment name and metrics are confirmed.
+# - type: replace
+#   path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
+#   value:
+#     name: platform-opensearch
+#     rules:
+#     - alert: platform_opensearch_disk_critical
+#       expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-platform"} > 82
+#       for: 30m
+#       labels:
+#         service: platform-opensearch
+#         severity: critical
+#       annotations:
+#         summary: "platform opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 85% used"
+#         description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
+#     - alert: platform_opensearch_disk_warning
+#       expr: bosh_job_persistent_disk_percent{bosh_deployment="logs-platform"} > 85
+#       for: 5m
+#       labels:
+#         service: platform-opensearch
+#         severity: warning
+#       annotations:
+#         summary: "platform opensearch node {{$labels.bosh_job_name}}/{{$labels.bosh_job_id}} index {{$labels.bosh_job_index}} disk is over 88% used"
+#         description: Review deployment and indexes and see if index and/or scaling operations need to take place for growth
 
 # cf_exporter watcher
 - type: replace
