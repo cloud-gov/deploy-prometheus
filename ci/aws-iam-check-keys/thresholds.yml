@@ -18,3 +18,8 @@
   warn: 300
   violation: 360
   alert: False
+- account_type: "Broker"
+  is_wildcard: True
+  warn: 300
+  violation: 360
+  alert: False
