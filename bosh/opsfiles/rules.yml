@@ -72,37 +72,6 @@
         summary: IAM key for {$labels.user} is now expired
         description: "For Platform or Applications if the key is expired\n"
 
-# Nessus alerts
-- type: replace
-  path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
-  value:
-    name: nessus
-    rules:
-    - alert: NessusManagerLicenseInvalid
-      expr: nessus_manager_license_invalid != 0
-      labels:
-        service: nessus-manager
-        severity: critical
-      annotations:
-        summary: Nessus Manager license is invalid
-        description: https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/
-    - alert: NessusPluginsOutdated
-      expr: nessus_manager_plugin_age > 7
-      labels:
-        service: nessus-manager
-        severity: critical
-      annotations:
-        summary: Nessus Manager plugins are more than 7 days old
-        description: https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/
-    - alert: NessusScandeleteFailing
-      expr: time() - nessus_manager_scandelete_time > 172800
-      labels:
-        service: nessus-manager
-        severity: warning
-      annotations:
-        summary: Nessus Manager has not been able to delete scans in 2 days
-        description: https://cloud.gov/docs/ops/runbook/troubleshooting-nessus/
-
 # UAA Client Audit alerts
 - type: replace
   path: /instance_groups/name=prometheus/jobs/name=prometheus/properties/prometheus/custom_rules?/-
