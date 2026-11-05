@@ -19,8 +19,8 @@ run:
     cd prometheus-config/ci/aws-rds-storage
     # note: this installs into system python. This is ok in an ephemeral container
     # but do not copy this locally!
-    retry python3 -m pip install --retries 3 --timeout 60 -r requirements.txt
-    python3 rds_disk_space.py
+    retry python -m pip install --retries 3 --timeout 60 -r requirements.txt
+    python rds_disk_space.py
 
 params:
   AWS_DEFAULT_REGION:
