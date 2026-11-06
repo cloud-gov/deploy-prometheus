@@ -497,10 +497,10 @@ jobs:
       image: general-task
       file: prometheus-config/ci/reset-aide.yml
       params:
-        BOSH_CA_CERT: ((common_ca_cert))    
-        BOSH_ENVIRONMENT: ((prometheus-staging-deployment-bosh-target))
-        BOSH_CLIENT: ci
-        BOSH_CLIENT_SECRET: ((tooling_bosh_uaa_ci_client_secret))
+        BOSH_CA_CERT: ((bosh-director-info.tooling.ca_cert))
+        BOSH_CLIENT: ((bosh-director-info.tooling.client))
+        BOSH_CLIENT_SECRET: ((bosh-director-info.tooling.client_secret))
+        BOSH_ENVIRONMENT: ((bosh-director-info.tooling.environment))
         BOSH_ENV_NAME: tooling
         BOSH_DEPLOYMENT_NAME: prometheus-staging
         BOSH_INSTANCE_NAME: alertmanager
@@ -517,10 +517,10 @@ jobs:
       image: general-task
       file: prometheus-config/ci/reset-aide.yml
       params:
-        BOSH_CA_CERT: ((common_ca_cert))    
-        BOSH_ENVIRONMENT: ((prometheus-production-deployment-bosh-target))
-        BOSH_CLIENT: ci
-        BOSH_CLIENT_SECRET: ((tooling_bosh_uaa_ci_client_secret))
+        BOSH_CA_CERT: ((bosh-director-info.tooling.ca_cert))
+        BOSH_CLIENT: ((bosh-director-info.tooling.client))
+        BOSH_CLIENT_SECRET: ((bosh-director-info.tooling.client_secret))
+        BOSH_ENVIRONMENT: ((bosh-director-info.tooling.environment))
         BOSH_ENV_NAME: tooling
         BOSH_DEPLOYMENT_NAME: prometheus-production
         BOSH_INSTANCE_NAME: alertmanager
@@ -537,10 +537,10 @@ jobs:
       image: general-task
       file: prometheus-config/ci/reset-aide.yml
       params:
-        BOSH_CA_CERT: ((common_ca_cert))    
-        BOSH_ENVIRONMENT: ((prometheus-pages-deployment-bosh-target))
-        BOSH_CLIENT: ci
-        BOSH_CLIENT_SECRET: ((tooling_bosh_uaa_ci_client_secret))
+        BOSH_CA_CERT: ((bosh-director-info.tooling.ca_cert))
+        BOSH_CLIENT: ((bosh-director-info.tooling.client))
+        BOSH_CLIENT_SECRET: ((bosh-director-info.tooling.client_secret))
+        BOSH_ENVIRONMENT: ((bosh-director-info.tooling.environment))
         BOSH_ENV_NAME: tooling
         BOSH_DEPLOYMENT_NAME: prometheus-pages
         BOSH_INSTANCE_NAME: prometheus
@@ -557,10 +557,10 @@ jobs:
       image: general-task
       file: prometheus-config/ci/reset-aide.yml
       params:
-        BOSH_CA_CERT: ((common_ca_cert))    
-        BOSH_ENVIRONMENT: ((prometheus-workshop-deployment-bosh-target))
-        BOSH_CLIENT: ci
-        BOSH_CLIENT_SECRET: ((tooling_bosh_uaa_ci_client_secret))
+        BOSH_CA_CERT: ((bosh-director-info.tooling.ca_cert))
+        BOSH_CLIENT: ((bosh-director-info.tooling.client))
+        BOSH_CLIENT_SECRET: ((bosh-director-info.tooling.client_secret))
+        BOSH_ENVIRONMENT: ((bosh-director-info.tooling.environment))
         BOSH_ENV_NAME: tooling
         BOSH_DEPLOYMENT_NAME: prometheus-workshop
         BOSH_INSTANCE_NAME: prometheus
@@ -636,37 +636,37 @@ resources:
   - name: prometheus-staging-deployment
     type: bosh-deployment
     source:
-      target: ((prometheus-staging-deployment-bosh-target))
-      client: ci
-      client_secret: ((tooling_bosh_uaa_ci_client_secret))
-      ca_cert: ((common_ca_cert))
+      ca_cert: ((bosh-director-info.tooling.ca_cert))
+      client: ((bosh-director-info.tooling.client))
+      client_secret: ((bosh-director-info.tooling.client_secret))
+      target: ((bosh-director-info.tooling.environment))
       deployment: prometheus-staging
 
   - name: prometheus-workshop-deployment
     type: bosh-deployment
     source:
-      target: ((prometheus-workshop-deployment-bosh-target))
-      client: ci
-      client_secret: ((tooling_bosh_uaa_ci_client_secret))
-      ca_cert: ((common_ca_cert))
+      ca_cert: ((bosh-director-info.tooling.ca_cert))
+      client: ((bosh-director-info.tooling.client))
+      client_secret: ((bosh-director-info.tooling.client_secret))
+      target: ((bosh-director-info.tooling.environment))
       deployment: prometheus-workshop
 
   - name: prometheus-pages-deployment
     type: bosh-deployment
     source:
-      target: ((prometheus-pages-deployment-bosh-target))
-      client: ci
-      client_secret: ((tooling_bosh_uaa_ci_client_secret))
-      ca_cert: ((common_ca_cert))
+      ca_cert: ((bosh-director-info.tooling.ca_cert))
+      client: ((bosh-director-info.tooling.client))
+      client_secret: ((bosh-director-info.tooling.client_secret))
+      target: ((bosh-director-info.tooling.environment))
       deployment: prometheus-pages
 
   - name: prometheus-production-deployment
     type: bosh-deployment
     source:
-      target: ((prometheus-production-deployment-bosh-target))
-      client: ci
-      client_secret: ((tooling_bosh_uaa_ci_client_secret))
-      ca_cert: ((common_ca_cert))
+      ca_cert: ((bosh-director-info.tooling.ca_cert))
+      client: ((bosh-director-info.tooling.client))
+      client_secret: ((bosh-director-info.tooling.client_secret))
+      target: ((bosh-director-info.tooling.environment))
       deployment: prometheus-production
 
   - name: pipeline-tasks
