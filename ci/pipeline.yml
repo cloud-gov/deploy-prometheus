@@ -301,7 +301,6 @@ jobs:
     serial: true
     plan:
       - in_parallel:
-          - get: master-bosh-root-cert
           - get: prometheus-config
             passed: [set-self]
             trigger: true
@@ -321,7 +320,7 @@ jobs:
           - get: terraform-staging-yml
       - put: prometheus-staging-deployment
         params: &deploy-params
-          cert: master-bosh-root-cert/master-bosh.crt
+          cert: ((bosh-director-info.tooling.ca_cert))
           manifest: prometheus-config/bosh/manifest.yml
           releases:
             - prometheus-release/*.*gz*
@@ -350,7 +349,6 @@ jobs:
     serial_groups: [production]
     plan:
       - in_parallel:
-          - get: master-bosh-root-cert
           - get: prometheus-config
             passed: [deploy-prometheus-staging]
             trigger: true
@@ -394,7 +392,6 @@ jobs:
     serial_groups: [production]
     plan:
       - in_parallel:
-          - get: master-bosh-root-cert
           - get: prometheus-config
             passed: [deploy-prometheus-staging]
             trigger: true
@@ -444,7 +441,6 @@ jobs:
     serial_groups: [production]
     plan:
       - in_parallel:
-          - get: master-bosh-root-cert
           - get: prometheus-config
             passed: [deploy-prometheus-staging]
             trigger: true
@@ -567,12 +563,6 @@ jobs:
 
 
 resources:
-  - name: master-bosh-root-cert
-    type: s3-iam
-    source:
-      bucket: ((prometheus-production-private-bucket))
-      region_name: ((aws-region))
-      versioned_file: master-bosh.crt
 
   - name: common-staging
     type: s3-iam
